@@ -1,0 +1,139 @@
+# Builds a signed arm64-v8a release APK of this fork, signed with the fork
+# owner's own keystore. Runs only from the Actions tab (Run workflow).
+#
+# Secrets (Settings -> Secrets and variables -> Actions):
+#   ANDROID_KEYSTORE_BASE64  the .jks file, base64-encoded
+#   KEYSTORE_PASSWORD        the keystore password
+#   KEY_ALIAS                the key's alias in the keystore
+#   KEY_PASSWORD             the key password (same as the keystore's for PKCS12)
+#
+# android/key.properties and the decoded keystore exist only on the runner,
+# outside git, and are deleted at the end of the job even if the build fails.
+
+name: Android release (signed, arm64)
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_name:
+        description: "Version name, e.g. 1.2.0. Leave blank to use pubspec.yaml."
+        required: false
+        default: ""
+      build_number:
+        description: "Version code, a whole number higher than the build you have installed. Leave blank to use pubspec.yaml."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      # Reads environment.flutter from pubspec.yaml (3.47.7 at ec536f0).
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          flutter-version-file: pubspec.yaml
+          cache: true
+
+      - name: Write signing config
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          for v in ANDROID_KEYSTORE_BASE64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD; do
+            if [ -z "${!v}" ]; then echo "::error::Secret $v is not set on this repository."; exit 1; fi
+          done
+          umask 077
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.jks"
+          cat > android/key.properties <<EOF
+          storeFile=$RUNNER_TEMP/release.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - name: Build arm64-v8a APK
+        env:
+          BUILD_NAME: ${{ inputs.build_name }}
+          BUILD_NUMBER: ${{ inputs.build_number }}
+        run: |
+          set -euo pipefail
+          if [ -z "$BUILD_NAME" ] && [ -z "$BUILD_NUMBER" ]; then
+            # The repo's own build script: checks the pinned Flutter version,
+            # runs pub get --enforce-lockfile, builds with --target-platform.
+            scripts/build_android.sh apk-arm64
+          else
+            # Same steps as scripts/build_android.sh apk-arm64, plus the
+            # version override the script has no option for.
+            if [ -n "$BUILD_NUMBER" ] && ! [[ "$BUILD_NUMBER" =~ ^[0-9]+$ ]]; then
+              echo "::error::build_number must be a whole number."; exit 1
+            fi
+            if [ -n "$BUILD_NAME" ] && ! [[ "$BUILD_NAME" =~ ^[0-9A-Za-z.+-]+$ ]]; then
+              echo "::error::build_name may only use letters, digits, '.', '+' and '-'."; exit 1
+            fi
+            WANT=$(awk '/^environment:/ { inside = 1; next } inside && /^[^ ]/ { inside = 0 } inside && $1 == "flutter:" { print $2 }' pubspec.yaml)
+            HAVE=$(flutter --version --machine | sed -n 's/.*"frameworkVersion": *"\([^"]*\)".*/\1/p')
+            [ "$HAVE" = "$WANT" ] || { echo "::error::Flutter $HAVE, but pubspec.yaml pins $WANT"; exit 1; }
+            flutter pub get --enforce-lockfile
+            args=(--release --target-platform android-arm64)
+            [ -n "$BUILD_NAME" ] && args+=(--build-name "$BUILD_NAME")
+            [ -n "$BUILD_NUMBER" ] && args+=(--build-number "$BUILD_NUMBER")
+            flutter build apk "${args[@]}"
+            mkdir -p build/android
+            cp build/app/outputs/flutter-apk/app-release.apk build/android/arm64-v8a.apk
+          fi
+          mkdir -p dist
+          mv build/android/arm64-v8a.apk dist/cupola-arm64-v8a.apk
+
+      - name: Verify signature and print SHA-256
+        run: |
+          set -euo pipefail
+          APK=dist/cupola-arm64-v8a.apk
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          "$BT/apksigner" verify --print-certs "$APK" | tee certs.txt
+          APK_SHA=$(sha256sum "$APK" | cut -d' ' -f1)
+          CERT_SHA=$(sed -n 's/.*certificate SHA-256 digest: //p' certs.txt | head -1)
+          echo "APK SHA-256:              $APK_SHA"
+          echo "Signing cert SHA-256:     $CERT_SHA"
+          {
+            echo "### Cupola arm64-v8a APK"
+            echo ""
+            echo "| | SHA-256 |"
+            echo "|---|---|"
+            echo "| APK file | \`$APK_SHA\` |"
+            echo "| Signing certificate | \`$CERT_SHA\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "$APK_SHA  cupola-arm64-v8a.apk" > dist/cupola-arm64-v8a.apk.sha256
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cupola-arm64-v8a-apk
+          path: |
+            dist/cupola-arm64-v8a.apk
+            dist/cupola-arm64-v8a.apk.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Remove signing files
+        if: always()
+        run: rm -f android/key.properties "$RUNNER_TEMP/release.jks"
