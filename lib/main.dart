@@ -217,6 +217,8 @@ const Map<String, String> bundledFontLicenses = {
   'Bricolage Grotesque': 'assets/fonts/BricolageGrotesque-OFL.txt',
   'Onest': 'assets/fonts/Onest-OFL.txt',
   'Geist Mono': 'assets/fonts/GeistMono-OFL.txt',
+  // This fork's face (Apache-2.0, not OFL).
+  'Roboto': 'assets/fonts/roboto/LICENSE.txt',
 };
 
 /// Puts each bundled font's SIL OFL 1.1 into the licence page Flutter builds

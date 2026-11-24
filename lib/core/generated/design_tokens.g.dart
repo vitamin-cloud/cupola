@@ -701,7 +701,8 @@ abstract final class DesignTokens {
   /// display type, figures. Its default instance is 96pt ExtraBold, so every
   /// role sets all three axes. Geist Mono after it carries the symbols it lacks
   /// (⇧ ⏎), Apple Symbols the Apple modifier glyphs (⌘ ⌥).
-  static const String typeFamilyDisplay = 'Bricolage Grotesque';
+  // This fork: one face across the app, the Home's (Roboto).
+  static const String typeFamilyDisplay = 'StackRoboto';
   static const List<String> typeFamilyDisplayFallback = <String>[
     'Geist Mono',
     'Apple Symbols',
@@ -710,7 +711,7 @@ abstract final class DesignTokens {
   /// Onest, bundled (wght 100–900): every text role. Has tabular figures. Geist
   /// Mono after it carries the symbols it lacks (∞ ⇧ ⏎), Apple Symbols the
   /// Apple modifier glyphs (⌘ ⌥), which only Apple platforms print.
-  static const String typeFamilyText = 'Onest';
+  static const String typeFamilyText = 'StackRoboto';
   static const List<String> typeFamilyTextFallback = <String>[
     'Geist Mono',
     'Apple Symbols',
@@ -1220,13 +1221,15 @@ abstract final class DesignTokensDark {
 
   // color.ink
   /// Primary text and the ink button.
-  static const Color colorInkPrimary = Color(0xFFF7F6F2);
+  // This fork: white text across the dark room, the quieter inks barely
+  // dimmer, so everything reads over the photo and the glass.
+  static const Color colorInkPrimary = Color(0xFFFFFFFF);
 
   /// Secondary text.
-  static const Color colorInkSecondary = Color(0xB8FFFFFF);
+  static const Color colorInkSecondary = Color(0xF2FFFFFF);
 
   /// Tertiary text: still at least 4.5:1 on a slab.
-  static const Color colorInkTertiary = Color(0x99FFFFFF);
+  static const Color colorInkTertiary = Color(0xD9FFFFFF);
 
   /// Disabled text.
   static const Color colorInkDisabled = Color(0x61FFFFFF);
@@ -1342,7 +1345,7 @@ abstract final class DesignTokensDark {
 
   /// The ink.secondary, flattened on the ground so contrast is measurable.
   /// Metadata, chip labels, hints.
-  static const Color colorOnSurfaceVariant = Color(0xFFBBBBBC);
+  static const Color colorOnSurfaceVariant = Color(0xFFF2F2F4);
 
   /// The ink.tertiary, flattened on the ground so contrast is measurable.
   /// Captions and tertiary metadata; 6.2:1 on the menu step.

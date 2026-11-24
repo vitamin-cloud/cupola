@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:cupola/core/utils/blink_transition.dart';
+import 'package:cupola/core/widgets/glass_panel.dart';
 import 'package:cupola/core/app_radius.dart';
 import 'package:cupola/core/focus_ring.dart';
 import 'package:cupola/core/generated/design_tokens.g.dart';
@@ -384,7 +385,9 @@ class CupolaRoom extends ThemeExtension<CupolaRoom> {
     // through it (`GlassPanel` adds the blur where a card draws one).
     slab: Color(0xD0141A2E),
     raised: DesignTokensDark.colorRoomRaised,
-    door: DesignTokensDark.colorRoomDoor,
+    // This fork: a door (Discover's tiles, a collection's card) is the same
+    // glass as a slab.
+    door: Color(0xD0141A2E),
     enamel: DesignTokensDark.colorRoomEnamel,
     menu: DesignTokensDark.colorRoomMenu,
     toast: DesignTokensDark.colorRoomToast,
@@ -1221,9 +1224,14 @@ class AppTheme {
           visualDensity: VisualDensity.standard,
           minimumSize: const Size(64, DesignTokens.sizeButtonM),
           foregroundColor: colorScheme.onSurface,
-          backgroundColor: room.fillControl,
           textStyle: buttonLabel,
-          side: BorderSide(color: room.edge),
+          // This fork: outlined buttons sit on the glass too.
+          backgroundColor: brightness == Brightness.dark
+              ? GlassPanel.tint
+              : room.fillControl,
+          side: brightness == Brightness.dark
+              ? const BorderSide(color: GlassPanel.rim, width: 1.5)
+              : BorderSide(color: room.edge),
           padding: const EdgeInsets.symmetric(
             horizontal: DesignTokens.spaceLg,
             vertical: DesignTokens.spaceMd,
@@ -1284,16 +1292,24 @@ class AppTheme {
 
       // Input Decoration: a field on the quiet fill with an edge; focus is the
       // secondary ink, a refusal is the fault tone.
+      // This fork: every field is the remote's glass (`GlassPanel`), so a
+      // form reads over the photo.
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: room.fillQuiet,
+        fillColor: brightness == Brightness.dark
+            ? GlassPanel.tint
+            : room.fillQuiet,
         border: OutlineInputBorder(
           borderRadius: AppRadius.borderRadiusField,
-          borderSide: BorderSide(color: room.edge),
+          borderSide: brightness == Brightness.dark
+              ? const BorderSide(color: GlassPanel.rim, width: 1.5)
+              : BorderSide(color: room.edge),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderRadiusField,
-          borderSide: BorderSide(color: room.edge),
+          borderSide: brightness == Brightness.dark
+              ? const BorderSide(color: GlassPanel.rim, width: 1.5)
+              : BorderSide(color: room.edge),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.borderRadiusField,

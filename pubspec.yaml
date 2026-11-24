@@ -196,13 +196,15 @@ flutter:
     # registered once renders at its default instance whatever `fontWeight`
     # asks for). Bricolage Grotesque (opsz, wdth, wght) sets display type,
     # Onest (wght) sets text, Geist Mono (wght) sets machine strings.
-    # This fork's Home: Roboto, the Living Room Remote's face on Android
+    # This fork's face, everywhere but machine strings: Roboto, the Living Room Remote's face on Android
     # (googlefonts/roboto-2, Apache-2.0), bundled so it is that face exactly.
     - family: StackRoboto
       fonts:
         - asset: assets/fonts/roboto/Roboto-Regular.ttf
         - asset: assets/fonts/roboto/Roboto-Medium.ttf
           weight: 500
+        - asset: assets/fonts/roboto/Roboto-Bold.ttf
+          weight: 700
     - family: Bricolage Grotesque
       fonts:
         - asset: assets/fonts/BricolageGrotesque.ttf
@@ -235,6 +237,7 @@ flutter:
     - assets/fonts/BricolageGrotesque-OFL.txt
     - assets/fonts/Onest-OFL.txt
     - assets/fonts/GeistMono-OFL.txt
+    - assets/fonts/roboto/LICENSE.txt
     # The demo's posters and backdrops, the Blender Studio's own pictures of
     # its open films (CC BY 4.0): `lib/demo/world/artwork.dart`.
     - assets/demo/artwork/

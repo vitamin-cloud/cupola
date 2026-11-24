@@ -310,8 +310,8 @@ class _TileState extends State<_Tile> {
           scale: _down ? 0.94 : 1,
           duration: const Duration(milliseconds: 220),
           curve: curve,
-          // The remote's tile, measured: the logo 40 tall from 14.7 down, the
-          // name's baseline 82.2 down; here the address under it, small.
+          // The remote's tile: a larger logo, the name, and the address
+          // centred between the name and the tile's foot.
           child: GlassPanel(
             radius: 22 * k,
             child: Stack(
@@ -319,17 +319,19 @@ class _TileState extends State<_Tile> {
                 Positioned(
                   left: 0,
                   right: 0,
-                  top: 14.7 * k,
+                  top: 10 * k,
                   child: Icon(
                     service.icon,
-                    size: 40 * k,
+                    size: 48 * k,
                     color: const Color(0xF0F5F7FF),
                   ),
                 ),
                 Positioned(
                   left: 6 * k,
                   right: 6 * k,
-                  top: (82.2 - 0.927 * 15.8 - 1.9) * k,
+                  // Its baseline 74 down (a line's baseline sits 1.01 of its
+                  // size below its top).
+                  top: (74.2 - 1.01 * 15.4) * k,
                   child: Text(
                     service.shortTitle,
                     textAlign: TextAlign.center,
@@ -356,7 +358,8 @@ class _TileState extends State<_Tile> {
                   Positioned(
                     left: 6 * k,
                     right: 6 * k,
-                    top: (93.0 - 0.927 * 9.5) * k,
+                    // Centred between the name and the tile's foot.
+                    top: (87.3 - 0.65 * 9.5) * k,
                     child: Text(
                       widget.address,
                       textAlign: TextAlign.center,

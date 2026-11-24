@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:cupola/core/utils/service_routes.dart';
+
 import 'package:cupola/core/capability/audience.dart';
 import 'package:cupola/features/media/presentation/media_split.dart';
 import 'package:cupola/core/app_animation.dart';
@@ -498,6 +500,14 @@ class _ShellScreenState extends ConsumerState<ShellScreen>
     if (portalWasOpen) _portal.closeFromUi();
 
     final index = tab.index;
+
+    // This fork: the Stack tab always lands on the Stack's own page, from
+    // anywhere, never on the service last opened under it.
+    if (tab == NavTab.stack &&
+        GoRouter.of(context).state.uri.path != ServiceRoutes.stack) {
+      widget.navigationShell.goBranch(index, initialLocation: true);
+      return;
+    }
 
     if (tab == currentTab) {
       if (portalWasOpen) return;
