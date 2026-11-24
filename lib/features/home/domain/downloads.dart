@@ -22,9 +22,7 @@ import 'package:cupola/features/services/domain/source_coverage.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
 /// The four download clients: where speeds come from.
-const downloadClients = [
-  ServiceKey.qbittorrent,
-];
+const downloadClients = [ServiceKey.qbittorrent];
 
 /// How many rows the module draws before See all in Activity.
 const downloadsRowLimit = 4;

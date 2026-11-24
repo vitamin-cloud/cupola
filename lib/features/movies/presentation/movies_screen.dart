@@ -20,6 +20,7 @@ import 'package:cupola/features/settings/data/connection_reach_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/media/domain/media_key.dart';
+import 'package:cupola/features/media/presentation/media_lookup_memory.dart';
 import 'package:cupola/features/media/presentation/open_media.dart';
 import 'package:cupola/core/utils/arr_model_helpers.dart';
 
@@ -65,6 +66,7 @@ MediaStatusInfo? Function(RadarrMovie movie) _statusOf(
 /// through its TMDB id on the title page, on the lens's copy.
 void _openMovie(
   BuildContext context,
+  WidgetRef ref,
   String lens,
   RadarrMovie movie,
   String heroTag,
@@ -73,6 +75,8 @@ void _openMovie(
     context.push(ServiceRoutes.radarrMovie(movie.id, heroTag: heroTag));
     return;
   }
+  // What the lookup knew of it, for a title nothing else knows yet.
+  if (movie.id <= 0) rememberLookup(ref, MediaKey.movie(movie.tmdbId), movie);
   context.openMedia(
     MediaKey.movie(movie.tmdbId),
     focus: lens.isEmpty ? null : lens,
@@ -101,7 +105,8 @@ class MoviesAddScreen extends ConsumerWidget {
       results: (context, query) => MoviesFindRadarr(
         query: query,
         statusOf: status,
-        onOpen: (context, movie, tag) => _openMovie(context, lens, movie, tag),
+        onOpen: (context, movie, tag) =>
+            _openMovie(context, ref, lens, movie, tag),
       ),
     );
   }

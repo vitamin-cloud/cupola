@@ -391,9 +391,7 @@ typedef DownloadClientHandle = ({
   String id,
 });
 
-const _clients = {
-  ServiceKey.qbittorrent,
-};
+const _clients = {ServiceKey.qbittorrent};
 
 DownloadClientHandle? downloadClientOf(ServiceQueueItem item) {
   final own = _clients.contains(item.service);
@@ -404,10 +402,7 @@ DownloadClientHandle? downloadClientOf(ServiceQueueItem item) {
   if (raw == null || raw.isEmpty) return null;
   // A torrent's hash in the case its client reads it; an \*arr records it
   // upper-cased.
-  final id =
-      client == ServiceKey.qbittorrent
-      ? raw.toLowerCase()
-      : raw;
+  final id = client == ServiceKey.qbittorrent ? raw.toLowerCase() : raw;
   return (client: client, instanceId: instanceId, id: id);
 }
 

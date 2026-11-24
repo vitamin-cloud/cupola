@@ -850,8 +850,7 @@ String failureHeadline(
     "$subject refused the request's security token",
   ServiceFailureReason.timeout =>
     '$subject was reached but did not reply in time',
-  ServiceFailureReason.tls =>
-    '$subject has a certificate Stack does not trust',
+  ServiceFailureReason.tls => '$subject has a certificate Stack does not trust',
   ServiceFailureReason.plainHttp => '$subject answered in plain http',
   ServiceFailureReason.noSecureConnection =>
     '$subject did not open a secure connection',

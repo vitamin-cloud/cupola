@@ -910,9 +910,7 @@ class _ServiceSettingsScreenState extends ConsumerState<ServiceSettingsScreen> {
       away: away,
       clearAway: away == null,
     );
-    return current.copyWithInstance(
-      next,
-    );
+    return current.copyWithInstance(next);
   }
 
   /// Brings the first field the last validation refused into view, focused,

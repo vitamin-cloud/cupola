@@ -215,6 +215,9 @@ flutter:
     # The product mark: this fork's ("Stack") neon pirate ship in a circle, made by
     # scripts/stack_icon.py from the owner's artwork.
     - assets/brand/stack_mark.png
+    # The Home's service logos: homarr-labs/dashboard-icons (Apache-2.0); the
+    # marks themselves belong to their projects.
+    - assets/brand/services/
     # The house at night behind every room: the owner's own photo, from the
     # Living Room Remote (`lib/core/house_backdrop.dart`).
     - assets/backdrop/house.jpg

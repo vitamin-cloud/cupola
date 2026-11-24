@@ -310,9 +310,6 @@ Future<ServiceDiagnosis> diagnoseCredentials(
     }
   }
 
-
-
-
   // Named, not inferred. This used to read `if (!service.usesApiKey)`, which is
   // a *negative capability* rather than an identity, so every future
   // credential-authenticated service was silently routed here, and Transmission
@@ -354,8 +351,6 @@ Future<ServiceDiagnosis> diagnoseCredentials(
       reach: (url: urlTrimmed, access: access, pin: pin),
     );
   }
-
-
 
   if (service == ServiceKey.unraid) {
     final client = UnraidClient(

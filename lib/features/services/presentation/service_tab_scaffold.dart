@@ -1,10 +1,8 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:cupola/core/app_spacing.dart';
-import 'package:cupola/core/theme.dart';
+import 'package:cupola/core/widgets/glass_panel.dart';
 import 'package:cupola/core/widgets/library_selection.dart';
 import 'package:cupola/core/widgets/service_tab_bar.dart';
 import 'package:cupola/features/services/domain/service_tab.dart';
@@ -87,9 +85,15 @@ class ServiceTabScaffold extends StatelessWidget {
       );
     }
 
+    // This fork: the page ends a hair (2pt) below the tabs' slab, so nothing
+    // scrolls under it or the band: it is gone before it reaches them. Not
+    // while a library selects: its selection header stands in their place.
+    final selecting = LibrarySelectionScope.selectingOf(context);
+    final top =
+        ServiceHomeScreen.bandHeightOf(context) + ServiceTabBar.height + 2;
     return Stack(
       children: [
-        child,
+        if (selecting) child else ClipRect(clipper: _Below(top), child: child),
         Positioned(
           // The band's full height, inset included, not `kToolbarHeight`.
           // The band consumes the top inset (`Positioned(top: 0)` under a
@@ -147,35 +151,52 @@ class ServiceTabScaffold extends StatelessWidget {
   }
 }
 
-/// The frosted slab under a service's tabs: what passes beneath is blurred,
-/// then tinted with the room's slab colour, the surface the Overview's cards
-/// are drawn on, inside the same hairline.
+/// Clips a page to what lies [top] points below its top.
+class _Below extends CustomClipper<Rect> {
+  const _Below(this.top);
+
+  final double top;
+
+  @override
+  Rect getClip(Size size) =>
+      Rect.fromLTRB(0, top.clamp(0, size.height), size.width, size.height);
+
+  @override
+  bool shouldReclip(_Below old) => old.top != top;
+}
+
+/// The slab under a service's tabs: solid, in the remote's glass colours and
+/// rim, since the page no longer passes under it.
 class FrostedTabSlab extends StatelessWidget {
   const FrostedTabSlab({super.key, required this.child});
 
   final Widget child;
 
-  /// How much of the slab colour covers the blur: enough that the labels read
-  /// as on a card, little enough that the room shows through as glass.
-  static const double tint = 0.72;
+  /// The remote's glass laid over the dark room: opaque.
+  static const Color fill = Color(0xFF161B2E);
 
   @override
   Widget build(BuildContext context) {
-    final room = CupolaRoom.of(context);
     final radius = BorderRadius.circular(ServiceTabBar.height / 2);
-    return ClipRRect(
-      borderRadius: radius,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: room.slab.withValues(alpha: tint),
-            borderRadius: radius,
-            border: Border.all(color: room.hair),
-          ),
-          child: child,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          stops: [0, 0.55, 1],
+          colors: [Color(0xFF262B3E), Color(0xFF181D30), Color(0xFF1B2033)],
         ),
+        border: Border.all(color: GlassPanel.rim, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x59000000),
+            blurRadius: 30,
+            offset: Offset(0, 12),
+          ),
+        ],
       ),
+      child: child,
     );
   }
 }

@@ -541,7 +541,6 @@ Future<String?> _loadVersion(
     );
   }
 
-
   // The media servers, through their own clients: each authenticates with
   // a header the shared `ApiClient` does not send, and each one's status route
   // is anonymous, so the generic branch below read any token as answering.
@@ -566,7 +565,6 @@ Future<String?> _loadVersion(
     );
   }
 
-
   if (service == ServiceKey.plex) {
     final client = PlexClient(
       url: reach.url,
@@ -585,9 +583,6 @@ Future<String?> _loadVersion(
   // Past both arms above, so none is left: a media server on the generic
   // branch below would be read as answering whatever key it is given.
   assert(!service.isMediaServer, '${service.name} has no credential probe');
-
-
-
 
   if (service == ServiceKey.unraid) {
     final client = UnraidClient(

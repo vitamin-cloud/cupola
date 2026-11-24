@@ -40,9 +40,7 @@ final List<ProviderOrFamily> homeDownloadsSources = [
 /// The lists the download clients' own pages hold: the part of
 /// [homeDownloadsSources] a client page drops, and what the queue reads as it
 /// stands (it does not watch them).
-final List<ProviderOrFamily> downloadClientLists = [
-  allTorrentsProvider,
-];
+final List<ProviderOrFamily> downloadClientLists = [allTorrentsProvider];
 
 /// Reads the queue again at once when a write succeeded whose follow-up
 /// dropped one of a client's lists: pausing, resuming or removing from a

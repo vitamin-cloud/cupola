@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:cupola/core/widgets/glass_panel.dart';
 import 'package:flutter/semantics.dart';
 import 'package:cupola/core/app_elevation.dart';
 import 'package:cupola/core/app_gradients.dart';
@@ -286,6 +288,16 @@ class AppCard extends StatelessWidget {
     // the day room (21/10). The dark room's `level1` is empty and hid it.
     if (bgColor.a == 0) shadows = null;
 
+    // This fork: a card on the room's own surface is the remote's glass
+    // (`GlassPanel`); one given a colour or drawn as an outline keeps it.
+    final glass = backgroundColor == null
+        ? variant != AppCardVariant.outlined
+        : backgroundColor == colorScheme.surfaceContainer;
+    final glassRadius = effectiveBorderRadius
+        .resolve(TextDirection.ltr)
+        .topLeft
+        .x;
+
     // Optional glow of the card's light, painted behind the content.
     final glow = accentColor != null
         ? AppGradients.serviceGlow(
@@ -326,8 +338,10 @@ class AppCard extends StatelessWidget {
       final scaled = pressFeedback == AppCardPressFeedback.scale;
 
       final material = Material(
-        color: bgColor,
-        shape: shape,
+        color: glass ? Colors.transparent : bgColor,
+        shape: glass
+            ? RoundedRectangleBorder(borderRadius: effectiveBorderRadius)
+            : shape,
         clipBehavior: glow != null ? Clip.antiAlias : Clip.none,
         // No ink at all under `scale`: an `InkWell` here would splash *and*
         // dip, and the splash is the half being rejected.
@@ -346,7 +360,9 @@ class AppCard extends StatelessWidget {
 
       // Explicit token shadows sit under the Material so tappable elevated
       // cards match the non-tappable ones.
-      final Widget body = shadows == null
+      final Widget body = glass
+          ? GlassPanel(radius: glassRadius, child: material)
+          : shadows == null
           ? material
           : DecoratedBox(
               decoration: BoxDecoration(
@@ -376,6 +392,14 @@ class AppCard extends StatelessWidget {
     // Non-tappable: plain Container. The edge is drawn over the card rather
     // than as its border, which would inset the child 1px per side: like the
     // tappable branch's shape, the stroke costs no layout.
+    if (glass) {
+      return _spoken(
+        GlassPanel(
+          radius: glassRadius,
+          child: wrapWithGlow(Padding(padding: effectivePadding, child: child)),
+        ),
+      );
+    }
     return _spoken(
       Container(
         decoration: BoxDecoration(

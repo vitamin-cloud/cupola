@@ -87,6 +87,7 @@ import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/service_theme.dart';
 import 'package:cupola/core/text_scale.dart';
 import 'package:cupola/core/theme.dart';
+import 'package:cupola/core/widgets/glass_panel.dart';
 import 'package:cupola/core/widgets/service_mark_tile.dart';
 import 'package:cupola/core/widgets/app_card.dart';
 import 'package:cupola/core/widgets/shimmer_placeholder.dart';
@@ -616,13 +617,9 @@ class _ServiceMatrixBand extends StatelessWidget {
       final room = CupolaRoom.of(context);
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: room.door,
-            borderRadius: BorderRadius.circular(AppRadius.group),
-            border: Border.all(color: room.fillControl),
-          ),
+        // This fork: the remote's glass (`GlassPanel`).
+        child: GlassPanel(
+          radius: AppRadius.group,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

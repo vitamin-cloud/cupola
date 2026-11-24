@@ -218,8 +218,7 @@ extension ServiceKeyExtension on ServiceKey {
   /// class a newly added service as API-key authenticated, whereas this makes
   /// the compiler ask.
   bool get usesApiKey => switch (this) {
-    ServiceKey.qbittorrent ||
-    ServiceKey.dockge => false,
+    ServiceKey.qbittorrent || ServiceKey.dockge => false,
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
@@ -283,9 +282,7 @@ extension ServiceKeyExtension on ServiceKey {
   ///
   /// An exhaustive switch, so the next service declares whether it does.
   bool get givesSessions => switch (this) {
-    ServiceKey.jellyfin ||
-    ServiceKey.plex ||
-    ServiceKey.emby => true,
+    ServiceKey.jellyfin || ServiceKey.plex || ServiceKey.emby => true,
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
@@ -379,9 +376,7 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.unraid => 'X-Api-Key',
     ServiceKey.plex => 'X-Plex-Token',
     ServiceKey.jellyfin || ServiceKey.emby => 'X-Emby-Token',
-    ServiceKey.truenas ||
-    ServiceKey.dockge ||
-    ServiceKey.qbittorrent => null,
+    ServiceKey.truenas || ServiceKey.dockge || ServiceKey.qbittorrent => null,
   };
 
   /// Every header this service's own client sets, lower-cased: its
@@ -430,9 +425,7 @@ extension ServiceKeyExtension on ServiceKey {
     // token is a person's: a shared account's reads the libraries and is
     // refused who is watching, which only the owner's sees
     // (`plex_capability.dart`).
-    ServiceKey.unraid ||
-    ServiceKey.truenas ||
-    ServiceKey.plex => true,
+    ServiceKey.unraid || ServiceKey.truenas || ServiceKey.plex => true,
     // Jellyfin's slot can hold a non-admin user's token, but a non-admin is
     // only ever shown sessions it may control, so no write Cupola draws can be
     // refused (see `jellyfin_client.dart`). What it loses are reads, a read
@@ -485,8 +478,7 @@ extension ServiceKeyExtension on ServiceKey {
   /// would silently file a newly added service under `api_key` and lose its
   /// secret the first time someone noticed.
   String get credentialStorageSuffix => switch (this) {
-    ServiceKey.qbittorrent ||
-    ServiceKey.dockge => 'password',
+    ServiceKey.qbittorrent || ServiceKey.dockge => 'password',
     ServiceKey.plex => 'token',
     ServiceKey.seerr ||
     ServiceKey.radarr ||
@@ -555,8 +547,7 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.unraid => 'Settings → Management Access → API Keys',
     ServiceKey.plex => 'any item → Get Info → View XML → copy X-Plex-Token',
     // Web-UI login: the user already has these.
-    ServiceKey.qbittorrent ||
-    ServiceKey.dockge => null,
+    ServiceKey.qbittorrent || ServiceKey.dockge => null,
   };
 
   /// Setup guidance shown above the address field, for the services where the

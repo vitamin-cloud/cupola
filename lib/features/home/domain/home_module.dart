@@ -121,11 +121,7 @@ enum HomeModule {
     audience: Audience.operator,
     label: 'Now playing',
     line: 'Who is watching, and on which screen',
-    services: [
-      ServiceKey.jellyfin,
-      ServiceKey.plex,
-      ServiceKey.emby,
-    ],
+    services: [ServiceKey.jellyfin, ServiceKey.plex, ServiceKey.emby],
   ),
 
   /// Every service's light on one slab: the Stack tab, folded. Off until the

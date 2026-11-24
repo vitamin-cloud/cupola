@@ -378,7 +378,9 @@ class CupolaRoom extends ThemeExtension<CupolaRoom> {
 
   static const CupolaRoom dark = CupolaRoom(
     ground: DesignTokensDark.colorRoomGround,
-    slab: DesignTokensDark.colorRoomSlab,
+    // This fork: every card is the remote's glass tint, the room showing
+    // through it (`GlassPanel` adds the blur where a card draws one).
+    slab: Color(0x9E0D1124),
     raised: DesignTokensDark.colorRoomRaised,
     door: DesignTokensDark.colorRoomDoor,
     enamel: DesignTokensDark.colorRoomEnamel,

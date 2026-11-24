@@ -59,6 +59,7 @@ import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/home/domain/home_arrangement.dart';
+import 'package:cupola/features/home/presentation/widgets/home_stack_grid.dart';
 import 'package:cupola/features/home/presentation/widgets/balanced_columns.dart';
 import 'package:cupola/features/shell/domain/settings_return.dart';
 import 'package:cupola/features/shell/domain/shell_audience.dart';
@@ -113,8 +114,12 @@ class HomeScreen extends ConsumerWidget {
       child: AmbientScaffold(
         // The room takes its light from the slide in front, drifting as the
         // title's own page does.
-        accent: allUnconfigured ? null : ref.watch(featuredRoomLightProvider),
-        art: allUnconfigured ? null : ref.watch(featuredRoomProvider)?.art,
+        accent: allUnconfigured || !requester
+            ? null
+            : ref.watch(featuredRoomLightProvider),
+        art: allUnconfigured || !requester
+            ? null
+            : ref.watch(featuredRoomProvider)?.art,
         accentDuration: AppAnimation.light,
         body: allUnconfigured
             ? NothingSetUpView(
@@ -122,6 +127,11 @@ class HomeScreen extends ConsumerWidget {
                 // The date stays: it is the Home's, whatever is set up.
                 header: const HomeHeader(showsHealth: false),
               )
+            // This fork: the operator's Home is the remote's grid of the
+            // services on the Stack (`HomeStackGrid`); Edit Home moved to
+            // Settings.
+            : !requester
+            ? const HomeStackGrid()
             : Stack(
                 children: [
                   RefreshIndicator(
@@ -167,7 +177,6 @@ class HomeScreen extends ConsumerWidget {
                                       mode,
                                     ))
                                       _homeRow(row, column),
-                                    if (!requester) column(const EditHomeRow()),
                                     const SizedBox(height: AppSpacing.lg),
                                   ],
                                 ),

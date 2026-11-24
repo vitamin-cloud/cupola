@@ -76,9 +76,7 @@ List<SetUpSuggestion> setUpNextOf(
         line: 'Play, Continue watching and Now playing',
         found: null,
       ),
-    if (!any(const [
-      ServiceKey.qbittorrent,
-    ]))
+    if (!any(const [ServiceKey.qbittorrent]))
       (
         service: null,
         title: Lexicon.setUp('a download client'),

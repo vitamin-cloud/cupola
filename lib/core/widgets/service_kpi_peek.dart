@@ -9,6 +9,7 @@ import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/reel_motion.dart';
 import 'package:cupola/core/text_scale.dart';
 import 'package:cupola/core/theme.dart';
+import 'package:cupola/core/widgets/glass_panel.dart';
 import 'package:cupola/core/widgets/reel_line.dart';
 import 'package:cupola/core/widgets/shimmer_placeholder.dart';
 import 'package:cupola/core/widgets/status_badge.dart';
@@ -176,9 +177,7 @@ class ServiceKpiPeek extends StatelessWidget {
   /// The figure the room leads with: a download client's speed, else the
   /// first figure, which every service lists as what it holds.
   ServiceKpi _leadOf(List<ServiceKpi> items) {
-    const byService = {
-      ServiceKey.qbittorrent: 'Download',
-    };
+    const byService = {ServiceKey.qbittorrent: 'Download'};
     final label = byService[service];
     return items.firstWhere(
       (kpi) => kpi.label == label,
@@ -335,61 +334,60 @@ class _KpiCard extends StatelessWidget {
     // under it, the tone a dot beside the label as a legend draws it. The
     // figure is the ink; an em dash is the secondary ink, a placeholder for a
     // figure rather than one.
-    final card = Container(
-      constraints: const BoxConstraints(minWidth: 104),
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-      decoration: BoxDecoration(
-        color: room.slab,
-        borderRadius: BorderRadius.circular(AppRadius.door),
-        border: Border.all(color: room.hair),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // The instrument readout, and the one number on a dashboard that
-          // is worth watching change: a library total ticking up after an
-          // import, a queue count draining. Safe to roll because the card is
-          // `minWidth`, not a fixed width, inside a horizontally scrolling
-          // rail: a wider value makes the card wider instead of overflowing.
-          ReelLine(
-            kpi.value,
-            options: ReelMotion.figure,
-            style: AppType.figure.copyWith(
-              color: kpi.isUnavailable ? room.inkSecondary : room.ink,
+    // This fork: the remote's glass (`GlassPanel`).
+    final card = GlassPanel(
+      radius: AppRadius.door,
+      child: Container(
+        constraints: const BoxConstraints(minWidth: 104),
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // The instrument readout, and the one number on a dashboard that
+            // is worth watching change: a library total ticking up after an
+            // import, a queue count draining. Safe to roll because the card is
+            // `minWidth`, not a fixed width, inside a horizontally scrolling
+            // rail: a wider value makes the card wider instead of overflowing.
+            ReelLine(
+              kpi.value,
+              options: ReelMotion.figure,
+              style: AppType.figure.copyWith(
+                color: kpi.isUnavailable ? room.inkSecondary : room.ink,
+              ),
+              fallbackMaxLines: 1,
             ),
-            fallbackMaxLines: 1,
-          ),
-          const SizedBox(height: 5),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (kpi.tone != null && !kpi.isUnavailable) ...[
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    shape: BoxShape.circle,
+            const SizedBox(height: 5),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (kpi.tone != null && !kpi.isUnavailable) ...[
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: accent,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                // The note replaces the label rather than joining it: the tile
+                // is two lines tall by construction. When the source did not
+                // answer, *why* is the more useful of the two.
+                Flexible(
+                  child: Text(
+                    kpi.note ?? kpi.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppType.meta.copyWith(color: room.inkSecondary),
                   ),
                 ),
-                const SizedBox(width: 6),
               ],
-              // The note replaces the label rather than joining it: the tile
-              // is two lines tall by construction. When the source did not
-              // answer, *why* is the more useful of the two.
-              Flexible(
-                child: Text(
-                  kpi.note ?? kpi.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppType.meta.copyWith(color: room.inkSecondary),
-                ),
-              ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
 

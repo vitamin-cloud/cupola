@@ -91,7 +91,6 @@ class ServiceInstance {
   /// everything but the session is kept, so signing in again is one step.
   final SeerrAccountSignIn? account;
 
-
   /// The address that reaches this server away from home, with what its
   /// gateway asks for, or null for a connection reached at [url] only.
   ///
@@ -247,7 +246,6 @@ class ServiceInstance {
 
   /// Where [owner]'s token lives in secure storage.
   String get ownerSessionStorageKey => 'secure_${id}_owner_session';
-
 
   /// How this Seerr connection signs in: its [account], or its API key.
   SeerrSignIn get seerrSignIn => account ?? SeerrApiKeySignIn(credential);

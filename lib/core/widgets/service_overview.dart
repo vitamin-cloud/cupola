@@ -9,6 +9,7 @@ import 'package:cupola/core/status/lexicon.dart';
 import 'package:cupola/core/text_scale.dart';
 import 'package:cupola/core/utils/arr_overview.dart';
 import 'package:cupola/core/utils/image_utils.dart';
+import 'package:cupola/core/widgets/glass_panel.dart';
 import 'package:cupola/core/widgets/async_value_widget.dart';
 import 'package:cupola/core/widgets/media_poster_card.dart';
 import 'package:cupola/core/widgets/pressable_scale.dart';
@@ -251,7 +252,6 @@ class ServiceOverviewSection extends StatelessWidget {
         ),
       );
     }
-    final room = CupolaRoom.of(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -259,12 +259,9 @@ class ServiceOverviewSection extends StatelessWidget {
         AppSpacing.lg,
         AppSpacing.md,
       ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: room.slab,
-          borderRadius: BorderRadius.circular(AppRadius.slab),
-          border: Border.all(color: room.hair),
-        ),
+      // This fork: the remote's glass (`GlassPanel`).
+      child: GlassPanel(
+        radius: AppRadius.slab,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadius.slab),
           child: Stack(

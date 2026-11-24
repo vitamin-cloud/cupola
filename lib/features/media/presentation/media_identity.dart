@@ -1,4 +1,3 @@
-import 'package:cupola/core/models/rating_source.dart';
 import 'package:cupola/core/utils/dot_separator.dart';
 import 'package:cupola/core/utils/string_utils.dart';
 import 'package:cupola/core/utils/unit_space.dart';
@@ -8,6 +7,8 @@ import 'package:cupola/features/media/domain/media_copies.dart';
 import 'package:cupola/features/media/domain/media_reading.dart';
 import 'package:cupola/features/media/domain/media_rows.dart';
 import 'package:cupola/features/media/domain/quality_words.dart';
+import 'package:cupola/features/movies/domain/models/radarr_movie.dart';
+import 'package:cupola/features/series/domain/models/sonarr_series.dart';
 import 'package:cupola/features/stream/domain/models/stream_item.dart';
 
 /// Who the title is: the identity layer of the page.
@@ -123,6 +124,52 @@ class MediaIdentity {
     ...studios,
   ].join(dotSeparator);
 
+  /// A Radarr record's identity: a copy it holds, or a lookup's result.
+  factory MediaIdentity.fromRadarr(RadarrMovie movie) => MediaIdentity(
+    title: movie.title,
+    year: movie.year > 0 ? '${movie.year}' : null,
+    runtime: formatRuntimeMinutes(movie.runtime),
+    genres: movie.genres,
+    overview: movie.overview ?? '',
+    posterUrl: _remoteImage(movie.images, 'poster'),
+    backdropUrl: _remoteImage(movie.images, 'fanart'),
+    studios: [?movie.studio],
+  );
+
+  /// A Sonarr record's identity: a copy it holds, or a lookup's result.
+  /// [seasons] counts the seasons with episodes, when they were read.
+  factory MediaIdentity.fromSonarr(SonarrSeries series, {int? seasons}) =>
+      MediaIdentity(
+        title: series.title,
+        year: series.year > 0 ? '${series.year}' : null,
+        genres: series.genres,
+        overview: series.overview ?? '',
+        posterUrl: _remoteImage(series.images, 'poster'),
+        backdropUrl: _remoteImage(series.images, 'fanart'),
+        studios: [?series.network],
+        series: (
+          span: _span(
+            series.firstAired ?? (series.year > 0 ? '${series.year}' : null),
+            series.lastAired,
+            ended: series.status == 'ended',
+          ),
+          seasons:
+              seasons ??
+              series.seasons
+                  .whereType<Map>()
+                  .where((s) => (s['seasonNumber'] as num? ?? 0) > 0)
+                  .length,
+        ),
+      );
+
+  /// What a lookup said of a title (`mediaLookupMemoryProvider`): a
+  /// [SonarrSeries] or a [RadarrMovie], or null.
+  static MediaIdentity? fromLookup(Object? record) => switch (record) {
+    final RadarrMovie movie => MediaIdentity.fromRadarr(movie),
+    final SonarrSeries series => MediaIdentity.fromSonarr(series),
+    _ => null,
+  };
+
   /// The identity [rows] carry: the first Seerr's that answered, else the
   /// first arr copy's own record, else the first media server's item, else
   /// null while nothing has answered.
@@ -140,37 +187,14 @@ class MediaIdentity {
       )) {
         switch (answer.value) {
           case MediaRadarrCopy(:final movie?):
-            return MediaIdentity(
-              title: movie.title,
-              year: movie.year > 0 ? '${movie.year}' : null,
-              runtime: formatRuntimeMinutes(movie.runtime),
-              genres: movie.genres,
-              overview: movie.overview ?? '',
-              posterUrl: _remoteImage(movie.images, 'poster'),
-              backdropUrl: _remoteImage(movie.images, 'fanart'),
-              studios: [?movie.studio],
-            );
+            return MediaIdentity.fromRadarr(movie);
           case MediaSonarrCopy(:final series?, :final episodes):
-            return MediaIdentity(
-              title: series.title,
-              year: series.year > 0 ? '${series.year}' : null,
-              genres: series.genres,
-              overview: series.overview ?? '',
-              posterUrl: _remoteImage(series.images, 'poster'),
-              backdropUrl: _remoteImage(series.images, 'fanart'),
-              studios: [?series.network],
-              series: (
-                span: _span(
-                  series.firstAired ??
-                      (series.year > 0 ? '${series.year}' : null),
-                  series.lastAired,
-                  ended: series.status == 'ended',
-                ),
-                seasons: {
-                  for (final episode in episodes)
-                    if (episode.seasonNumber > 0) episode.seasonNumber,
-                }.length,
-              ),
+            return MediaIdentity.fromSonarr(
+              series,
+              seasons: {
+                for (final episode in episodes)
+                  if (episode.seasonNumber > 0) episode.seasonNumber,
+              }.length,
             );
         }
       }
@@ -243,7 +267,11 @@ typedef MediaScores = ({
 /// opened it. An arr's record, a copy refreshed on its own schedule, fills
 /// what Seerr left out, and Seerr's IMDb and Rotten Tomatoes fill what the
 /// arr left out (a title no arr holds).
-MediaScores mediaScoresOf(List<MediaRow> rows, MediaIdentity? identity) {
+MediaScores mediaScoresOf(
+  List<MediaRow> rows,
+  MediaIdentity? identity, {
+  Object? lookup,
+}) {
   List<RatingSource>? arr;
   int? seerrTomatoes;
   double? seerrImdb;
@@ -265,6 +293,13 @@ MediaScores mediaScoresOf(List<MediaRow> rows, MediaIdentity? identity) {
       }
     }
   }
+  // A title no arr holds: the scores its lookup carried, when it was opened
+  // from one (`mediaLookupMemoryProvider`).
+  arr ??= switch (lookup) {
+    final RadarrMovie movie => movie.ratings,
+    final SonarrSeries series => series.ratings,
+    _ => null,
+  };
   double? score(String name) {
     for (final rating in arr ?? const <RatingSource>[]) {
       // The arr's names are display names (`Rotten Tomatoes`).

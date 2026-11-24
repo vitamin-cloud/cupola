@@ -83,6 +83,7 @@ import 'package:cupola/features/media/presentation/media_facts_sections.dart';
 import 'package:cupola/features/media/domain/media_facts.dart';
 import 'package:cupola/features/import/presentation/manual_import_routes.dart';
 import 'package:cupola/features/media/presentation/media_identity.dart';
+import 'package:cupola/features/media/presentation/media_lookup_memory.dart';
 import 'package:cupola/features/media/presentation/media_sources_provider.dart';
 import 'package:cupola/features/services/domain/in_flight.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
@@ -604,18 +605,23 @@ class _MediaPageState extends ConsumerState<MediaPage> {
     final rows = ref.watch(mediaRowsProvider(mediaKey));
     final audience = ref.watch(audienceProvider);
     final settings = ref.watch(currentSettingsProvider);
-    final identity = MediaIdentity.of(rows);
+    // This fork: a title opened from a Sonarr or Radarr search falls back on
+    // what that search said of it (`mediaLookupMemoryProvider`).
+    final lookup = ref.watch(mediaLookupMemoryProvider)[mediaKey];
+    final identity = MediaIdentity.of(rows) ?? MediaIdentity.fromLookup(lookup);
     // The scores are Seerr's and the arrs': with neither set up, four dashes
     // would promise figures no source here can give.
-    final scored = rows.any(
-      (row) =>
-          row is MediaConnectionRow &&
-          const {
-            ServiceKey.seerr,
-            ServiceKey.radarr,
-            ServiceKey.sonarr,
-          }.contains(row.service),
-    );
+    final scored =
+        lookup != null ||
+        rows.any(
+          (row) =>
+              row is MediaConnectionRow &&
+              const {
+                ServiceKey.seerr,
+                ServiceKey.radarr,
+                ServiceKey.sonarr,
+              }.contains(row.service),
+        );
     // The operator's choice of how a title nobody holds is added, and whether
     // the Seerr that answered may take the request for it now. Read for the
     // operator only, and only once a Seerr has answered: until then the lead
@@ -855,7 +861,7 @@ class _MediaPageState extends ConsumerState<MediaPage> {
           if (scored) ...[
             const SizedBox(height: AppSpacing.lg),
             _Scores(
-              scores: mediaScoresOf(rows, identity),
+              scores: mediaScoresOf(rows, identity, lookup: lookup),
               showMetacritic: audience == Audience.operator,
               series: !mediaKey.isMovie,
             ),

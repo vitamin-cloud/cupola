@@ -127,6 +127,22 @@ class SettingsAnotherDeviceRow extends StatelessWidget {
   }
 }
 
+/// Edit Home, moved here from the foot of the Home in this fork.
+class SettingsEditHomeRow extends StatelessWidget {
+  const SettingsEditHomeRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsCard.grouped(
+      leading: const Icon(Icons.dashboard_customize_outlined),
+      title: 'Edit Home',
+      subtitle: 'Choose and order what Home shows',
+      semanticHint: 'opens Edit Home',
+      onTap: () => context.push(ServiceRoutes.homeEdit),
+    );
+  }
+}
+
 /// Opens the Welcome again, after asking: nothing set up is touched.
 class SettingsRevisitOnboardingRow extends ConsumerWidget {
   const SettingsRevisitOnboardingRow({super.key});

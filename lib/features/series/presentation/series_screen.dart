@@ -9,6 +9,7 @@ import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/widgets/arr_add_scaffold.dart';
 import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/features/media/domain/media_key.dart';
+import 'package:cupola/features/media/presentation/media_lookup_memory.dart';
 import 'package:cupola/features/media/presentation/open_media.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/series/domain/models/sonarr_series.dart';
@@ -73,6 +74,7 @@ MediaStatusInfo? Function(SonarrSeries series) _statusOf(
 /// through its TMDB id on the title page, on the lens's copy.
 void _openSeries(
   BuildContext context,
+  WidgetRef ref,
   String lens,
   SonarrSeries series,
   String heroTag,
@@ -81,6 +83,8 @@ void _openSeries(
     context.push(ServiceRoutes.sonarrSeries(series.id, heroTag: heroTag));
     return;
   }
+  // What the lookup knew of it, for a title nothing else knows yet.
+  if (series.id <= 0) rememberLookup(ref, MediaKey.tv(series.tmdbId), series);
   context.openMedia(
     MediaKey.tv(series.tmdbId),
     focus: lens.isEmpty ? null : lens,
@@ -110,7 +114,7 @@ class SeriesAddScreen extends ConsumerWidget {
         query: query,
         statusOf: status,
         onOpen: (context, series, tag) =>
-            _openSeries(context, lens, series, tag),
+            _openSeries(context, ref, lens, series, tag),
       ),
     );
   }
