@@ -12,7 +12,6 @@ import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/widgets/floating_bottom_nav_bar.dart';
 import 'package:cupola/core/widgets/glass_panel.dart';
 import 'package:cupola/features/home/presentation/widgets/home_header.dart';
-import 'package:cupola/features/media/presentation/media_parts.dart';
 import 'package:cupola/features/shell/domain/settings_return.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -61,7 +60,7 @@ const _text = Color(0xFFF5F7FF);
 const _text2 = Color(0xFFAEB6D6);
 
 /// The remote's face on Android: "Helvetica Neue", then Roboto.
-const _face = 'Roboto';
+const _face = 'StackRoboto';
 
 class _HomeStackGridState extends ConsumerState<HomeStackGrid> {
   Timer? _tick;
@@ -100,158 +99,154 @@ class _HomeStackGridState extends ConsumerState<HomeStackGrid> {
         health.checking == 0 &&
         line.startsWith('${health.configured} of ${health.configured}');
 
-    final media = MediaQuery.of(context);
-    final width = media.size.width;
-    final top = media.padding.top;
+    final width = MediaQuery.sizeOf(context).width;
+    // Measured off the Living Room Remote on the owner's phone (448dp wide):
+    // every figure below is in those dp, scaled to this screen's width, and
+    // drawn with no text scaling, so the two pages match to the point.
+    final k = math.min(width, 460.0) / 448;
+    final side = math.max(0.0, (width - 460) / 2);
+    const scale = TextScaler.noScaling;
     const shadow = [
       Shadow(color: Color(0xD9000000), blurRadius: 12, offset: Offset(0, 2)),
     ];
+    final timeSize = 89.7 * k;
+    final dateSize = 18.0 * k;
+    final stateSize = 17.0 * k;
 
-    return LayoutBuilder(
-      builder: (context, box) {
-        final w = math.min(box.maxWidth, 460.0);
-        // Where the remote's apps start: on the faded lower part of the photo.
-        // The remote's own measures (its CSS): the apps start 1.017 widths
-        // below the safe area (the photo's foot, lifted 0.44 of a width), a
-        // tile is clamp(80px, 22vw, 96px) tall, its logo clamp(30px, 9vw,
-        // 40px), three to a row 10px apart inside 18px margins.
-        final gridTop = top + w * (1.5873 - 0.13 - 0.44);
-        final tileHeight = (w * 0.22).clamp(80.0, 96.0);
-        final logo = (w * 0.09).clamp(30.0, 40.0);
-        return ListView(
-          padding: EdgeInsets.only(
-            bottom: FloatingNavBarMetrics.getScrollViewBottomPadding(context),
-          ),
-          children: [
-            SizedBox(
-              height: gridTop,
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(18, top + 18, 18, 0),
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Transform.translate(
-                              offset: const Offset(-3, 0),
-                              child: Text(
-                                time,
-                                style: const TextStyle(
-                                  fontFamily: _face,
-                                  fontSize: 74,
-                                  fontWeight: FontWeight.w400,
-                                  letterSpacing: -1.8,
-                                  height: 1,
-                                  color: _text,
-                                  shadows: [
-                                    Shadow(
-                                      color: Color(0x59000000),
-                                      blurRadius: 30,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              date,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                color: _text2,
-                                shadows: shadow,
-                              ),
-                            ),
-                            if (line.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              GestureDetector(
-                                onTap: () => context.go(ServiceRoutes.stack),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _Dot(
-                                      clean: clean,
-                                      checking: health.checking > 0,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Flexible(
-                                      child: Text(
-                                        line,
-                                        style: const TextStyle(
-                                          fontFamily: _face,
-                                          fontSize: 14,
-                                          color: Color(0xE0F5F7FF),
-                                          shadows: shadow,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                      // Settings, as the Stack page opens it.
-                      Tooltip(
-                        message: 'Settings',
-                        child: MediaPlate(
-                          label: 'Settings',
-                          icon: Icons.settings_outlined,
-                          onTap: () => openSettings(context, ref),
-                        ),
-                      ),
-                    ],
+    final gridTop = 456.1 * k;
+    final tileHeight = 97.3 * k;
+    final gap = 11.5 * k;
+    final margin = 19.0 * k;
+    final tileWidth = (math.min(width, 460.0) - 2 * margin - 2 * gap) / 3;
+
+    final header = SizedBox(
+      height: gridTop,
+      child: Stack(
+        children: [
+          Positioned(
+            left: side + 16.9 * k,
+            top: 67.2 * k,
+            child: Text(
+              time,
+              textScaler: scale,
+              style: TextStyle(
+                fontFamily: _face,
+                fontSize: timeSize,
+                fontWeight: FontWeight.w400,
+                letterSpacing: -2.2 * k,
+                height: 1,
+                color: _text,
+                shadows: const [
+                  Shadow(
+                    color: Color(0x59000000),
+                    blurRadius: 30,
+                    offset: Offset(0, 4),
                   ),
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: math.max(18, (width - 460) / 2 + 18),
-              ),
-              child: GridView.count(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: EdgeInsets.zero,
-                crossAxisCount: 3,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: ((w - 36 - 20) / 3) / tileHeight,
-                children: [
-                  for (final service in services)
-                    _Tile(
-                      service: service,
-                      address: _addressOf(
-                        settings.primaryOf(service)?.url ?? '',
-                      ),
-                      logo: logo,
-                      height: tileHeight,
-                      onTap: () {
-                        ref.read(homeLastOpenedProvider.notifier).state =
-                            service;
-                        context.go(ServiceRoutes.forService(service));
-                      },
-                    ),
                 ],
               ),
             ),
-          ],
-        );
-      },
+          ),
+          Positioned(
+            left: side + 19.2 * k,
+            top: 178.9 * k,
+            child: Text(
+              date,
+              textScaler: scale,
+              style: TextStyle(
+                fontFamily: _face,
+                fontSize: dateSize,
+                height: 1,
+                color: _text2,
+                shadows: shadow,
+              ),
+            ),
+          ),
+          if (line.isNotEmpty)
+            Positioned(
+              left: side + 19.0 * k,
+              top: 209.6 * k,
+              child: GestureDetector(
+                onTap: () => context.go(ServiceRoutes.stack),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _Dot(
+                      clean: clean,
+                      checking: health.checking > 0,
+                      size: 8 * k,
+                    ),
+                    SizedBox(width: 9 * k),
+                    Text(
+                      line,
+                      textScaler: scale,
+                      style: TextStyle(
+                        fontFamily: _face,
+                        fontSize: stateSize,
+                        height: 1,
+                        color: const Color(0xE0F5F7FF),
+                        shadows: shadow,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          // Settings, where the remote keeps its round power button.
+          Positioned(
+            right: side + 20.0 * k,
+            top: 87.5 * k,
+            child: _RoundGlassButton(
+              size: 55 * k,
+              icon: Icons.settings_outlined,
+              label: 'Settings',
+              onTap: () => openSettings(context, ref),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return ListView(
+      padding: EdgeInsets.only(
+        bottom: FloatingNavBarMetrics.getScrollViewBottomPadding(context),
+      ),
+      children: [
+        header,
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: side + margin),
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            crossAxisCount: 3,
+            mainAxisSpacing: gap,
+            crossAxisSpacing: gap,
+            childAspectRatio: tileWidth / tileHeight,
+            children: [
+              for (final service in services)
+                _Tile(
+                  service: service,
+                  address: _addressOf(settings.primaryOf(service)?.url ?? ''),
+                  k: k,
+                  onTap: () {
+                    ref.read(homeLastOpenedProvider.notifier).state = service;
+                    context.go(ServiceRoutes.forService(service));
+                  },
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _Dot extends StatelessWidget {
-  const _Dot({required this.clean, required this.checking});
+  const _Dot({required this.clean, required this.checking, this.size = 8});
 
   final bool clean;
   final bool checking;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -261,8 +256,8 @@ class _Dot extends StatelessWidget {
         ? const Color(0xFF7CF0A6)
         : const Color(0xFFFFB86B);
     return Container(
-      width: 8,
-      height: 8,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
@@ -276,15 +271,15 @@ class _Tile extends StatefulWidget {
   const _Tile({
     required this.service,
     required this.address,
-    required this.height,
-    required this.logo,
+    required this.k,
     required this.onTap,
   });
 
   final ServiceKey service;
   final String address;
-  final double logo;
-  final double height;
+
+  /// The screen's scale against the remote's 448dp.
+  final double k;
   final VoidCallback onTap;
 
   @override
@@ -297,7 +292,11 @@ class _TileState extends State<_Tile> {
   @override
   Widget build(BuildContext context) {
     final service = widget.service;
+    final k = widget.k;
     const curve = Cubic(.22, .9, .24, 1);
+    const scale = TextScaler.noScaling;
+    final nameSize = 15.4 * k;
+    final addressSize = 9.5 * k;
     return Semantics(
       button: true,
       label: service.title,
@@ -311,67 +310,110 @@ class _TileState extends State<_Tile> {
           scale: _down ? 0.94 : 1,
           duration: const Duration(milliseconds: 220),
           curve: curve,
-          // The remote's tile: glass, a white mark, the name, and here the
-          // address it is reached at, small, under it.
+          // The remote's tile, measured: the logo 40 tall from 14.7 down, the
+          // name's baseline 82.2 down; here the address under it, small.
           child: GlassPanel(
-            radius: 22,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(6, 13, 6, 10),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Icon(
+            radius: 22 * k,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 14.7 * k,
+                  child: Icon(
                     service.icon,
-                    size: widget.address.isEmpty
-                        ? widget.logo
-                        : widget.logo.clamp(0, widget.height - 23 - 26),
+                    size: 40 * k,
                     color: const Color(0xF0F5F7FF),
                   ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        service.shortTitle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontFamily: _face,
-                          fontSize: 13,
-                          height: 1.15,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xEBF5F7FF),
-                          shadows: [
-                            Shadow(
-                              color: Color(0x59000000),
-                              blurRadius: 6,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
+                ),
+                Positioned(
+                  left: 6 * k,
+                  right: 6 * k,
+                  top: (82.2 - 0.927 * 15.8 - 1.9) * k,
+                  child: Text(
+                    service.shortTitle,
+                    textAlign: TextAlign.center,
+                    textScaler: scale,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: _face,
+                      fontSize: nameSize,
+                      height: 1,
+                      fontWeight: FontWeight.w500,
+                      color: const Color(0xEBF5F7FF),
+                      shadows: const [
+                        Shadow(
+                          color: Color(0x59000000),
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
                         ),
-                      ),
-                      // Small, so the tile keeps the remote's height.
-                      if (widget.address.isNotEmpty)
-                        Text(
-                          widget.address,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontFamily: _face,
-                            fontSize: 9,
-                            height: 1.1,
-                            color: _text2,
-                          ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+                if (widget.address.isNotEmpty)
+                  Positioned(
+                    left: 6 * k,
+                    right: 6 * k,
+                    top: (93.0 - 0.927 * 9.5) * k,
+                    child: Text(
+                      widget.address,
+                      textAlign: TextAlign.center,
+                      textScaler: scale,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: _face,
+                        fontSize: addressSize,
+                        height: 1,
+                        color: _text2,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
       ),
     );
   }
+}
+
+/// The remote's round glass button (its power and Santa buttons): here,
+/// Settings.
+class _RoundGlassButton extends StatelessWidget {
+  const _RoundGlassButton({
+    required this.size,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final double size;
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    button: true,
+    label: label,
+    excludeSemantics: true,
+    child: GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: GlassPanel(
+          radius: size / 2,
+          child: Center(
+            child: Icon(icon, size: size * 0.44, color: _text),
+          ),
+        ),
+      ),
+    ),
+  );
 }
 
 /// `nas.home.arpa:8989`: the host and, when it has one, the port.

@@ -299,9 +299,6 @@ class CupolaApp extends ConsumerWidget {
       // system bars in the room's ink (`ThemedSystemBars`). And Android's back
       // claimed for Settings, above every navigator (`SettingsBackClaim`).
       builder: (context, child) {
-        // This fork: the house photo starts below the status bar, as the
-        // remote's does.
-        HouseBackdrop.topInset = MediaQuery.paddingOf(context).top;
         return AppSnapshotCover(
           child: ThemedSystemBars(
             child: AnnouncementHost(
