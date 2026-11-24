@@ -2070,22 +2070,22 @@ RouteBase _branchRootFor(NavTab tab) => switch (tab) {
           // the form, not a level of the hierarchy, and threading a segment
           // through would have every nested settings route grow one it never
           // reads.
-          return SecureScreen(
-            child: ServiceSettingsScreen(
-              service: _settingsServiceOf(state)!,
-              instanceId: state.uri.queryParameters['i'],
-              isNew: state.uri.queryParameters['new'] == '1',
-              initialAccess: AccessKind.byName(
-                state.uri.queryParameters['access'],
-              ),
-              focusAway: state.uri.queryParameters['away'] == '1',
-              foundFrom: state.uri.queryParameters['from'],
-              foundName: state.uri.queryParameters['known'],
-              prefillUrl: state.uri.queryParameters['url'],
-              prefillAccess: state.extra is ConnectionAccess
-                  ? state.extra as ConnectionAccess
-                  : null,
+          // Not a SecureScreen in this fork: the owner takes screenshots of
+          // the connection form. The pairing screens keep theirs.
+          return ServiceSettingsScreen(
+            service: _settingsServiceOf(state)!,
+            instanceId: state.uri.queryParameters['i'],
+            isNew: state.uri.queryParameters['new'] == '1',
+            initialAccess: AccessKind.byName(
+              state.uri.queryParameters['access'],
             ),
+            focusAway: state.uri.queryParameters['away'] == '1',
+            foundFrom: state.uri.queryParameters['from'],
+            foundName: state.uri.queryParameters['known'],
+            prefillUrl: state.uri.queryParameters['url'],
+            prefillAccess: state.extra is ConnectionAccess
+                ? state.extra as ConnectionAccess
+                : null,
           );
         },
         // A service the app does not know is no service's form. It used to

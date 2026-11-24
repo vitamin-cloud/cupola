@@ -80,6 +80,8 @@ void main() {
       '100.64.1.2',
       '100.127.255.1',
       'nas.tail1234.ts.net',
+      'hi.netbird.cloud',
+      'nas.netbird.selfhosted',
     ]) {
       expect(localNetworkHostVerdict(host) == true, isFalse, reason: host);
       expect(UrlUtils.cleartextWarning('http://$host'), isNull, reason: host);
@@ -88,6 +90,8 @@ void main() {
     // Just outside the range, the internet again.
     expect(UrlUtils.cleartextWarning('http://100.128.0.1'), isNotNull);
     expect(UrlUtils.cleartextWarning('http://100.63.255.1'), isNotNull);
+    // A name that only looks like NetBird's is the internet again.
+    expect(UrlUtils.cleartextWarning('http://netbird.cloud.example.com'), isNotNull);
   });
 
   test('https never warns, wherever it goes', () {

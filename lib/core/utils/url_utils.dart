@@ -304,9 +304,13 @@ class UrlUtils {
     return uri.scheme != 'https';
   }
 
-  /// Whether [host] is reached through a Tailscale tunnel: an address in its
-  /// range (100.64.0.0/10, carrier NAT, which no server on the internet
-  /// answers from) or a MagicDNS name (`*.ts.net`).
+  /// Whether [host] is reached through a WireGuard mesh VPN: an address in
+  /// the range Tailscale and NetBird hand out (100.64.0.0/10, carrier NAT,
+  /// which no server on the internet answers from), a Tailscale MagicDNS name
+  /// (`*.ts.net`) or a NetBird peer name (`*.netbird.cloud`, and
+  /// `*.netbird.selfhosted` on a self-hosted management server). NetBird's
+  /// peer names resolve only through its own client: off the VPN they do not
+  /// resolve at all, so nothing is sent.
   ///
   /// WireGuard encrypts the whole way, so `http://` there sends nothing in the
   /// clear: no warning and no refusal. Not a local host for the local-network
@@ -314,6 +318,10 @@ class UrlUtils {
   static bool isTailnetHost(String host) {
     final bare = host.replaceAll('[', '').replaceAll(']', '').toLowerCase();
     if (bare.endsWith('.ts.net')) return true;
+    if (bare.endsWith('.netbird.cloud') ||
+        bare.endsWith('.netbird.selfhosted')) {
+      return true;
+    }
     final address = InternetAddress.tryParse(bare);
     if (address == null || address.type != InternetAddressType.IPv4) {
       return false;
