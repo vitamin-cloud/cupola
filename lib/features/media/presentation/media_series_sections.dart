@@ -122,9 +122,14 @@ class MediaEpisodes extends StatefulWidget {
     required this.initialSeason,
     this.onSearchMissing,
     this.onOpen,
+    this.qualityOf,
   });
 
   final List<MediaSeason> seasons;
+
+  /// Sonarr's quality for an episode on disk (`HDTV-1080p`), for the Status
+  /// column; null when there is no file or it has not been read.
+  final String? Function(MediaEpisode episode)? qualityOf;
 
   /// The season shown first: where the viewer is, else the latest aired.
   final int initialSeason;
@@ -164,11 +169,16 @@ class _MediaEpisodesState extends State<MediaEpisodes> {
           ),
           const SizedBox(height: AppSpacing.md),
         ],
+        // This fork: Sonarr's own arrangement. Newest first; the number,
+        // the title, the air date and the status (the file's quality, or
+        // where it stands) in columns under a header.
         MediaGroup(
           children: [
-            for (final episode in season.episodes)
+            const _EpisodeHeader(),
+            for (final episode in season.episodes.reversed)
               _EpisodeRow(
                 episode,
+                quality: widget.qualityOf?.call(episode),
                 onTap: widget.onOpen == null
                     ? null
                     : () => widget.onOpen!(episode),
@@ -347,12 +357,59 @@ class _SeasonTrackState extends State<_SeasonTrack> {
   }
 }
 
-/// One episode: its number, its title, its word, and a bar while it plays
-/// or downloads. One sentence for a screen reader.
+/// The widths of the episode table's columns.
+abstract final class _Cols {
+  static const double number = 30;
+  static const double date = 82;
+  static const double status = 88;
+}
+
+/// `#  Title  Air Date  Status`, as Sonarr heads its season.
+class _EpisodeHeader extends StatelessWidget {
+  const _EpisodeHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final style = AppType.meta.copyWith(
+      color: CupolaRoom.of(context).inkTertiary,
+    );
+    return ExcludeSemantics(
+      child: Padding(
+        padding: const EdgeInsets.only(
+          top: AppSpacing.sm,
+          bottom: AppSpacing.xs,
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: _Cols.number,
+              child: Text('#', style: style),
+            ),
+            Expanded(child: Text('Title', style: style)),
+            SizedBox(
+              width: _Cols.date,
+              child: Text('Air Date', style: style),
+            ),
+            SizedBox(
+              width: _Cols.status,
+              child: Text('Status', textAlign: TextAlign.end, style: style),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One episode as a row of Sonarr's table: its number, its title, the day it
+/// airs, and its status: the file's quality when it is on disk, how far a
+/// download is, `Missing` when it aired and nothing came, else the bookmark
+/// that says whether Sonarr watches for it. A bar while it downloads or plays.
 class _EpisodeRow extends StatelessWidget {
-  const _EpisodeRow(this.episode, {this.onTap});
+  const _EpisodeRow(this.episode, {this.quality, this.onTap});
 
   final MediaEpisode episode;
+  final String? quality;
 
   /// Opens the episode's sheet.
   final VoidCallback? onTap;
@@ -362,66 +419,143 @@ class _EpisodeRow extends StatelessWidget {
     final room = CupolaRoom.of(context);
     final scheme = Theme.of(context).colorScheme;
     final progress = episode.progress;
+    final record = episode.fromSonarr;
+    final now = DateTime.now();
+    final meta = AppType.meta.weight(FontWeight.w400);
+
+    Widget status() {
+      if (episode.downloading) {
+        return Text(
+          episode.state,
+          textAlign: TextAlign.end,
+          maxLines: 2,
+          style: meta.copyWith(
+            color: statusToneColor(
+              scheme,
+              StatusTone.info,
+              surface: room.ground,
+            ),
+          ),
+        );
+      }
+      if (quality case final q? when q.isNotEmpty) {
+        return Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: room.fillStrong,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              q,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppType.meta
+                  .weight(FontWeight.w600)
+                  .copyWith(color: room.ink, fontSize: 11),
+            ),
+          ),
+        );
+      }
+      if (record == null) {
+        // No Sonarr: the media server's word.
+        return MediaStateWord(
+          episode.state,
+          tone: episode.tone,
+          hollow: episode.tone == StatusTone.neutral,
+        );
+      }
+      if (record.hasFile) {
+        return Text(
+          'Downloaded',
+          textAlign: TextAlign.end,
+          style: meta.copyWith(color: room.inkSecondary),
+        );
+      }
+      if (episode.missing) {
+        return Text(
+          'Missing',
+          textAlign: TextAlign.end,
+          style: meta
+              .weight(FontWeight.w600)
+              .copyWith(
+                color: statusToneColor(
+                  scheme,
+                  StatusTone.error,
+                  surface: room.ground,
+                ),
+              ),
+        );
+      }
+      return Align(
+        alignment: Alignment.centerRight,
+        child: Icon(
+          record.monitored
+              ? Icons.bookmark_border_rounded
+              : Icons.bookmark_remove_outlined,
+          size: 20,
+          color: record.monitored ? room.inkSecondary : room.inkTertiary,
+        ),
+      );
+    }
+
     final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.row),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            width: 40,
-            child: Text(
-              episode.code,
-              style: AppType.meta
-                  .weight(FontWeight.w400)
-                  .copyWith(color: room.inkTertiary),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        episode.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppType.row.copyWith(color: room.ink),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 170),
-                      child: MediaStateWord(
-                        episode.state,
-                        tone: episode.tone,
-                        hollow: episode.tone == StatusTone.neutral,
-                      ),
-                    ),
-                  ],
+          Row(
+            children: [
+              SizedBox(
+                width: _Cols.number,
+                child: Text(
+                  '${episode.number}',
+                  style: AppType.row
+                      .weight(FontWeight.w400)
+                      .copyWith(color: room.inkSecondary),
                 ),
-                if (progress != null) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: LinearProgressIndicator(
-                      value: progress.clamp(0.0, 1.0),
-                      minHeight: 4,
-                      backgroundColor: room.fillTrack,
-                      color: episode.downloading
-                          ? statusToneColor(
-                              scheme,
-                              StatusTone.info,
-                              surface: room.ground,
-                            )
-                          : room.inkSecondary,
-                    ),
-                  ),
-                ],
-              ],
-            ),
+              ),
+              Expanded(
+                child: Text(
+                  episode.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppType.row.copyWith(color: room.ink),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              SizedBox(
+                width: _Cols.date,
+                child: Text(
+                  episodeAirDay(episode.airsAt, now),
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.fade,
+                  style: meta.copyWith(color: room.inkSecondary),
+                ),
+              ),
+              SizedBox(width: _Cols.status, child: status()),
+            ],
           ),
+          if (progress != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: progress.clamp(0.0, 1.0),
+                minHeight: 4,
+                backgroundColor: room.fillTrack,
+                color: episode.downloading
+                    ? statusToneColor(
+                        scheme,
+                        StatusTone.info,
+                        surface: room.ground,
+                      )
+                    : room.inkSecondary,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -441,6 +575,34 @@ class _EpisodeRow extends StatelessWidget {
       child: row,
     );
   }
+}
+
+/// The day an episode airs, as Sonarr's table says it: `Today`, `Tomorrow`,
+/// `Yesterday`, else `Dec 16 2026`; `TBA` with no date.
+String episodeAirDay(DateTime? airsAt, DateTime now) {
+  if (airsAt == null) return 'TBA';
+  final at = airsAt.toLocal();
+  final day = DateTime(at.year, at.month, at.day);
+  final today = DateTime(now.year, now.month, now.day);
+  final diff = day.difference(today).inDays;
+  if (diff == 0) return 'Today';
+  if (diff == 1) return 'Tomorrow';
+  if (diff == -1) return 'Yesterday';
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return '${months[at.month - 1]} ${at.day} ${at.year}';
 }
 
 /// The day [next] airs, as a card or a graph row says it: `Today`,

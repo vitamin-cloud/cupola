@@ -454,6 +454,12 @@ class SonarrService with ArrActivityMixin {
   Future<ArrBulkResult> searchSeriesInBulk(List<int> seriesIds) =>
       bulkEachOf(seriesIds, searchSeries);
 
+  /// Deletes one episode's file from disk (and Sonarr's record of it), as
+  /// Sonarr's own page does from an episode.
+  Future<void> deleteEpisodeFile(int episodeFileId) async {
+    await client.delete('/api/v3/episodefile/$episodeFileId');
+  }
+
   /// Deletes a series from Sonarr.
   Future<void> deleteSeries(
     int seriesId, {

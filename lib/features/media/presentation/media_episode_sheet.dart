@@ -1,5 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+
+import 'package:cupola/core/widgets/app_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cupola/core/app_radius.dart';
@@ -116,6 +118,7 @@ class _MediaEpisodeSheetState extends ConsumerState<MediaEpisodeSheet> {
   /// What the switch said last, until Sonarr is read again.
   final Map<int, bool> _monitored = {};
   bool _searching = false;
+  bool _deleting = false;
 
   MediaEpisode get _episode => _episodes[_index];
 
@@ -285,25 +288,13 @@ class _MediaEpisodeSheetState extends ConsumerState<MediaEpisodeSheet> {
               children: [
                 if (record.episodeFileId case final fileId?)
                   _FileRow(sonarr: sonarr, fileId: fileId, now: now),
-                if (_searchFor(sonarr, episode, now) case final label?)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.row,
-                    ),
-                    child: OutlinedButton.icon(
-                      onPressed: _searching
-                          ? null
-                          : () => _search(sonarr, record.id),
-                      icon: const Icon(Icons.search_rounded, size: 18),
-                      label: Text(label),
-                    ),
-                  ),
-                // Sonarr's own pick passed over: the releases its indexers
-                // have, for this episode alone.
+                // This fork: Interactive Search leads (the releases your
+                // indexers have, to choose from), and Add to queue (Sonarr's
+                // own pick, an automatic search) sits under it.
                 if (!record.isUnairedAt(now))
                   MediaLinkRow(
-                    label: 'Choose a release',
-                    detail: 'Pick one from your indexers',
+                    label: 'Interactive Search',
+                    detail: 'Choose a release from your indexers',
                     onTap: () => showReleaseSearch(
                       context,
                       ref,
@@ -317,6 +308,19 @@ class _MediaEpisodeSheetState extends ConsumerState<MediaEpisodeSheet> {
                       ).stampedWith(sonarr.connection.id),
                     ),
                   ),
+                if (_searchFor(sonarr, episode, now) case final label?)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.row,
+                    ),
+                    child: OutlinedButton.icon(
+                      onPressed: _searching
+                          ? null
+                          : () => _search(sonarr, record.id),
+                      icon: const Icon(Icons.playlist_add_rounded, size: 18),
+                      label: Text(label),
+                    ),
+                  ),
                 MediaSwitchRow(
                   label: 'Monitored',
                   detail: (_monitored[record.id] ?? record.monitored)
@@ -325,6 +329,26 @@ class _MediaEpisodeSheetState extends ConsumerState<MediaEpisodeSheet> {
                   value: _monitored[record.id] ?? record.monitored,
                   onChanged: (value) => _monitor(sonarr, record.id, value),
                 ),
+                // On disk: delete the file, as Sonarr's page does.
+                if ((record.hasFile, record.episodeFileId) case (
+                  true,
+                  final fileId?,
+                ))
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.row,
+                    ),
+                    child: TextButton.icon(
+                      onPressed: _deleting
+                          ? null
+                          : () => _deleteFile(sonarr, fileId),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                      ),
+                      icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                      label: const Text('Delete from server'),
+                    ),
+                  ),
                 if (widget.subtitles?[record.id] case final bazarr?)
                   if (mediaEpisodeSubtitles(bazarr) case final words?)
                     MediaValueRow(
@@ -383,7 +407,7 @@ class _MediaEpisodeSheetState extends ConsumerState<MediaEpisodeSheet> {
   ) {
     final record = episode.fromSonarr!;
     if (record.isUnairedAt(now)) return null;
-    if (!record.hasFile) return 'Search for it';
+    if (!record.hasFile) return 'Add to queue';
     final fileId = record.episodeFileId;
     if (fileId == null) return null;
     final file = ref
@@ -408,8 +432,8 @@ class _MediaEpisodeSheetState extends ConsumerState<MediaEpisodeSheet> {
       null => null,
     };
     return cutoff == null
-        ? 'Search for a better version'
-        : 'Search for $cutoff';
+        ? 'Add a better version to queue'
+        : 'Add $cutoff to queue';
   }
 
   Future<void> _search(MediaEpisodeSonarr sonarr, int episodeId) async {
@@ -430,6 +454,44 @@ class _MediaEpisodeSheetState extends ConsumerState<MediaEpisodeSheet> {
           detail: error,
         );
       }
+    }
+  }
+
+  /// Deletes the episode's file from disk, after asking.
+  Future<void> _deleteFile(MediaEpisodeSonarr sonarr, int fileId) async {
+    final answer = await showAppConfirmDialog(
+      context: context,
+      title: 'Delete this episode?',
+      message:
+          'The file is deleted from disk and ${sonarr.name} forgets it. '
+          'If the episode is monitored, ${sonarr.name} may download it again.',
+      confirmLabel: 'Delete',
+      icon: Icons.delete_outline_rounded,
+    );
+    if (!answer.confirmed || !mounted) return;
+    setState(() => _deleting = true);
+    try {
+      await ref
+          .read(sonarrServiceForProvider(sonarr.connection.id))
+          .deleteEpisodeFile(fileId);
+      ref.invalidate(
+        mediaEpisodeFilesProvider((
+          connectionId: sonarr.connection.id,
+          seriesId: sonarr.seriesId,
+        )),
+      );
+      widget.onChanged();
+      if (!mounted) return;
+      SnackBarHelper.success(context, 'Deleted from ${sonarr.name}');
+      Navigator.of(context).maybePop();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _deleting = false);
+      SnackBarHelper.error(
+        context,
+        'Could not delete it in ${sonarr.name}',
+        detail: error,
+      );
     }
   }
 
