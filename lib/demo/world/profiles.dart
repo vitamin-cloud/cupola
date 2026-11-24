@@ -492,7 +492,7 @@ abstract final class Profiles {
     id: 'P5',
     title: 'Arrs only through Seerr',
     summary:
-        'Seerr and Jellyfin. Seerr knows a Radarr and a Sonarr Cupola has no '
+        'Seerr and Jellyfin. Seerr knows a Radarr and a Sonarr Stack has no '
         'connection to.',
     cases: const {ConfigCase.knownThroughAnother, ConfigCase.notSetUp},
     connections: [WorldConnections.seerr, WorldConnections.jellyfin],

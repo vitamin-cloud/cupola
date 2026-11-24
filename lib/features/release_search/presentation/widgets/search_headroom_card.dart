@@ -183,14 +183,14 @@ class _SearchHeadroomCardState extends ConsumerState<SearchHeadroomCard> {
       ReleaseSearchReach.whileOpen ||
       ReleaseSearchReach.whileOpenSwitchedOff => null,
       ReleaseSearchReach.whileOpenTrustedCert =>
-        "$title's certificate is trusted only inside Cupola, so this search "
-            'runs only while Cupola is open.$noCeiling Installing the '
+        "$title's certificate is trusted only inside Stack, so this search "
+            'runs only while Stack is open.$noCeiling Installing the '
             'certificate on this device lets it run in the background too.',
       ReleaseSearchReach.whileOpenCleartext =>
         // Why, in one clause: the background path cannot refuse a redirect,
         // and over http anyone on the network can inject one to collect the
         // key it carries.
-        'Over plain http this search runs only while Cupola is open: in the '
+        'Over plain http this search runs only while Stack is open: in the '
             "background it could not keep $title's API key safe.$noCeiling "
             'With https it runs in the background too.',
     };
@@ -202,7 +202,7 @@ class _SearchHeadroomCardState extends ConsumerState<SearchHeadroomCard> {
   String _verdict(SearchHeadroom h) {
     return switch (h.gateway) {
       null =>
-        'Run the check to see what sits between Cupola and '
+        'Run the check to see what sits between Stack and '
             '${widget.service.title}, and what it allows.',
       SearchGateway.direct =>
         'Direct connection, nothing between you and '

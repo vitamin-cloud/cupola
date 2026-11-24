@@ -172,7 +172,7 @@ class _PairOfferScreenState extends ConsumerState<PairOfferScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'On the other phone, open Cupola and choose Copy from '
+                      'On the other phone, open Stack and choose Copy from '
                       'another device.',
                       style: theme.textTheme.bodyMedium,
                     ),
@@ -217,7 +217,7 @@ class _PairOfferScreenState extends ConsumerState<PairOfferScreen> {
       PairOfferFailed() => [
         NoticeLine(
           tone: StatusTone.warning,
-          title: "Cupola could not open the code",
+          title: "Stack could not open the code",
           sentence: 'Wait a moment, then make a new code.',
           actions: [
             noticeAction(
@@ -270,7 +270,7 @@ class _PairOfferScreenState extends ConsumerState<PairOfferScreen> {
       if (defaultTargetPlatform == TargetPlatform.macOS) ...[
         const SizedBox(height: AppSpacing.xs),
         Text(
-          'If your Mac asks, allow Cupola to accept incoming connections.',
+          'If your Mac asks, allow Stack to accept incoming connections.',
           textAlign: TextAlign.center,
           style: dim,
         ),

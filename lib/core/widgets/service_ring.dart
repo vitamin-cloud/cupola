@@ -446,7 +446,7 @@ class CupolaMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Image.asset(
-    'assets/brand/cupola_mark.png',
+    'assets/brand/stack_mark.png',
     width: size,
     height: size,
     fit: BoxFit.contain,
@@ -663,12 +663,12 @@ class OnePunchline extends StatelessWidget {
     : _spoken = promise,
       _lines = _promiseLines;
 
-  static const claim = 'A Cupola over your server.';
+  static const claim = 'Your whole stack, in your pocket.';
   static const promise = 'Nothing left in the dark.';
 
   // The breaks carry the words: the dome, then what it stands over; what is
   // promised, then where it no longer is.
-  static const _claimLines = ['A Cupola over', 'your server.'];
+  static const _claimLines = ['Your whole stack,', 'in your pocket.'];
   static const _promiseLines = ['Nothing left', 'in the dark.'];
 
   final String _spoken;

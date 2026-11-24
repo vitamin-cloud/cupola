@@ -768,7 +768,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       if (!mounted) return false;
       SnackBarHelper.error(
         context,
-        "Could not save your services. Retry, and restart Cupola if it "
+        "Could not save your services. Retry, and restart Stack if it "
         'keeps failing.',
       );
       return false;
@@ -785,7 +785,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       if (!mounted) return;
       SnackBarHelper.error(
         context,
-        "Could not finish setup. Retry, and restart Cupola if it keeps "
+        "Could not finish setup. Retry, and restart Stack if it keeps "
         'failing.',
       );
       return;
@@ -896,7 +896,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       if (!mounted) return false;
       SnackBarHelper.error(
         context,
-        "Could not save your services. Retry, and restart Cupola if it "
+        "Could not save your services. Retry, and restart Stack if it "
         'keeps failing.',
       );
       return false;

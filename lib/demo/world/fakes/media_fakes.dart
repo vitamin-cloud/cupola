@@ -2192,7 +2192,7 @@ class EmbyFake extends ServiceFake {
     },
     {
       'Id': 'emby-session-api-key',
-      'Client': 'Cupola',
+      'Client': 'Stack',
       'DeviceName': 'nas',
       'DeviceId': serverId,
       'LastActivityDate': c.ago(const Duration(seconds: 20)),

@@ -125,7 +125,7 @@ class TracearrOwnerNotice {
     TracearrOwnerNoticeKind.singleSignOn,
     tone: StatusTone.info,
     title:
-        "This Tracearr signs in with single sign-on, which Cupola can't use.",
+        "This Tracearr signs in with single sign-on, which Stack can't use.",
     sentence: 'Acknowledge it in Tracearr.',
   );
 

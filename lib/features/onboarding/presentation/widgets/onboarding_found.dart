@@ -1150,7 +1150,7 @@ class _CertificateBlock extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Trust it if this matches the fingerprint on your server. '
-              'Cupola remembers it and tells you if it ever changes.',
+              'Stack remembers it and tells you if it ever changes.',
               style: theme.textTheme.bodySmall!.copyWith(
                 color: scheme.onSurfaceVariant,
               ),

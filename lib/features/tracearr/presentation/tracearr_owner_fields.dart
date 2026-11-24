@@ -160,7 +160,7 @@ class _TracearrOwnerFieldsState extends ConsumerState<TracearrOwnerFields> {
     }
     return [
       Text(
-        'Cupola reads with the key. The owner can also acknowledge and '
+        'Stack reads with the key. The owner can also acknowledge and '
         'dismiss violations.',
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
@@ -253,7 +253,7 @@ class _TracearrOwnerFieldsState extends ConsumerState<TracearrOwnerFields> {
       seerrSignInAction(context, 'Cancel', _flow.cancel),
       const SizedBox(height: AppSpacing.xs),
       Text(
-        "Your password goes only to ${_flow.host}. Cupola doesn't keep it.",
+        "Your password goes only to ${_flow.host}. Stack doesn't keep it.",
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),

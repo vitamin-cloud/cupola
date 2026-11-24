@@ -762,8 +762,8 @@ class _OnboardingWalkState extends State<OnboardingWalk> {
       sentence: 'Not checked from here.',
       lines: [
         away
-            ? "Cupola tries it when the home address doesn't answer."
-            : 'Cupola tries it first, and uses it whenever it answers.',
+            ? "Stack tries it when the home address doesn't answer."
+            : 'Stack tries it first, and uses it whenever it answers.',
         _addressLine(away: away),
       ],
     );

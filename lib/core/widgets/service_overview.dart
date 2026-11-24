@@ -1373,7 +1373,7 @@ class ServiceOverviewOnlyAtHome extends ConsumerWidget {
       // On the page column, its glyph under the identity line's first fact.
       child: InlineErrorRetry.flush(
         message:
-            '$name has no address away, so Cupola reaches it only on your '
+            '$name has no address away, so Stack reaches it only on your '
             'home Wi-Fi.',
         error: ServiceOnlyAtHome(service),
         service: service,

@@ -209,7 +209,7 @@ Future<void> _openDonation(BuildContext context) async {
   if (DonationService.usesIAP) {
     final useFallback = await AppBottomSheet.show<bool>(
       context: context,
-      title: 'Support Cupola',
+      title: 'Support Stack',
       icon: Icons.favorite_rounded,
       builder: (_) => const DonationSheet(),
     );

@@ -25,7 +25,7 @@ library;
 /// Not derived from the package name (`cupola`) or the bundle id: those are
 /// identifiers that happen to look like the name today, and the app was called
 /// Seekarr until recently.
-const String kAppName = 'Cupola';
+const String kAppName = 'Stack';
 
 /// The user-facing version, mirroring `pubspec.yaml`'s `version:` with the
 /// build number dropped.

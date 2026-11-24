@@ -10,7 +10,7 @@
 /// No logo is shown for any of the three: TrueNAS limits fair use to text and
 /// Unraid forbids its marks in a third-party interface without a licence.
 const String trademarkNotice =
-    'Cupola is an independent project. It is not affiliated with, endorsed or '
+    'Stack is an independent project. It is not affiliated with, endorsed or '
     'sponsored by the makers of the services it connects to, whose names are '
     'used only to identify them.\n\n'
     'Plex and Plex Media Server are trademarks of Plex and used under a '

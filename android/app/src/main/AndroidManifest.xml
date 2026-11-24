@@ -23,8 +23,8 @@
     <application
         android:label="Stack"
         android:name="${applicationName}"
-        android:icon="@mipmap/cupola_icon"
-        android:roundIcon="@mipmap/cupola_icon_round"
+        android:icon="@mipmap/stack_icon"
+        android:roundIcon="@mipmap/stack_icon_round"
         android:networkSecurityConfig="@xml/network_security_config"
         android:fullBackupContent="false"
         android:dataExtractionRules="@xml/data_extraction_rules"

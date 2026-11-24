@@ -46,7 +46,7 @@ const String kPlexDeviceName = kAppName;
 /// Plex forwards this string to the player, where the viewer sees it as the
 /// explanation for their stream stopping. It is therefore an API payload rather
 /// than app chrome, which is why it lives here and not in a widget.
-const String kPlexTerminationReason = 'Stopped from Cupola';
+const String kPlexTerminationReason = 'Stopped from Stack';
 
 /// Poster aspect used when asking Plex's photo transcoder to resize.
 ///

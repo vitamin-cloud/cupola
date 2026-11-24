@@ -171,7 +171,7 @@ MediaRowView? mediaRowView(
         state: status.label,
         tone: status.tone,
         hollow: status.tone == StatusTone.neutral,
-        action: 'Add $name to Cupola',
+        action: 'Add $name to Stack',
         way: MediaRowWay.add,
       );
     }(),
@@ -198,7 +198,7 @@ MediaRowView? mediaRowView(
             : status.label,
         tone: status.tone,
         hollow: status.tone == StatusTone.neutral,
-        action: 'Add ${server.title} to Cupola',
+        action: 'Add ${server.title} to Stack',
         way: MediaRowWay.add,
       );
     }(),

@@ -272,7 +272,7 @@ class _SeerrIssueThreadScreenState
         : const <IssueFile>[];
 
     final readers = operator
-        ? '${reporter ?? 'The reporter'} reads replies in Seerr, or in Cupola.'
+        ? '${reporter ?? 'The reporter'} reads replies in Seerr, or in Stack.'
         : others.isEmpty
         ? 'Whoever runs the server sees what you add.'
         : '${other ?? 'Whoever runs the server'} sees your reply.';

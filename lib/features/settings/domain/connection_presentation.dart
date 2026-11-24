@@ -333,7 +333,7 @@ String? cleartextRefusal(
   final credential = !service.usesApiKey
       ? 'password'
       : (service == ServiceKey.plex ? 'token' : 'key');
-  return "Cupola doesn't send your $credential over plain http across the "
+  return "Stack doesn't send your $credential over plain http across the "
       'internet. ${optional ? 'Use its https address, or leave this empty.' : 'Use its https address.'}';
 }
 
@@ -402,7 +402,7 @@ ServerVersionNote? describeServerVersion(ServiceKey service, String? version) {
     // would put a caveat on a working server.
     if (parsed != null && !parsed.isSupported) {
       return ServerVersionNote(
-        'Running $reported. Cupola supports SCALE $kTrueNasMinVersion or '
+        'Running $reported. Stack supports SCALE $kTrueNasMinVersion or '
         'newer, some sections will be unavailable.',
         isWarning: true,
       );

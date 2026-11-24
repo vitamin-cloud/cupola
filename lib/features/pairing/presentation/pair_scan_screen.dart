@@ -142,7 +142,7 @@ class _PairScanScreenState extends State<PairScanScreen> {
           liveRegion: true,
           child: Text(
             _notOurs
-                ? 'This code is not from Cupola. On the other device, open '
+                ? 'This code is not from Stack. On the other device, open '
                       'Settings › Set up another device.'
                 : 'Point the camera at the code on the other device.',
             textAlign: TextAlign.center,
@@ -180,7 +180,7 @@ class _CameraUnavailable extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               Text(
                 refused
-                    ? 'Allow the camera for Cupola in Settings, or go back '
+                    ? 'Allow the camera for Stack in Settings, or go back '
                           'and paste the link from the other device.'
                     : 'The camera could not start. Go back and paste the '
                           'link from the other device.',

@@ -108,8 +108,8 @@ class TrueNasInsecureTransportException extends TrueNasException
   /// headline in its own title prints beneath it.
   static const explanation =
       'TrueNAS 25.04 and later revoke an API key that arrives over http://, '
-      'so Cupola did not send it. Change the address to https://; a '
-      'self-signed certificate works, and Cupola offers to trust it when you '
+      'so Stack did not send it. Change the address to https://; a '
+      'self-signed certificate works, and Stack offers to trust it when you '
       'test the connection.';
 
   @override

@@ -259,7 +259,7 @@ class SeerrSignInNotice {
     SeerrSignInNoticeKind.plexDidNotAnswer,
     tone: StatusTone.error,
     title: 'Plex did not answer',
-    sentence: "Cupola could not reach plex.tv from this device.",
+    sentence: "Stack could not reach plex.tv from this device.",
     retryHelps: true,
   );
 

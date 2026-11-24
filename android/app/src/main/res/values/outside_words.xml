@@ -21,7 +21,7 @@
     <string name="outside_requests_description" translatable="false">What you asked for, and when it is ready.</string>
 
     <!-- No file yet: the app has not run since the widget was added. -->
-    <string name="outside_no_file" translatable="false">Open Cupola to fill this in.</string>
+    <string name="outside_no_file" translatable="false">Open Stack to fill this in.</string>
 
     <!-- A file, but nothing in it for this widget: a requester has no calendar
          and no queue, an operator has no requests of his own, and a calendar no

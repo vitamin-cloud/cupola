@@ -140,9 +140,9 @@ class SettingsConnectionsScreen extends ConsumerWidget {
                   : 'Add a service',
               showChevron: false,
               subtitle: available.isEmpty
-                  ? 'All ${ServiceKey.values.length} services Cupola supports '
+                  ? 'All ${ServiceKey.values.length} services Stack supports '
                         'have an address saved.'
-                  : 'Cupola talks straight to your instance. Nothing is stored '
+                  : 'Stack talks straight to your instance. Nothing is stored '
                         'anywhere but this device.',
             ),
             if (available.isNotEmpty) ...[

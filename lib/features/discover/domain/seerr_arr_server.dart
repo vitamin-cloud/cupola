@@ -366,7 +366,7 @@ class SeerrApproveTarget {
       final name = server.name.isEmpty ? "Seerr's $_kind" : server.name;
       // "Connected" is on the brand book's Never list; a connection is
       // the word Settings uses for what Cupola has.
-      return '$title goes to $name and starts downloading. Cupola has no '
+      return '$title goes to $name and starts downloading. Stack has no '
           'connection to that server.';
     }
     if (serversRead) {

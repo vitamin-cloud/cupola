@@ -61,7 +61,7 @@ bool duplicatesCredentialHeader(ServiceKey service, String name) {
 
 /// The line under a custom header that duplicates [service]'s credential.
 String credentialHeaderClash(ServiceKey service) =>
-    "Cupola already sends ${service.title}'s ${refusedCredentialOf(service)}. "
+    "Stack already sends ${service.title}'s ${refusedCredentialOf(service)}. "
     'Move it to the ${service.credentialLabel} field?';
 
 /// What is wrong with the custom header name [name] for [service], or null.
@@ -80,7 +80,7 @@ String? customHeaderNameProblem(
   if (duplicatesCredentialHeader(service, trimmed)) return null;
   if (isReservedAccessHeader(trimmed) ||
       service.ownHeaders.contains(trimmed.toLowerCase())) {
-    return 'Cupola sets this header itself';
+    return 'Stack sets this header itself';
   }
   final lower = trimmed.toLowerCase();
   if (earlier.any((other) => other.trim().toLowerCase() == lower)) {

@@ -193,7 +193,7 @@ class SeerrSignInSteps extends ConsumerWidget {
         const SizedBox(height: AppSpacing.sm),
       ],
       Text(
-        "Your password goes only to ${flow.host}. Cupola doesn't keep it.",
+        "Your password goes only to ${flow.host}. Stack doesn't keep it.",
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
@@ -271,7 +271,7 @@ class SeerrSignInSteps extends ConsumerWidget {
       Text('Finish signing in with Plex', style: _heading(theme)),
       const SizedBox(height: AppSpacing.xs),
       Text(
-        'Approve Cupola on the Plex page, then come back here.',
+        'Approve Stack on the Plex page, then come back here.',
         style: theme.textTheme.bodyMedium,
       ),
       const SizedBox(height: AppSpacing.md),

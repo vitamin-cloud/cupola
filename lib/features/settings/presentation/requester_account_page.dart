@@ -152,7 +152,7 @@ class RequesterAccountPage extends ConsumerWidget {
       icon: Icons.link_off_rounded,
       title: 'Remove this server?',
       message:
-          'Cupola signs you out and forgets its address. Your requests stay '
+          'Stack signs you out and forgets its address. Your requests stay '
           'on the server.',
       confirmLabel: 'Remove this server',
     );

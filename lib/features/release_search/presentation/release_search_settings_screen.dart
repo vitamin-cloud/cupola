@@ -78,8 +78,8 @@ class _ReleaseSearchSettingsScreenState
       SnackBarHelper.error(
         context,
         ReleaseSearchNotifications.platformSupported
-            ? 'Notifications are turned off for Cupola in system settings.'
-            : 'Cupola cannot show notifications on this platform.',
+            ? 'Notifications are turned off for Stack in system settings.'
+            : 'Stack cannot show notifications on this platform.',
       );
     }
   }
@@ -263,7 +263,7 @@ class _MasterRow extends StatelessWidget {
     const title = 'Background search';
     final subtitle = enabled
         ? 'A search keeps running after you leave the app.'
-        : 'Searches end when you leave Cupola. Turn on to let them finish on '
+        : 'Searches end when you leave Stack. Turn on to let them finish on '
               'their own.';
 
     return SettingsSwitchRow(
@@ -292,7 +292,7 @@ class _DisclosureBlock extends StatelessWidget {
 
   /// The same sentence on both platforms, because the fact is the same one.
   static const headline =
-      'While Cupola is suspended, the system runs the search on its behalf, '
+      'While Stack is suspended, the system runs the search on its behalf, '
       'so the request, including this service\'s admin API key, sits in system '
       'storage while the task runs.';
 
@@ -304,7 +304,7 @@ class _DisclosureBlock extends StatelessWidget {
       return "The system's working copy never leaves this device and is deleted "
           'when the search ends, after '
           '${kBackgroundSearchResourceTimeout.inMinutes} minutes at the latest. '
-          'If iOS closes Cupola before it can collect a result, that result '
+          'If iOS closes Stack before it can collect a result, that result '
           'waits, key included, in the app\'s preferences until the next '
           'launch, and preferences are part of device backups: an encrypted '
           'Finder backup, or iCloud with Advanced Data Protection, covers that '
@@ -312,7 +312,7 @@ class _DisclosureBlock extends StatelessWidget {
           'clears the stored records.';
     }
     return "The system's copies live in app-private storage that is excluded "
-        'from every backup, reading them takes a rooted device. Cupola clears '
+        'from every backup, reading them takes a rooted device. Stack clears '
         'finished records at every launch. Turning this off cancels running '
         'background searches and clears the stored records right away.';
   }
@@ -383,7 +383,7 @@ class _DesktopStatusCard extends StatelessWidget {
   const _DesktopStatusCard();
 
   static const message =
-      'Searches keep running while Cupola is open, desktop never suspends the '
+      'Searches keep running while Stack is open, desktop never suspends the '
       'app, so nothing is handed to the system and nothing is written to '
       'system storage.';
 
@@ -476,10 +476,10 @@ class _NotifyRow extends StatelessWidget {
       return 'Not needed here, the app keeps running';
     }
     if (foregroundOnlyServices.isEmpty) {
-      return 'Only when Cupola is not in front of you';
+      return 'Only when Stack is not in front of you';
     }
     final names = foregroundOnlyServices.map((s) => s.title).join(', ');
-    return 'Only when Cupola is not in front of you, for $names, that '
+    return 'Only when Stack is not in front of you, for $names, that '
         "includes a search stopping because it could not keep running in the "
         'background';
   }
@@ -498,7 +498,7 @@ class _NotifyRow extends StatelessWidget {
       true => 'System permission: granted',
       false =>
         isIOS
-            ? 'Blocked in Settings › Notifications › Cupola'
+            ? 'Blocked in Settings › Notifications › Stack'
             : "Blocked in your system's notification settings",
       null => null,
     };
@@ -592,25 +592,25 @@ class _LimitsCard extends StatelessWidget {
           ),
           line(
             backgroundActive
-                ? 'A search keeps going when you switch apps, but if Cupola is '
+                ? 'A search keeps going when you switch apps, but if Stack is '
                       'closed while it waits, by you or by the system reclaiming '
                       'memory, the outcome is lost: no notification, and nothing '
                       'under Activity. Searching again is the only recovery.'
-                : 'A search runs as long as Cupola is running. Leaving the app '
+                : 'A search runs as long as Stack is running. Leaving the app '
                       'ends it.',
           ),
           if (androidCeilingApplies)
             line(
               'Android stops background work after '
               '${BackgroundReleaseSearchTransport.androidCeiling.inMinutes} '
-              'minutes. A longer search needs Cupola open, where there is no '
+              'minutes. A longer search needs Stack open, where there is no '
               'ceiling.',
             ),
           if (pinnedServices.isNotEmpty)
             line(
               '${pinnedServices.map((s) => s.title).join(', ')} '
               '${pinnedServices.length == 1 ? 'uses' : 'use'} a certificate '
-              "trusted only inside Cupola, so ${pinnedServices.length == 1 ? 'its' : 'their'} "
+              "trusted only inside Stack, so ${pinnedServices.length == 1 ? 'its' : 'their'} "
               'searches run in the foreground instead of the background, see '
               "that service's connection in Settings for how to restore it.",
             ),
@@ -636,7 +636,7 @@ class _LimitsCard extends StatelessWidget {
             ),
           line(
             'Nothing is searched on a server of ours, there is not one. Your '
-            'own instances do the work, and what Cupola measures about them '
+            'own instances do the work, and what Stack measures about them '
             'never leaves this device.',
           ),
         ],

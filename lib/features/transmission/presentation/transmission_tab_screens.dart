@@ -128,7 +128,7 @@ class _TransmissionLabelsScreenState
                     ServiceKey.transmission,
                     session.error,
                     consequence:
-                        'Cupola cannot tell whether it can change labels, '
+                        'Stack cannot tell whether it can change labels, '
                         'and editing them is off',
                   ),
                   error: session.error,

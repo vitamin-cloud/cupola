@@ -212,10 +212,9 @@ flutter:
         - asset: assets/fonts/CupolaServices.otf
 
   assets:
-    # The product mark: the Cupola seen from above, with six lit window panes on the
-    # hexagon's edge midpoints, around the central circular window. Rendered from
-    # `assets/brand/cupola_mark.svg`, which is the vector source of record.
-    - assets/brand/cupola_mark.png
+    # The product mark: this fork's ("Stack") neon pirate ship in a circle, made by
+    # scripts/stack_icon.py from the owner's artwork.
+    - assets/brand/stack_mark.png
     # The house at night behind every room: the owner's own photo, from the
     # Living Room Remote (`lib/core/house_backdrop.dart`).
     - assets/backdrop/house.jpg

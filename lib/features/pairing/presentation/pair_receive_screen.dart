@@ -254,9 +254,9 @@ class _PairReceiveScreenState extends ConsumerState<PairReceiveScreen> {
     return [
       Text(
         _pastesTheLink
-            ? 'On the device that has Cupola set up, open Settings › Set up '
+            ? 'On the device that has Stack set up, open Settings › Set up '
                   'another device, copy its link and paste it here.'
-            : 'On the device that has Cupola set up, open Settings › Set up '
+            : 'On the device that has Stack set up, open Settings › Set up '
                   'another device, then scan its code.',
         style: theme.textTheme.bodyMedium,
       ),

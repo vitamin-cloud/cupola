@@ -522,7 +522,7 @@ class _ServerRows extends StatelessWidget {
             // qualifier arriving before the thing it qualifies, which is the
             // exact failure the spoken order below exists to prevent.
             value: 'Owner only',
-            label: 'Plex Home\u00A0· Cupola reads the owner’s watch state',
+            label: 'Plex Home\u00A0· Stack reads the owner’s watch state',
           ),
       ],
     );

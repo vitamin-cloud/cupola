@@ -64,8 +64,8 @@ class TrueNasSystemApi extends TrueNasApiBase {
   Future<dynamic> sendTestMail(Map<String, dynamic>? config) =>
       client.callJob('mail.send', [
         {
-          'subject': 'Cupola test email',
-          'text': 'This is a test email from Cupola.',
+          'subject': 'Stack test email',
+          'text': 'This is a test email from Stack.',
         },
         ?config,
       ]);
@@ -95,13 +95,13 @@ class TrueNasSystemApi extends TrueNasApiBase {
   // lands in the host's own shutdown log, so it says which app asked rather
   // than leaving an unexplained reboot in the audit trail.
 
-  Future<void> shutdown({String reason = 'Requested from Cupola'}) =>
+  Future<void> shutdown({String reason = 'Requested from Stack'}) =>
       client.call('system.shutdown', [
         reason,
         {'delay': 0},
       ]);
 
-  Future<void> reboot({String reason = 'Requested from Cupola'}) =>
+  Future<void> reboot({String reason = 'Requested from Stack'}) =>
       client.call('system.reboot', [
         reason,
         {'delay': 0},

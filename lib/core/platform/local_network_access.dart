@@ -168,14 +168,14 @@ abstract final class LocalNetworkPermission {
   /// are what makes the button's destination predictable.
   static String get remedy => switch (defaultTargetPlatform) {
     TargetPlatform.iOS =>
-      'Turn on Local Network for Cupola in Settings › Privacy & Security › '
+      'Turn on Local Network for Stack in Settings › Privacy & Security › '
           'Local Network, then test again.',
     TargetPlatform.macOS =>
-      'Turn on Cupola under System Settings › Privacy & Security › Local '
+      'Turn on Stack under System Settings › Privacy & Security › Local '
           'Network, then test again.',
     TargetPlatform.android =>
-      "Allow Cupola to reach your local network in Android's app permissions, "
+      "Allow Stack to reach your local network in Android's app permissions, "
           'then test again.',
-    _ => 'Allow Cupola to reach your local network, then test again.',
+    _ => 'Allow Stack to reach your local network, then test again.',
   };
 }

@@ -69,7 +69,7 @@ class _SettingsNotificationsScreenState
     if (!granted && mounted) {
       SnackBarHelper.error(
         context,
-        'Notifications are turned off for Cupola in system settings.',
+        'Notifications are turned off for Stack in system settings.',
       );
     }
   }
@@ -121,9 +121,9 @@ class _SettingsNotificationsScreenState
                 tone: StatusTone.warning,
                 title: 'Notifications are blocked',
                 sentence: ios
-                    ? 'iOS Settings has notifications off for Cupola, so '
+                    ? 'iOS Settings has notifications off for Stack, so '
                           'these switches cannot reach you.'
-                    : 'Android has notifications off for Cupola, so these '
+                    : 'Android has notifications off for Stack, so these '
                           'switches cannot reach you.',
                 actions: [
                   noticeAction(
@@ -186,16 +186,16 @@ class _SettingsNotificationsScreenState
               child: Text(
                 [
                   ios
-                      ? 'Cupola checks in the background when iOS allows it, '
+                      ? 'Stack checks in the background when iOS allows it, '
                             'which can be hours apart.'
-                      : 'Cupola checks about every 15 minutes. Android may '
+                      : 'Stack checks about every 15 minutes. Android may '
                             'wait longer while the phone is idle.',
                   if (!requester)
                     'A service that is only out of reach never sends one.',
                   // Tracearr never stops watching; Cupola only reads when
                   // the system wakes it, so a violation can wait for that.
                   if (flagged)
-                    'Tracearr watches around the clock, but Cupola reads '
+                    'Tracearr watches around the clock, but Stack reads '
                         'what it flagged only when the phone wakes it.',
                 ].join(' '),
                 style: note,

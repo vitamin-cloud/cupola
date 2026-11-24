@@ -845,19 +845,19 @@ String failureHeadline(
   ServiceFailureReason.sessionEnded => 'Signed out of $subject',
   ServiceFailureReason.onlyAtHome => '$subject only works at home',
   ServiceFailureReason.secretUnread =>
-    "Cupola could not read $subject's saved ${_secretNoun(credential)}",
+    "Stack could not read $subject's saved ${_secretNoun(credential)}",
   ServiceFailureReason.csrfRefused =>
     "$subject refused the request's security token",
   ServiceFailureReason.timeout =>
     '$subject was reached but did not reply in time',
   ServiceFailureReason.tls =>
-    '$subject has a certificate Cupola does not trust',
+    '$subject has a certificate Stack does not trust',
   ServiceFailureReason.plainHttp => '$subject answered in plain http',
   ServiceFailureReason.noSecureConnection =>
     '$subject did not open a secure connection',
   ServiceFailureReason.notFound => '$subject is not at this address',
   ServiceFailureReason.redirected =>
-    '$subject answered with a redirect Cupola will not follow',
+    '$subject answered with a redirect Stack will not follow',
   ServiceFailureReason.accessGateway => switch (gateway) {
     null => 'Something in front of $subject answered instead of it',
     AccessGatewayAnswer(kind: AccessGatewayKind.cloudflareAccess) =>
@@ -873,11 +873,11 @@ String failureHeadline(
   },
   ServiceFailureReason.serverError => '$subject answered with an error',
   ServiceFailureReason.invalidResponse =>
-    '$subject answered with something Cupola cannot read',
+    '$subject answered with something Stack cannot read',
   ServiceFailureReason.insecureTransport =>
     '$subject needs an https:// address',
   ServiceFailureReason.localNetworkBlocked =>
-    'This device is keeping Cupola off the local network',
+    'This device is keeping Stack off the local network',
   ServiceFailureReason.unknown => 'The request to $subject did not complete',
 };
 
@@ -909,20 +909,20 @@ String? failureGroupHeadline(
   ServiceFailureReason.timeout =>
     '$subjects were reached but did not reply in time',
   ServiceFailureReason.tls =>
-    '$subjects have certificates Cupola does not trust',
+    '$subjects have certificates Stack does not trust',
   ServiceFailureReason.plainHttp => '$subjects answered in plain http',
   ServiceFailureReason.noSecureConnection =>
     '$subjects did not open secure connections',
   ServiceFailureReason.notFound => '$subjects are not at their addresses',
   ServiceFailureReason.redirected =>
-    '$subjects answered with redirects Cupola will not follow',
+    '$subjects answered with redirects Stack will not follow',
   ServiceFailureReason.serverError => '$subjects answered with an error',
   ServiceFailureReason.invalidResponse =>
-    '$subjects answered with something Cupola cannot read',
+    '$subjects answered with something Stack cannot read',
   ServiceFailureReason.insecureTransport => '$subjects need https:// addresses',
   // Said of the device, not of any of them: once is enough.
   ServiceFailureReason.localNetworkBlocked =>
-    'This device is keeping Cupola off the local network',
+    'This device is keeping Stack off the local network',
   ServiceFailureReason.unknown => 'The requests to $subjects did not complete',
   ServiceFailureReason.secretUnread ||
   ServiceFailureReason.csrfRefused ||
@@ -1165,7 +1165,7 @@ String connectionFailureSentence(
     ServiceFailureReason.sessionEnded =>
       'Sign in again to keep asking for movies and series.',
     ServiceFailureReason.onlyAtHome =>
-      '${subject ?? 'It'} has no address away, so Cupola reaches it only on '
+      '${subject ?? 'It'} has no address away, so Stack reaches it only on '
           'your home Wi-Fi.',
     ServiceFailureReason.secretUnread =>
       "${secureStoreName()} didn't hand it over.",
@@ -1173,7 +1173,7 @@ String connectionFailureSentence(
     ServiceFailureReason.notFound =>
       'Something answered, but the API is not at this address.',
     ServiceFailureReason.redirected =>
-      'The server answered with a redirect Cupola will not follow.',
+      'The server answered with a redirect Stack will not follow.',
     ServiceFailureReason.accessGateway => accessGatewaySentence(
       accessGatewayOf(error),
       subject: subject,
@@ -1181,13 +1181,13 @@ String connectionFailureSentence(
     ServiceFailureReason.serverError =>
       'The server answered with an error of its own. Its logs will say why.',
     ServiceFailureReason.invalidResponse =>
-      'Something answered, but not with anything Cupola can read. A reverse '
+      'Something answered, but not with anything Stack can read. A reverse '
           'proxy page at this address is the usual cause.',
     ServiceFailureReason.insecureTransport =>
-      'The address starts with http://, so Cupola did not send the key over '
+      'The address starts with http://, so Stack did not send the key over '
           'it. Change it to https://.',
     ServiceFailureReason.localNetworkBlocked =>
-      'This device is blocking Cupola from reaching the local network.',
+      'This device is blocking Stack from reaching the local network.',
     ServiceFailureReason.unknown => 'The request did not complete.',
   };
 }
@@ -1212,15 +1212,15 @@ String accessGatewaySentence(AccessGatewayAnswer? gateway, {String? subject}) {
           ? 'Add a Service Auth policy for it on '
                 '${host.isEmpty ? 'the application' : host}, or make a new '
                 'token if it expired.'
-          : '$opening is behind Cloudflare Access. Cupola needs a service '
+          : '$opening is behind Cloudflare Access. Stack needs a service '
                 'token to reach it.',
     AccessGatewayAnswer(kind: AccessGatewayKind.signInPage) =>
-      'Something in front of $who asks for a sign-in that Cupola cannot '
+      'Something in front of $who asks for a sign-in that Stack cannot '
           'complete.',
     AccessGatewayAnswer(kind: AccessGatewayKind.passwordPrompt) =>
       gateway.credentialsSent
           ? 'Something in front of $who asked for a username and password, '
-                'and refused the ones Cupola sent.'
+                'and refused the ones Stack sent.'
           : 'Something in front of $who asks for a username and password.',
   };
 }

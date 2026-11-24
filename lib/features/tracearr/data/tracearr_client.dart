@@ -187,7 +187,7 @@ class TracearrTooOld implements Exception, HasFailureReason, HasFailureDetail {
 
   @override
   String get failureDetail =>
-      'Tracearr $found is older than the public API Cupola reads. Install '
+      'Tracearr $found is older than the public API Stack reads. Install '
       'Tracearr $kTracearrMinVersion or newer.';
 
   @override

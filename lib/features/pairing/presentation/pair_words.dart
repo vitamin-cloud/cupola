@@ -163,7 +163,7 @@ extension PairReceiveFailureWords on PairReceiveFailure {
   PairNotice get notice => switch (this) {
     PairReceiveFailure.unreachable => const PairNotice(
       tone: StatusTone.error,
-      headline: "Cupola could not reach the other device",
+      headline: "Stack could not reach the other device",
       sentence: 'Both need to be on the same Wi-Fi.',
       fillsStartAgain: false,
     ),
@@ -175,14 +175,14 @@ extension PairReceiveFailureWords on PairReceiveFailure {
     ),
     PairReceiveFailure.unreadable => const PairNotice(
       tone: StatusTone.warning,
-      headline: "Cupola could not read what the other device sent",
+      headline: "Stack could not read what the other device sent",
       sentence: 'Make a new code on the other device.',
       fillsStartAgain: true,
     ),
     PairReceiveFailure.newer => const PairNotice(
       tone: StatusTone.warning,
-      headline: 'This came from a newer Cupola',
-      sentence: 'Update Cupola on this device, then make a new code.',
+      headline: 'This came from a newer Stack',
+      sentence: 'Update Stack on this device, then make a new code.',
       fillsStartAgain: true,
     ),
     PairReceiveFailure.notWhole => const PairNotice(
@@ -193,8 +193,8 @@ extension PairReceiveFailureWords on PairReceiveFailure {
     ),
     PairReceiveFailure.notSaved => const PairNotice(
       tone: StatusTone.warning,
-      headline: 'Cupola could not save these services',
-      sentence: 'Retry, and restart Cupola if it keeps failing.',
+      headline: 'Stack could not save these services',
+      sentence: 'Retry, and restart Stack if it keeps failing.',
       fillsStartAgain: false,
     ),
   };
@@ -208,7 +208,7 @@ extension PairInviteFailureWords on PairReceiveFailure {
   PairNotice get inviteNotice => switch (this) {
     PairReceiveFailure.unreachable => const PairNotice(
       tone: StatusTone.error,
-      headline: 'Cupola could not reach the other device',
+      headline: 'Stack could not reach the other device',
       sentence: 'Both need to be on the same Wi-Fi.',
       fillsStartAgain: false,
     ),
@@ -220,20 +220,20 @@ extension PairInviteFailureWords on PairReceiveFailure {
     ),
     PairReceiveFailure.unreadable => const PairNotice(
       tone: StatusTone.warning,
-      headline: 'Cupola could not read the invite',
+      headline: 'Stack could not read the invite',
       sentence: 'Ask for a new code.',
       fillsStartAgain: false,
     ),
     PairReceiveFailure.newer => const PairNotice(
       tone: StatusTone.warning,
-      headline: 'This came from a newer Cupola',
-      sentence: 'Update Cupola on this device, then ask for a new code.',
+      headline: 'This came from a newer Stack',
+      sentence: 'Update Stack on this device, then ask for a new code.',
       fillsStartAgain: false,
     ),
     PairReceiveFailure.notSaved => const PairNotice(
       tone: StatusTone.warning,
-      headline: 'Cupola could not save the invite',
-      sentence: 'Ask for a new code, and restart Cupola if it keeps failing.',
+      headline: 'Stack could not save the invite',
+      sentence: 'Ask for a new code, and restart Stack if it keeps failing.',
       fillsStartAgain: false,
     ),
     PairReceiveFailure.notWhole => notice,
@@ -267,8 +267,8 @@ List<String> pairPlanNotes(PairPlan plan) => [
       '${pairSubject(c)} arrives without its ${pairSecretNamed(c, secret)}. '
           "Paste it here once it's added.",
   if (plan.unknown == 1)
-    "1 service this version of Cupola doesn't know stays behind.",
+    "1 service this version of Stack doesn't know stays behind.",
   if (plan.unknown > 1)
-    "${plan.unknown} services this version of Cupola doesn't know stay "
+    "${plan.unknown} services this version of Stack doesn't know stay "
         'behind.',
 ];

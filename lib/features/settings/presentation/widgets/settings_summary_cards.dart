@@ -360,7 +360,7 @@ class _BackgroundSearchSummaryCard extends ConsumerWidget {
           const _NoteRow(
             icon: Icons.notifications_off_rounded,
             title: 'Notifications are blocked',
-            subtitle: 'Turned off for Cupola in system settings.',
+            subtitle: 'Turned off for Stack in system settings.',
             tone: StatusTone.warning,
           ),
         for (final entry in _foregroundOnly(ref).entries)
@@ -369,10 +369,10 @@ class _BackgroundSearchSummaryCard extends ConsumerWidget {
             title: joinServiceNames(entry.value),
             subtitle: switch (entry.key) {
               ReleaseSearchReach.whileOpenTrustedCert =>
-                'Searches run while Cupola is open, the certificate is '
+                'Searches run while Stack is open, the certificate is '
                     'trusted only inside the app.',
               _ =>
-                'Searches run while Cupola is open, the address is '
+                'Searches run while Stack is open, the address is '
                     'cleartext.',
             },
           ),

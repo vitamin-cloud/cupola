@@ -151,7 +151,7 @@ class _AdvancedEditorState extends ConsumerState<_AdvancedEditor> {
       message:
           'This goes live the moment nginx reloads. If the block does not '
           'parse, $domain stops answering until you come back and fix it. No '
-          'other host is affected. Cupola does not check Nginx syntax. Type the '
+          'other host is affected. Stack does not check Nginx syntax. Type the '
           'domain to save.',
       phrase: domain,
       confirmLabel: 'Save and reload',
@@ -248,7 +248,7 @@ class _AdvancedEditorState extends ConsumerState<_AdvancedEditor> {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          'No validation, no autocomplete, no formatter. Cupola cannot tell '
+          'No validation, no autocomplete, no formatter. Stack cannot tell '
           'you a line is wrong before you save it.',
           style: theme.textTheme.bodySmall?.copyWith(
             color: colorScheme.onSurfaceVariant,

@@ -245,7 +245,7 @@ class _TracearrViolationScreenState
         ref.read(tracearrOwnerRoutesAbsentProvider.notifier).mark(instanceId);
         SnackBarHelper.withAction(
           context,
-          'This Tracearr cannot do that from Cupola.',
+          'This Tracearr cannot do that from Stack.',
           actionLabel: 'Open in Tracearr',
           onAction: () => openInTracearr(
             ref,

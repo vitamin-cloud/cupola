@@ -522,7 +522,7 @@ class NpmClient {
     if (map['requires_2fa'] == true) {
       throw const NpmException(
         'This Nginx Proxy Manager account has two-factor authentication '
-        'enabled, which Cupola cannot complete. Use a dedicated account '
+        'enabled, which Stack cannot complete. Use a dedicated account '
         'without 2FA for the app.',
         reason: ServiceFailureReason.unauthorized,
       );
@@ -661,7 +661,7 @@ class NpmClient {
         );
       case 404:
         return const NpmException(
-          'The Nginx Proxy Manager API is not at this address. Point Cupola '
+          'The Nginx Proxy Manager API is not at this address. Point Stack '
           'at the admin interface (port 81 by default).',
           reason: ServiceFailureReason.notFound,
         );

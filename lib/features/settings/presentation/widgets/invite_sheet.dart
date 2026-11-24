@@ -229,7 +229,7 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
           if (defaultTargetPlatform == TargetPlatform.macOS) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'If your Mac asks, allow Cupola to accept incoming connections.',
+              'If your Mac asks, allow Stack to accept incoming connections.',
               textAlign: TextAlign.center,
               style: dim,
             ),
@@ -290,7 +290,7 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
         PairOfferFailed() => [
           NoticeLine(
             tone: StatusTone.warning,
-            title: 'Cupola could not open the code',
+            title: 'Stack could not open the code',
             sentence: 'Wait a moment, then make a new code.',
             actions: [
               noticeAction(
@@ -352,7 +352,7 @@ class _InviteSheetState extends ConsumerState<InviteSheet> {
       ),
       const SizedBox(height: AppSpacing.md),
       Text(
-        'Sent as a message, they paste it where Cupola asks where their '
+        'Sent as a message, they paste it where Stack asks where their '
         'Seerr is.',
         textAlign: TextAlign.center,
         style: dim,

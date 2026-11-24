@@ -1116,7 +1116,7 @@ String connectionFailureMessage(
       // and confirm the certificate when Cupola offers to trust it.
       return 'The HTTPS certificate could not be verified. If '
           '${service.title} uses a self-signed certificate, test again and '
-          'confirm the certificate when Cupola offers to trust it.';
+          'confirm the certificate when Stack offers to trust it.';
     case ServiceFailureReason.plainHttp:
       // TrueNAS revokes a key sent over http, so its only way out is the
       // HTTPS port; for the others an http:// address at home is as good.
@@ -1145,7 +1145,7 @@ String connectionFailureMessage(
       return 'This account was signed out of ${service.title}. Sign in again '
           'to keep asking for movies and series.';
     case ServiceFailureReason.onlyAtHome:
-      return '${service.title} has no address away, so Cupola reaches it '
+      return '${service.title} has no address away, so Stack reaches it '
           'only on your home Wi-Fi.';
     case ServiceFailureReason.secretUnread:
       return "${secureStoreName()} didn't hand over the saved "
@@ -1162,9 +1162,9 @@ String connectionFailureMessage(
       // `messageFor` shows that instead; this is what is left when only the
       // reason survived: an unfollowable 3xx from a client that does not
       // explain itself.
-      return 'Reached the server, but it answered with a redirect Cupola '
+      return 'Reached the server, but it answered with a redirect Stack '
           'will not follow. A reverse proxy in front of ${service.title} is '
-          'the usual cause, point Cupola at the address the proxy sends '
+          'the usual cause, point Stack at the address the proxy sends '
           'the request to, or stop it redirecting the API.';
     case ServiceFailureReason.accessGateway:
       return accessGatewaySentence(gateway, subject: service.title);
@@ -1173,17 +1173,17 @@ String connectionFailureMessage(
           'instance and its logs.';
     case ServiceFailureReason.invalidResponse:
       return 'Something answered at this address, but not with anything '
-          'Cupola can read as ${service.title}. A reverse proxy page, or '
+          'Stack can read as ${service.title}. A reverse proxy page, or '
           'another app on this port, is the usual cause.';
     case ServiceFailureReason.insecureTransport:
-      return 'The address starts with http://, so Cupola did not send the '
+      return 'The address starts with http://, so Stack did not send the '
           '${service.credentialLabel} over it. Change it to https://.';
     case ServiceFailureReason.localNetworkBlocked:
       // Names the device, not the server, and never mentions the address: the
       // request never left this phone, so everything in the form is still
       // unproven rather than wrong. `remedy` spells out the route in the words
       // the running OS uses for it.
-      return 'This device is blocking Cupola from reaching your local '
+      return 'This device is blocking Stack from reaching your local '
           'network, so ${service.title} was never dialled. '
           '${LocalNetworkPermission.remedy}';
     case ServiceFailureReason.unknown:

@@ -45,7 +45,7 @@ class UnreadSecretWords {
     const reason = ServiceFailureReason.secretUnread;
     return UnreadSecretWords._(
       headline: switch (secret) {
-        UnreadSecret.access => "Cupola could not read $subject's saved access",
+        UnreadSecret.access => "Stack could not read $subject's saved access",
         UnreadSecret.credential => failureHeadline(
           reason,
           subject: subject,

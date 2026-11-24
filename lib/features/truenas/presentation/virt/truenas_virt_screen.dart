@@ -162,7 +162,7 @@ class _VirtPane extends ConsumerWidget {
               message:
                   'This server reports $parsed. Incus virtualization '
                   '(containers and VMs) arrived in $kTrueNasMinVersion, so '
-                  'Cupola has nothing to show or start here.',
+                  'Stack has nothing to show or start here.',
             ),
           ),
         ],

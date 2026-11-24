@@ -1147,7 +1147,7 @@ class _ServiceSettingsScreenState extends ConsumerState<ServiceSettingsScreen> {
               if (_onlyAtHomeNow(saved)) ...[
                 _buildInfoNote(
                   context,
-                  '${service.title} has no address away, so Cupola reaches it '
+                  '${service.title} has no address away, so Stack reaches it '
                   'only on your home Wi-Fi.',
                   icon: Icons.home_rounded,
                 ),
@@ -1539,8 +1539,8 @@ class _ServiceSettingsScreenState extends ConsumerState<ServiceSettingsScreen> {
     ConnectionRoute? inUse,
   ) {
     final sentence = route == ConnectionRoute.away
-        ? "Cupola tries it when the home address doesn't answer."
-        : 'Cupola tries it first, and uses it whenever it answers.';
+        ? "Stack tries it when the home address doesn't answer."
+        : 'Stack tries it first, and uses it whenever it answers.';
     return _ResultPanel(
       tone: StatusTone.info,
       icon: Icons.info_outline_rounded,
@@ -2504,7 +2504,7 @@ class _ServiceSettingsScreenState extends ConsumerState<ServiceSettingsScreen> {
     // way to interpret, so it is refused at the point of paste, where the
     // message can still say what to paste instead.
     if (isPlex && trimmed.startsWith('eyJ')) {
-      return 'That is a temporary token, it expires in 7 days and Cupola '
+      return 'That is a temporary token, it expires in 7 days and Stack '
           'cannot renew it. Paste a device token instead.';
     }
 

@@ -683,7 +683,7 @@ extension ServiceKeyExtension on ServiceKey {
     // user should know they are pointing at a project that will not receive
     // fixes.
     ServiceKey.readarr =>
-      'Readarr development has stopped upstream. Cupola targets its '
+      'Readarr development has stopped upstream. Stack targets its '
           'last released API, so existing instances keep working, but expect '
           'no new server-side fixes.',
     ServiceKey.jellyfin =>
@@ -730,9 +730,9 @@ extension ServiceKeyExtension on ServiceKey {
     // otherwise and deserves to know what they are handing over.
     ServiceKey.nginxProxyManager =>
       'Nginx Proxy Manager issues no API key. The only credential it '
-          'accepts is an account login, which Cupola exchanges for a '
+          'accepts is an account login, which Stack exchanges for a '
           'short-lived token it keeps in memory and never writes to disk. '
-          'Create a dedicated user for Cupola rather than using your admin '
+          'Create a dedicated user for Stack rather than using your admin '
           'account, and point this at the admin interface (port 81 by '
           'default), not at a hostname the proxy serves.',
     ServiceKey.seerr ||
@@ -765,7 +765,7 @@ extension ServiceKeyExtension on ServiceKey {
     // leave whole sections empty, which reads as a broken app rather than an
     // unsupported server.
     ServiceKey.truenas =>
-      'Cupola supports TrueNAS SCALE $kTrueNasMinVersion or newer. An older '
+      'Stack supports TrueNAS SCALE $kTrueNasMinVersion or newer. An older '
           'release may connect and still leave whole sections empty.',
     ServiceKey.readarr =>
       'Readarr development has stopped upstream. Existing instances keep '
@@ -785,7 +785,7 @@ extension ServiceKeyExtension on ServiceKey {
           'trr_pub_.',
     ServiceKey.plex =>
       'It must be a long-lived device token: one beginning "eyJ" expires '
-          'in 7 days and Cupola cannot renew it without contacting plex.tv.',
+          'in 7 days and Stack cannot renew it without contacting plex.tv.',
     // Transmission's one all-or-nothing credential and its `rpc-whitelist`
     // default are both reasons a daemon that works in a browser refuses a
     // phone, so they are worth a line here too.

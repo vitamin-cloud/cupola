@@ -636,7 +636,7 @@ class OnboardingWelcome extends StatelessWidget {
           const OnePunchline(),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            'Cupola talks straight to the services you run at home. No Cupola '
+            'Stack talks straight to the services you run at home. No Stack '
             'account, no cloud in between.',
             style: theme.textTheme.bodyLarge!.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -730,7 +730,7 @@ class OnboardingClose extends StatelessWidget {
       alignment: MainAxisAlignment.end,
       actions: OnboardingFooter(
         primary: ReelCommandButton(
-          label: 'Enter Cupola',
+          label: 'Enter Stack',
           busyLabel: 'Opening',
           onPressed: onEnter,
         ),

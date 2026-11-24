@@ -53,9 +53,9 @@ class StartupFailure {
 
   /// What failed, naming what the person has lost sight of, not the API.
   String get headline => switch (step) {
-    StartupStep.preferences => 'Cupola could not open its settings',
-    StartupStep.connections => 'Cupola could not read your saved connections',
-    StartupStep.forgettingKeys => 'Cupola could not forget the saved keys',
+    StartupStep.preferences => 'Stack could not open its settings',
+    StartupStep.connections => 'Stack could not read your saved connections',
+    StartupStep.forgettingKeys => 'Stack could not forget the saved keys',
   };
 
   /// Whether forgetting the saved keys is a way on: secure storage refused

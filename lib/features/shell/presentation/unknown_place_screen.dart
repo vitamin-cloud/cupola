@@ -18,7 +18,7 @@ class UnknownPlaceScreen extends StatelessWidget {
         child: Center(
           child: AppEmptyState(
             icon: Icons.explore_off_outlined,
-            title: "This page isn't in Cupola",
+            title: "This page isn't in Stack",
             message: 'The link may come from an older version of the app.',
             action: FilledButton(
               onPressed: () => context.go(ServiceRoutes.home),

@@ -7,6 +7,8 @@ SOURCE is the full artwork (the neon tile on a grey ground). Writes into REPO:
   android/.../mipmap-*/stack_icon_foreground.png  the artwork, feathered at the edges
   android/.../mipmap-*/stack_icon_background.png  the same artwork, blurred: what shows past it
   android/.../mipmap-*/stack_icon_monochrome.png  its bright lines in white, for themed icons
+  android/.../mipmap-*/stack_icon{,_round}.png    flattened icons, for Android 7 (before adaptive icons)
+  assets/brand/stack_mark.png                     the ship in a circle, the in-app logo
 An adaptive icon is 108dp; a launcher shows the middle 72dp, cut to its shape. The artwork is
 sized so the flag and the bow stay inside the circle, the tightest of those shapes.
 Needs Pillow.
@@ -17,6 +19,7 @@ import sys
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 DENSITIES = {"mdpi": 108, "hdpi": 162, "xhdpi": 216, "xxhdpi": 324, "xxxhdpi": 432}
+LEGACY = {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}
 ART_SHARE = 0.63   # the artwork's width as a share of the 108dp canvas (the visible circle is 0.667)
 
 
@@ -61,6 +64,25 @@ def build(art, canvas):
     return fg, bg, mono
 
 
+def flattened(art, canvas):
+    """The icon as a launcher shows it: both layers, cut to the middle 72 of 108."""
+    fg, bg, _ = build(art, canvas)
+    full = bg.convert("RGBA")
+    full.alpha_composite(fg)
+    m = round(canvas / 6)
+    return full.crop((m, m, canvas - m, canvas - m))
+
+
+def circle_cut(im, feather=1):
+    size = im.size[0]
+    big = size * 4
+    m = Image.new("L", (big, big), 0)
+    ImageDraw.Draw(m).ellipse((feather * 4, feather * 4, big - feather * 4, big - feather * 4), fill=255)
+    out = im.copy()
+    out.putalpha(m.resize((size, size), Image.LANCZOS))
+    return out
+
+
 def main():
     src, repo = sys.argv[1], sys.argv[2]
     preview = sys.argv[3] if len(sys.argv) > 3 else None
@@ -73,6 +95,15 @@ def main():
         fg.save(os.path.join(d, "stack_icon_foreground.png"), optimize=True)
         bg.save(os.path.join(d, "stack_icon_background.png"), optimize=True)
         mono.save(os.path.join(d, "stack_icon_monochrome.png"), optimize=True)
+        face = flattened(art, round(LEGACY[density] * 1.5)).resize((LEGACY[density],) * 2, Image.LANCZOS)
+        square = Image.new("L", face.size, 0)
+        ImageDraw.Draw(square).rounded_rectangle((0, 0, face.size[0] - 1, face.size[1] - 1), round(face.size[0] * 0.18), fill=255)
+        sq = face.copy()
+        sq.putalpha(square)
+        sq.save(os.path.join(d, "stack_icon.png"), optimize=True)
+        circle_cut(face).save(os.path.join(d, "stack_icon_round.png"), optimize=True)
+    circle_cut(flattened(art, 1536).resize((1024, 1024), Image.LANCZOS), feather=6).save(
+        os.path.join(repo, "assets/brand/stack_mark.png"), optimize=True)
     if preview:
         os.makedirs(preview, exist_ok=True)
         fg, bg, mono = build(art, 432)

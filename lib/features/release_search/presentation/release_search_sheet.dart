@@ -48,21 +48,21 @@ class ReleaseSearchHandoffCopy {
           'leaving the app.',
     ReleaseSearchReach.whileOpenTrustedCert =>
       'Keep it running and pick the release up later in Activity. Runs '
-          'while Cupola is open, background search cannot see the '
+          'while Stack is open, background search cannot see the '
           'certificate trusted for this instance, so it needs the app to '
           'stay in front.',
     ReleaseSearchReach.whileOpenCleartext =>
       'Keep it running and pick the release up later in Activity. Runs '
-          'while Cupola is open, this instance is reached over plain '
+          'while Stack is open, this instance is reached over plain '
           'http, where a background search could be redirected into '
           'handing its API key to another host. Switching it to https '
           'restores background search.',
     ReleaseSearchReach.whileOpen =>
       'Keep it running and pick the release up later in Activity. Runs '
-          'while Cupola is open.',
+          'while Stack is open.',
     ReleaseSearchReach.whileOpenSwitchedOff =>
       'Keep it running and pick the release up later in Activity. Runs '
-          'while Cupola is open, Background search is switched off, so '
+          'while Stack is open, Background search is switched off, so '
           'leaving the app ends it. Settings › Background search turns it '
           'on.',
   };
@@ -78,11 +78,11 @@ class ReleaseSearchHandoffCopy {
     ReleaseSearchReach.beyondTheApp =>
       "Running in the background. You'll find it in Activity.",
     ReleaseSearchReach.whileOpenSwitchedOff =>
-      "Still running. You'll find it in Activity, keep Cupola open until it "
+      "Still running. You'll find it in Activity, keep Stack open until it "
           'finishes. Background search is off; Settings › Background search '
           'lets the next one survive leaving the app.',
     _ =>
-      "Still running. You'll find it in Activity, keep Cupola open "
+      "Still running. You'll find it in Activity, keep Stack open "
           'until it finishes.',
   };
 
@@ -229,7 +229,7 @@ class _ReleaseSearchSheetState extends ConsumerState<ReleaseSearchSheet> {
       title: 'Search again for this release?',
       message:
           '${widget.target.service.title} no longer has this release list, so '
-          'nothing on it can be grabbed. Cupola will run the search on your '
+          'nothing on it can be grabbed. Stack will run the search on your '
           'indexers again, grab the release from the new list when it lands.'
           '${lastRun == Duration.zero ? '' : ' It took ${formatElapsed(lastRun)} last time.'}',
       // Not plain "Search again": the results body behind this dialog already

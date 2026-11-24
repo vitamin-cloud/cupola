@@ -413,7 +413,7 @@ ReleaseSearchFailure classifyReleaseSearchFailure(
   if (wasBackgrounded && reach != ReleaseSearchReach.beyondTheApp) {
     return ReleaseSearchFailure(
       kind: ReleaseSearchFailureKind.interruptedByBackground,
-      headline: 'Stopped when you left Cupola.',
+      headline: 'Stopped when you left Stack.',
       diagnosis: switch (reach) {
         // Unreachable by the guard above; kept because the switch must stay
         // exhaustive, and a wrong sentence still beats a crash.
@@ -421,7 +421,7 @@ ReleaseSearchFailure classifyReleaseSearchFailure(
           'The search cannot continue while the app is in the background. '
               'Searching again asks your indexers a second time.',
         ReleaseSearchReach.whileOpenTrustedCert =>
-          'This instance uses a certificate trusted only inside Cupola, and '
+          'This instance uses a certificate trusted only inside Stack, and '
               'background search cannot see that trust, it needs the app '
               'open. Installing the certificate on this device would '
               'restore it. Searching again asks your indexers a second '
@@ -441,7 +441,7 @@ ReleaseSearchFailure classifyReleaseSearchFailure(
         // from here, and a failure is when they most want to know how.
         ReleaseSearchReach.whileOpenSwitchedOff =>
           'Background search is switched off, so a search ends when you leave '
-              'Cupola. Turning it on in Settings › Background search lets the '
+              'Stack. Turning it on in Settings › Background search lets the '
               'next one finish on its own. Searching again asks your indexers '
               'a second time.',
       },
@@ -457,10 +457,10 @@ ReleaseSearchFailure classifyReleaseSearchFailure(
     if (atCeiling) {
       return ReleaseSearchFailure(
         kind: ReleaseSearchFailureKind.clientTimeout,
-        headline: 'Cupola stopped waiting after ${_readable(elapsed)}.',
+        headline: 'Stack stopped waiting after ${_readable(elapsed)}.',
         diagnosis:
             'The search may still finish on the server. You can raise how long '
-            'Cupola waits in Settings.',
+            'Stack waits in Settings.',
         detail: error.type.name,
       );
     }
