@@ -214,13 +214,6 @@ class SettingsHomeScreen extends ConsumerWidget {
             semanticHint: 'opens background release search settings',
             onTap: () => context.push('/settings/background-search'),
           ),
-          SettingsCard.grouped(
-            leading: const Icon(Icons.tips_and_updates_outlined),
-            title: 'Hints',
-            subtitle: 'Nudges that introduce a gesture',
-            semanticHint: 'opens the gesture hint switches',
-            onTap: () => context.push('/settings/hints'),
-          ),
           // Shared with the window's summary pane: see settings_app_rows.dart.
           const SettingsRevisitOnboardingRow(),
         ],

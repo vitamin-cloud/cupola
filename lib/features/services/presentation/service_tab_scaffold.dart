@@ -165,38 +165,15 @@ class _Below extends CustomClipper<Rect> {
   bool shouldReclip(_Below old) => old.top != top;
 }
 
-/// The slab under a service's tabs: solid, in the remote's glass colours and
-/// rim, since the page no longer passes under it.
+/// The slab under a service's tabs: the same glass as every card
+/// (`GlassPanel`). The page is clipped below it, so only the room shows
+/// through, never a row.
 class FrostedTabSlab extends StatelessWidget {
   const FrostedTabSlab({super.key, required this.child});
 
   final Widget child;
 
-  /// The remote's glass laid over the dark room: opaque.
-  static const Color fill = Color(0xFF161B2E);
-
   @override
-  Widget build(BuildContext context) {
-    final radius = BorderRadius.circular(ServiceTabBar.height / 2);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: radius,
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          stops: [0, 0.55, 1],
-          colors: [Color(0xFF262B3E), Color(0xFF181D30), Color(0xFF1B2033)],
-        ),
-        border: Border.all(color: GlassPanel.rim, width: 1.5),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x59000000),
-            blurRadius: 30,
-            offset: Offset(0, 12),
-          ),
-        ],
-      ),
-      child: child,
-    );
-  }
+  Widget build(BuildContext context) =>
+      GlassPanel(radius: ServiceTabBar.height / 2, child: child);
 }

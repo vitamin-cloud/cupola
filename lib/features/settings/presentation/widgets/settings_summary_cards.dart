@@ -26,7 +26,6 @@ import 'package:cupola/features/settings/presentation/widgets/requester_settings
 import 'package:cupola/features/settings/presentation/widgets/settings_app_rows.dart';
 import 'package:cupola/features/settings/presentation/widgets/settings_section_label.dart';
 import 'package:cupola/features/settings/presentation/widgets/test_all_connections_button.dart';
-import 'package:cupola/features/shell/domain/portal_hints.dart';
 import 'package:cupola/features/shell/domain/shell_audience.dart';
 import 'package:cupola/demo/presentation/demo_settings_card.dart';
 
@@ -103,8 +102,6 @@ class SettingsSummaryPane extends ConsumerWidget {
         const _RegionSummaryCard(),
         const SizedBox(height: AppSpacing.xl),
         const _AppearanceSummaryCard(),
-        const SizedBox(height: AppSpacing.xl),
-        const _HintsSummaryCard(),
         const SizedBox(height: AppSpacing.xl),
         _SummaryCard(
           label: 'Onboarding',
@@ -465,32 +462,6 @@ class _AppearanceSummaryCard extends ConsumerWidget {
           subtitle:
               'The interface stays neutral. Its color comes from the artwork '
               'on screen, never from the system accent.',
-        ),
-      ],
-    );
-  }
-}
-
-/// Hints: how many gestures still introduce themselves.
-class _HintsSummaryCard extends ConsumerWidget {
-  const _HintsSummaryCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // One gesture teaches itself today, the Portal, so the count is out of
-    // one. The board draws "2 of 5": the other four hints do not exist yet
-    // (long-press to select is its own decision), and printing 5 would be the
-    // summary inventing features the app does not have.
-    final enabled = ref.watch(portalHintsProvider.select((s) => s.enabled));
-
-    return _SummaryCard(
-      label: 'Hints',
-      children: [
-        SettingsCard.grouped(
-          leading: const Icon(Icons.tips_and_updates_outlined),
-          title: gestureHintsLine(introducing: enabled ? 1 : 0, total: 1),
-          semanticHint: 'opens the gesture hint switches',
-          onTap: () => context.push('/settings/hints'),
         ),
       ],
     );

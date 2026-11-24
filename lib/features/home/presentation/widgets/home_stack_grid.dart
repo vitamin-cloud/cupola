@@ -12,6 +12,8 @@ import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/widgets/floating_bottom_nav_bar.dart';
 import 'package:cupola/core/widgets/glass_panel.dart';
 import 'package:cupola/features/home/presentation/widgets/home_header.dart';
+import 'package:cupola/features/media/presentation/media_parts.dart';
+import 'package:cupola/features/shell/domain/settings_return.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/shell/domain/stack_health.dart';
@@ -55,16 +57,11 @@ Color serviceBrandColor(ServiceKey service) => switch (service) {
   ServiceKey.emby => const Color(0xFF56D84D),
 };
 
-/// How strongly a brand glows: the remote softens the loud reds and yellows.
-double _glowStrength(ServiceKey service) => switch (service) {
-  ServiceKey.readarr || ServiceKey.unraid || ServiceKey.prowlarr => 0.7,
-  ServiceKey.radarr || ServiceKey.plex => 0.8,
-  ServiceKey.bazarr => 0.7,
-  _ => 1,
-};
-
 const _text = Color(0xFFF5F7FF);
 const _text2 = Color(0xFFAEB6D6);
+
+/// The remote's face on Android: "Helvetica Neue", then Roboto.
+const _face = 'Roboto';
 
 class _HomeStackGridState extends ConsumerState<HomeStackGrid> {
   Timer? _tick;
@@ -93,7 +90,6 @@ class _HomeStackGridState extends ConsumerState<HomeStackGrid> {
     ];
     final health = ref.watch(stackHealthProvider);
     final line = homeHealthLine(health);
-    final lit = ref.watch(homeLastOpenedProvider) ?? services.firstOrNull;
     final now = DateTime.now();
     final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
     final time = '$hour:${now.minute.toString().padLeft(2, '0')}';
@@ -116,7 +112,7 @@ class _HomeStackGridState extends ConsumerState<HomeStackGrid> {
         final w = math.min(box.maxWidth, 460.0);
         // Where the remote's apps start: on the faded lower part of the photo.
         final gridTop = math.max(top + 190, w * 1.02);
-        final tileHeight = (w * 0.22).clamp(80.0, 96.0);
+        final tileHeight = (w * 0.22).clamp(80.0, 96.0) + 14;
         final logo = (w * 0.09).clamp(30.0, 40.0);
         return ListView(
           padding: EdgeInsets.only(
@@ -129,61 +125,82 @@ class _HomeStackGridState extends ConsumerState<HomeStackGrid> {
                 padding: EdgeInsets.fromLTRB(18, top + 18, 18, 0),
                 child: Align(
                   alignment: Alignment.topLeft,
-                  child: Column(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Transform.translate(
-                        offset: const Offset(-3, 0),
-                        child: Text(
-                          time,
-                          style: const TextStyle(
-                            fontSize: 74,
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: -1.8,
-                            height: 1,
-                            color: _text,
-                            shadows: [
-                              Shadow(
-                                color: Color(0x59000000),
-                                blurRadius: 30,
-                                offset: Offset(0, 4),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Transform.translate(
+                              offset: const Offset(-3, 0),
+                              child: Text(
+                                time,
+                                style: const TextStyle(
+                                  fontFamily: _face,
+                                  fontSize: 74,
+                                  fontWeight: FontWeight.w400,
+                                  letterSpacing: -1.8,
+                                  height: 1,
+                                  color: _text,
+                                  shadows: [
+                                    Shadow(
+                                      color: Color(0x59000000),
+                                      blurRadius: 30,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        date,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          color: _text2,
-                          shadows: shadow,
-                        ),
-                      ),
-                      if (line.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        GestureDetector(
-                          onTap: () => context.go(ServiceRoutes.stack),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _Dot(clean: clean, checking: health.checking > 0),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  line,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Color(0xE0F5F7FF),
-                                    shadows: shadow,
-                                  ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              date,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: _text2,
+                                shadows: shadow,
+                              ),
+                            ),
+                            if (line.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              GestureDetector(
+                                onTap: () => context.go(ServiceRoutes.stack),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _Dot(
+                                      clean: clean,
+                                      checking: health.checking > 0,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        line,
+                                        style: const TextStyle(
+                                          fontFamily: _face,
+                                          fontSize: 14,
+                                          color: Color(0xE0F5F7FF),
+                                          shadows: shadow,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
+                      // Settings, as the Stack page opens it.
+                      Tooltip(
+                        message: 'Settings',
+                        child: MediaPlate(
+                          label: 'Settings',
+                          icon: Icons.settings_outlined,
+                          onTap: () => openSettings(context, ref),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -205,7 +222,9 @@ class _HomeStackGridState extends ConsumerState<HomeStackGrid> {
                   for (final service in services)
                     _Tile(
                       service: service,
-                      lit: service == lit,
+                      address: _addressOf(
+                        settings.primaryOf(service)?.url ?? '',
+                      ),
                       logo: logo,
                       onTap: () {
                         ref.read(homeLastOpenedProvider.notifier).state =
@@ -251,13 +270,13 @@ class _Dot extends StatelessWidget {
 class _Tile extends StatefulWidget {
   const _Tile({
     required this.service,
-    required this.lit,
+    required this.address,
     required this.logo,
     required this.onTap,
   });
 
   final ServiceKey service;
-  final bool lit;
+  final String address;
   final double logo;
   final VoidCallback onTap;
 
@@ -271,9 +290,7 @@ class _TileState extends State<_Tile> {
   @override
   Widget build(BuildContext context) {
     final service = widget.service;
-    final lit = widget.lit;
     const curve = Cubic(.22, .9, .24, 1);
-    final scale = _down ? 0.94 : (lit ? 1.04 : 1.0);
     return Semantics(
       button: true,
       label: service.title,
@@ -283,52 +300,61 @@ class _TileState extends State<_Tile> {
         onTapCancel: () => setState(() => _down = false),
         onTapUp: (_) => setState(() => _down = false),
         onTap: widget.onTap,
-        child: AnimatedSlide(
-          offset: Offset(0, lit ? -0.03 : 0),
+        child: AnimatedScale(
+          scale: _down ? 0.94 : 1,
           duration: const Duration(milliseconds: 220),
           curve: curve,
-          child: AnimatedScale(
-            scale: scale,
-            duration: const Duration(milliseconds: 220),
-            curve: curve,
-            child: GlassPanel(
-              radius: 22,
-              glow: lit ? serviceBrandColor(service) : null,
-              glowStrength: _glowStrength(service),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(6, 13, 6, 10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Opacity(
-                      opacity: 0.94,
-                      child: Image.asset(
-                        serviceLogoAsset(service),
-                        height: widget.logo,
-                        width: widget.logo * 1.6,
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.medium,
+          // The remote's tile: glass, a white mark, the name, and here the
+          // address it is reached at, small, under it.
+          child: GlassPanel(
+            radius: 22,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(6, 13, 6, 9),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Icon(
+                    service.icon,
+                    size: widget.logo,
+                    color: const Color(0xF0F5F7FF),
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        service.shortTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontFamily: _face,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xEBF5F7FF),
+                          shadows: [
+                            Shadow(
+                              color: Color(0x59000000),
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    Text(
-                      service.shortTitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: lit ? Colors.white : const Color(0xEBF5F7FF),
-                        shadows: const [
-                          Shadow(
-                            color: Color(0x59000000),
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
+                      if (widget.address.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.address,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: _face,
+                            fontSize: 10,
+                            color: _text2,
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -336,4 +362,11 @@ class _TileState extends State<_Tile> {
       ),
     );
   }
+}
+
+/// `nas.home.arpa:8989`: the host and, when it has one, the port.
+String _addressOf(String url) {
+  final uri = Uri.tryParse(url.trim());
+  if (uri == null || uri.host.isEmpty) return url.trim();
+  return uri.hasPort ? '${uri.host}:${uri.port}' : uri.host;
 }

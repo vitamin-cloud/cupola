@@ -163,9 +163,9 @@ class _ShellScreenState extends ConsumerState<ShellScreen>
   /// Both halves, because each alone is wrong somewhere: a desktop window
   /// between the compact artboard (720) and the rail (840) is narrower than
   /// the rail and still draws the desktop shell, which has no bar to lift.
-  static bool _portalDrawn(BuildContext context) =>
-      !AppBreakpoints.isDesktopShell(context) &&
-      MediaQuery.sizeOf(context).width < AppBreakpoints.touchRail;
+  // This fork has no Portal: no drag up from the bar, no coach mark, no
+  // demo bounce, no Settings hint.
+  static bool _portalDrawn(BuildContext context) => false;
 
   /// Whether the one-shot demo may play now, in this window.
   bool _demoCanPlay() =>
@@ -445,13 +445,7 @@ class _ShellScreenState extends ConsumerState<ShellScreen>
                       child: FloatingBottomNavBar(
                         selectedIndex: selectedIndex,
                         onDestinationSelected: select,
-                        destinations: [
-                          for (final (index, destination)
-                              in destinations.indexed)
-                            barTabs[index] == NavTab.stack
-                                ? _withPortalAction(destination)
-                                : destination,
-                        ],
+                        destinations: destinations,
                         verticalDragDelegate: portalOn ? _portal : null,
                       ),
                     ),
@@ -571,30 +565,6 @@ class _ShellScreenState extends ConsumerState<ShellScreen>
       }
     }
     return true;
-  }
-
-  /// The screen reader's way into the Portal: an action on the Stack tab.
-  ///
-  /// A reader cannot perform the drag, so the bar offers the same way in as a
-  /// custom action: *Actions available: Open the Portal*. On the Stack tab
-  /// because that is where the services are: every room is inside it, so it is
-  /// also the tab that is selected whenever a service is on screen. Offered in
-  /// every mode the phone bar is in, not only under a screen reader: Voice
-  /// Control and Switch Access list custom actions too, and cannot drag either.
-  FloatingNavDestination _withPortalAction(FloatingNavDestination destination) {
-    return FloatingNavDestination(
-      icon: destination.icon,
-      selectedIcon: destination.selectedIcon,
-      railIcon: destination.railIcon,
-      label: destination.label,
-      badgeCount: destination.badgeCount,
-      badgeTone: destination.badgeTone,
-      badgeFloor: destination.badgeFloor,
-      badgeSemanticLabel: destination.badgeSemanticLabel,
-      customSemanticsActions: {
-        ShellScreen.openPortalAction: _portal.openFromUi,
-      },
-    );
   }
 
   FloatingNavDestination _destinationFor(NavTab tab, ActivityBadge? activity) {

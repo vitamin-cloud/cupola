@@ -140,7 +140,8 @@ class ServiceHomeScreen extends StatelessWidget {
           child: LibrarySelectionHide(
             // The tabs below ride their own frosted slab now, so the band
             // ends on its own fade rather than running into theirs.
-            child: GlassSurface(child: _band()),
+            // No fade below it: the fade lay over the top of the tabs' slab.
+            child: GlassSurface.continued(child: _band()),
           ),
         ),
       ],
