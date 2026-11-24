@@ -1,122 +1,87 @@
-"""Pirate-ship launcher icon for the "Stack" fork, in Android's 108x108 adaptive-icon grid.
+"""The "Stack" fork's launcher icon, from the owner's neon pirate-ship artwork.
 
-Writes, into the repo given as argv[1]:
-  res/drawable/stack_ship.xml        foreground (colour)
-  res/drawable/stack_ship_mono.xml   monochrome (themed icons)
-  res/drawable/stack_ship_bg.xml     background (night sky)
-and into argv[2] the same art as SVG for the preview page.
-The safe zone is the 66dp circle at the centre; everything that must survive a mask sits inside it.
+    python3 scripts/stack_icon.py SOURCE.jpg REPO [PREVIEW_DIR]
+
+SOURCE is the full artwork (the neon tile on a grey ground). Writes into REPO:
+  assets/brand/stack_icon_art.jpg               the tile's inside, kept as the source of record
+  android/.../mipmap-*/stack_icon_foreground.png  the artwork, feathered at the edges
+  android/.../mipmap-*/stack_icon_background.png  the same artwork, blurred: what shows past it
+  android/.../mipmap-*/stack_icon_monochrome.png  its bright lines in white, for themed icons
+An adaptive icon is 108dp; a launcher shows the middle 72dp, cut to its shape. The artwork is
+sized so the flag and the bow stay inside the circle, the tightest of those shapes.
+Needs Pillow.
 """
 import os
 import sys
 
-# (path, fill, optional stroke width) -- drawn in order, back to front.
-SKY_TOP, SKY_BOTTOM = "#22335A", "#070B16"
-MOON = "#F4E7B8"
-STAR = "#DCE6FF"
-SEA_BACK, SEA_FRONT = "#1E5A78", "#2D86A8"
-FOAM = "#CFEAF5"
-HULL, HULL_DARK, RAIL = "#7A4524", "#4E2A14", "#C08A4A"
-MAST = "#3B2210"
-SAIL, SAIL_SHADE = "#F3E9D2", "#D9CBAE"
-INK = "#1A120C"
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
+
+DENSITIES = {"mdpi": 108, "hdpi": 162, "xhdpi": 216, "xxhdpi": 324, "xxxhdpi": 432}
+ART_SHARE = 0.63   # the artwork's width as a share of the 108dp canvas (the visible circle is 0.667)
 
 
-def circle(cx, cy, r):
-    return f"M{cx - r},{cy} a{r},{r} 0 1,0 {2 * r},0 a{r},{r} 0 1,0 {-2 * r},0 Z"
+def inside_of_tile(src):
+    """The square inside the neon border, found by its bright pixels across the middle."""
+    im = Image.open(src).convert("RGB")
+    w, h = im.size
+    px = im.load()
+    bright = [x for x in range(w) if px[x, h // 2][1] > 200 and px[x, h // 2][0] > 150]
+    left, right = bright[0], bright[-1]
+    inset = round((right - left) * 0.019)  # past the border line and its glow
+    box = (left + inset, left + inset, right - inset, right - inset)
+    return im.crop(box)
 
 
-FOREGROUND = [
-    # moon and stars
-    (circle(35, 33, 5.2), MOON, None),
-    (circle(38.2, 31.4, 4.6), "#1A2746", None),  # bite out of the moon, in the sky's colour there
-    (circle(70, 30, 0.9), STAR, None),
-    (circle(76, 40, 0.7), STAR, None),
-    (circle(30, 44, 0.7), STAR, None),
-    # back wave
-    ("M-6,74 q5,-3.4 10,0" + " t10,0" * 11 + " V112 H-6 Z", SEA_BACK, None),
-    # mast and flag
-    ("M53.1,22 h2.2 v43 h-2.2 Z", MAST, None),
-    ("M55.3,22.2 h10 l-2.6,3.1 l2.6,3.1 h-10 Z", INK, None),
-    (circle(59.6, 25.3, 1.15), SAIL, None),
-    # top sail
-    ("M46,30 Q54.2,28.6 62.4,30 Q61.4,33.2 62.4,36.2 Q54.2,35 46,36.2 Q47,33.2 46,30 Z", SAIL, None),
-    # main sail with a shaded belly
-    ("M39.5,38 Q54.2,35.6 68.9,38 Q66.6,47.5 68.9,57 Q54.2,54.6 39.5,57 Q41.8,47.5 39.5,38 Z", SAIL, None),
-    ("M54.2,36.8 Q62,37 68.9,38 Q66.6,47.5 68.9,57 Q62,55.8 54.2,55.8 Z", SAIL_SHADE, None),
-    # skull and crossbones on the main sail
-    ("M48.6,52.2 L59.8,44.6", INK, 1.7),
-    ("M48.6,44.6 L59.8,52.2", INK, 1.7),
-    (circle(54.2, 46.6, 3.9), INK, None),
-    ("M51.9,49.4 h4.6 v2.6 h-4.6 Z", INK, None),
-    (circle(52.7, 46.4, 1.0), SAIL, None),
-    (circle(55.7, 46.4, 1.0), SAIL, None),
-    # hull, raised stern, rail and portholes
-    ("M66,59.5 h12.5 l-0.8,5.5 h-11.7 Z", HULL_DARK, None),
-    ("M29,64 H79.5 L73.5,77 H35.5 Z", HULL, None),
-    ("M29,64 H79.5 L78.6,66 H29.9 Z", RAIL, None),
-    ("M35.5,77 L34.2,74.2 H74.8 L73.5,77 Z", HULL_DARK, None),
-    (circle(42, 70, 1.5), INK, None),
-    (circle(50, 70, 1.5), INK, None),
-    (circle(58, 70, 1.5), INK, None),
-    (circle(66, 70, 1.5), INK, None),
-    # front wave and foam
-    ("M-6,79 q5,-3.4 10,0" + " t10,0" * 11 + " V112 H-6 Z", SEA_FRONT, None),
-    ("M22,78.4 q2.5,-1.6 5,0 M41,78.4 q2.5,-1.6 5,0 M62,78.4 q2.5,-1.6 5,0 M80,78.4 q2.5,-1.6 5,0", FOAM, 1.2),
-]
-
-# Monochrome: the ship alone (Android tints it), no sky, moon or sea fill.
-MONO = [
-    ("M53.1,22 h2.2 v43 h-2.2 Z", None),
-    ("M55.3,22.2 h10 l-2.6,3.1 l2.6,3.1 h-10 Z", None),
-    ("M46,30 Q54.2,28.6 62.4,30 Q61.4,33.2 62.4,36.2 Q54.2,35 46,36.2 Q47,33.2 46,30 Z", None),
-    ("M39.5,38 Q54.2,35.6 68.9,38 Q66.6,47.5 68.9,57 Q54.2,54.6 39.5,57 Q41.8,47.5 39.5,38 Z", None),
-    ("M66,59.5 h12.5 l-0.8,5.5 h-11.7 Z", None),
-    ("M29,64 H79.5 L73.5,77 H35.5 Z", None),
-    ("M24,81 q5,-3.4 10,0 t10,0 t10,0 t10,0 t10,0 t10,0", 2.2),
-]
+def rounded_mask(size, radius, feather):
+    m = Image.new("L", (size, size), 0)
+    ImageDraw.Draw(m).rounded_rectangle((feather, feather, size - feather, size - feather), radius, fill=255)
+    return m.filter(ImageFilter.GaussianBlur(feather / 2))
 
 
-def android_vector(items):
-    out = ['<?xml version="1.0" encoding="utf-8"?>',
-           '<!-- The "Stack" fork\'s pirate-ship icon (scripts made it; see the commit). 108dp adaptive grid. -->',
-           '<vector xmlns:android="http://schemas.android.com/apk/res/android"',
-           '    android:width="108dp" android:height="108dp"',
-           '    android:viewportWidth="108" android:viewportHeight="108">']
-    for d, fill, stroke in items:
-        if stroke:
-            out.append(f'    <path android:pathData="{d}" android:fillColor="#00000000"'
-                       f' android:strokeColor="{fill}" android:strokeWidth="{stroke}" android:strokeLineCap="round"/>')
-        else:
-            out.append(f'    <path android:pathData="{d}" android:fillColor="{fill}"/>')
-    out.append('</vector>')
-    return "\n".join(out) + "\n"
+def build(art, canvas):
+    a = round(canvas * ART_SHARE)
+    off = (canvas - a) // 2
+    scaled = art.resize((a, a), Image.LANCZOS)
+    mask = rounded_mask(a, radius=round(a * 0.12), feather=max(2, round(a * 0.035)))
+
+    fg = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
+    piece = scaled.convert("RGBA")
+    piece.putalpha(mask)
+    fg.paste(piece, (off, off), piece)
+
+    bg = art.resize((canvas, canvas), Image.LANCZOS).filter(ImageFilter.GaussianBlur(canvas * 0.06))
+    bg = Image.blend(Image.new("RGB", bg.size, (4, 12, 14)), bg, 0.55)
+
+    lum = scaled.convert("L").point(lambda v: 0 if v < 120 else min(255, (v - 120) * 3))
+    lum = ImageChops.multiply(lum, mask)
+    mono = Image.new("RGBA", (canvas, canvas), (255, 255, 255, 0))
+    white = Image.new("RGBA", (a, a), (255, 255, 255, 255))
+    white.putalpha(lum)
+    mono.paste(white, (off, off), white)
+    return fg, bg, mono
 
 
-def svg(items, bg=True):
-    out = ['<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108">']
-    if bg:
-        out.append(f'<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{SKY_TOP}"/>'
-                   f'<stop offset="1" stop-color="{SKY_BOTTOM}"/></linearGradient></defs><rect width="108" height="108" fill="url(#sky)"/>')
-    for d, fill, stroke in items:
-        if stroke:
-            out.append(f'<path d="{d}" fill="none" stroke="{fill}" stroke-width="{stroke}" stroke-linecap="round"/>')
-        else:
-            out.append(f'<path d="{d}" fill="{fill}"/>')
-    out.append('</svg>')
-    return "".join(out)
+def main():
+    src, repo = sys.argv[1], sys.argv[2]
+    preview = sys.argv[3] if len(sys.argv) > 3 else None
+    art = inside_of_tile(src)
+    art.resize((1024, 1024), Image.LANCZOS).save(os.path.join(repo, "assets/brand/stack_icon_art.jpg"), quality=90)
+    res = os.path.join(repo, "android/app/src/main/res")
+    for density, px in DENSITIES.items():
+        fg, bg, mono = build(art, px)
+        d = os.path.join(res, f"mipmap-{density}")
+        fg.save(os.path.join(d, "stack_icon_foreground.png"), optimize=True)
+        bg.save(os.path.join(d, "stack_icon_background.png"), optimize=True)
+        mono.save(os.path.join(d, "stack_icon_monochrome.png"), optimize=True)
+    if preview:
+        os.makedirs(preview, exist_ok=True)
+        fg, bg, mono = build(art, 432)
+        full = bg.convert("RGBA")
+        full.alpha_composite(fg)
+        full.save(os.path.join(preview, "icon_full.png"))
+        mono.save(os.path.join(preview, "icon_mono.png"))
+    print("ok")
 
 
-repo, preview = sys.argv[1], sys.argv[2]
-res = os.path.join(repo, "android/app/src/main/res/drawable")
-open(os.path.join(res, "stack_ship.xml"), "w").write(android_vector(FOREGROUND))
-open(os.path.join(res, "stack_ship_mono.xml"), "w").write(
-    android_vector([(d, "#FFFFFFFF", s) for d, s in MONO]))
-open(os.path.join(res, "stack_ship_bg.xml"), "w").write(
-    '<?xml version="1.0" encoding="utf-8"?>\n<!-- The "Stack" fork\'s icon background: the night sky. -->\n'
-    '<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">\n'
-    f'    <gradient android:angle="270" android:startColor="{SKY_TOP}" android:endColor="{SKY_BOTTOM}"/>\n</shape>\n')
-os.makedirs(preview, exist_ok=True)
-open(os.path.join(preview, "ship.svg"), "w").write(svg(FOREGROUND))
-open(os.path.join(preview, "ship_mono.svg"), "w").write(svg([(d, "#FFFFFF", s) for d, s in MONO], bg=False))
-print("ok")
+if __name__ == "__main__":
+    main()

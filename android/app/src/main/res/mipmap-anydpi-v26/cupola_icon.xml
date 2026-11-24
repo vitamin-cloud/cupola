@@ -14,9 +14,9 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<!-- This fork ("Stack"): the pirate ship, drawable/stack_ship*.xml. -->
+<!-- This fork ("Stack"): the neon pirate ship, mipmap-*/stack_icon_*.png from scripts/stack_icon.py. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@drawable/stack_ship_bg"/>
-    <foreground android:drawable="@drawable/stack_ship"/>
-    <monochrome android:drawable="@drawable/stack_ship_mono"/>
+    <background android:drawable="@mipmap/stack_icon_background"/>
+    <foreground android:drawable="@mipmap/stack_icon_foreground"/>
+    <monochrome android:drawable="@mipmap/stack_icon_monochrome"/>
 </adaptive-icon>
