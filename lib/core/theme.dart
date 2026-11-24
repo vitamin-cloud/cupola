@@ -383,11 +383,11 @@ class CupolaRoom extends ThemeExtension<CupolaRoom> {
     ground: DesignTokensDark.colorRoomGround,
     // This fork: every card is the remote's glass tint, the room showing
     // through it (`GlassPanel` adds the blur where a card draws one).
-    slab: Color(0xD0141A2E),
+    slab: GlassPanel.flat,
     raised: DesignTokensDark.colorRoomRaised,
     // This fork: a door (Discover's tiles, a collection's card) is the same
     // glass as a slab.
-    door: Color(0xD0141A2E),
+    door: GlassPanel.flat,
     enamel: DesignTokensDark.colorRoomEnamel,
     menu: DesignTokensDark.colorRoomMenu,
     toast: DesignTokensDark.colorRoomToast,
@@ -1227,7 +1227,7 @@ class AppTheme {
           textStyle: buttonLabel,
           // This fork: outlined buttons sit on the glass too.
           backgroundColor: brightness == Brightness.dark
-              ? GlassPanel.tint
+              ? GlassPanel.flat
               : room.fillControl,
           side: brightness == Brightness.dark
               ? const BorderSide(color: GlassPanel.rim, width: 1.5)
@@ -1297,7 +1297,7 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: brightness == Brightness.dark
-            ? GlassPanel.tint
+            ? GlassPanel.flat
             : room.fillQuiet,
         border: OutlineInputBorder(
           borderRadius: AppRadius.borderRadiusField,

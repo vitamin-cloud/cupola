@@ -84,7 +84,7 @@ class DiscoverRegionChip extends ConsumerWidget {
                 ),
                 // This fork: the remote's glass, as every card.
                 decoration: BoxDecoration(
-                  color: GlassPanel.tint,
+                  color: GlassPanel.flat,
                   borderRadius: AppRadius.borderRadiusSm,
                   border: Border.all(color: GlassPanel.rim, width: 1.5),
                 ),

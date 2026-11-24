@@ -16,6 +16,7 @@ import 'package:cupola/core/platform/secure_clipboard.dart';
 import 'package:cupola/core/service_theme.dart';
 import 'package:cupola/core/text_scale.dart';
 import 'package:cupola/core/theme.dart';
+import 'package:cupola/core/widgets/glass_panel.dart';
 import 'package:cupola/core/utils/dot_separator.dart';
 import 'package:cupola/core/utils/snack_bar_helper.dart';
 import 'package:cupola/core/utils/url_utils.dart';
@@ -1988,7 +1989,7 @@ class _ServiceSettingsScreenState extends ConsumerState<ServiceSettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
+        color: GlassPanel.flat,
         borderRadius: AppRadius.borderRadiusMd,
         border: Border.all(color: colorScheme.outlineVariant),
       ),

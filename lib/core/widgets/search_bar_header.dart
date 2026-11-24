@@ -213,7 +213,7 @@ class _SearchBarHeaderState extends State<SearchBarHeader> {
             ],
             elevation: WidgetStateProperty.all(0),
             // This fork: the remote's glass, as every card.
-            backgroundColor: WidgetStateProperty.all(GlassPanel.tint),
+            backgroundColor: WidgetStateProperty.all(GlassPanel.flat),
             // A focused field's edge is `line.focus`, as every focused field's
             // is (`inputDecorationTheme`): the keyboard's place is never only a
             // caret.

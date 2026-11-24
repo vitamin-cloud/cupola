@@ -41,6 +41,11 @@ class GlassPanel extends StatelessWidget {
   /// to stand in for its blur.
   static const Color tint = Color(0xD0141A2E);
 
+  /// The glass as it reads on the Home's tiles ([tint] with its white sheen
+  /// laid over it), as one flat colour: what every surface that draws no
+  /// sheen of its own fills with, so it is the same shade as the tiles.
+  static const Color flat = Color(0xD42E3345);
+
   /// The rim and its brighter top edge.
   static const Color rim = Color(0x38FFFFFF);
   static const Color rimTop = Color(0x2EFFFFFF);
