@@ -911,6 +911,13 @@ class ServiceRoutes {
   ///
   /// [access] opens the form on its Access row with that choice made, for a
   /// gateway's remedy (`Add a service token` lands on Cloudflare Access).
+  /// This fork: a connection's form opened from the Stack's pencil, inside
+  /// the Stack tab.
+  static String stackEdit(ServiceKey service, String? connectionId) =>
+      _withQuery('$stack/edit/${service.routeParam}', {
+        if (connectionId != null && connectionId.isNotEmpty) 'i': connectionId,
+      });
+
   static String settingsForConnection(
     ServiceKey service,
     String connectionId, {

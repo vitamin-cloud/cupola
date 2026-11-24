@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:cupola/core/app_radius.dart';
+import 'package:cupola/core/widgets/glass_panel.dart';
 import 'package:cupola/core/app_spacing.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
@@ -11,7 +12,7 @@ import 'package:cupola/features/settings/domain/settings_model.dart';
 
 /// Where the gear lands. The same literal the four settings call sites use;
 /// there is no route constant for the settings tree yet.
-const String _regionSettingsLocation = '/settings/region';
+const String _regionSettingsLocation = '/discover/region';
 
 /// "Region · IT": a **readout** of Settings › Region with a door to it.
 ///
@@ -81,12 +82,11 @@ class DiscoverRegionChip extends ConsumerWidget {
                   horizontal: AppSpacing.md,
                   vertical: AppSpacing.sm,
                 ),
+                // This fork: the remote's glass, as every card.
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHigh,
+                  color: GlassPanel.tint,
                   borderRadius: AppRadius.borderRadiusSm,
-                  border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                  ),
+                  border: Border.all(color: GlassPanel.rim, width: 1.5),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,

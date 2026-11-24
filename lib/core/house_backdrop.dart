@@ -21,6 +21,10 @@ abstract final class HouseBackdrop {
   /// width (the remote's `margin-top: -13%`).
   static const double lift = 0.13;
 
+  /// The status bar's height: the remote's page starts below it, and so does
+  /// its photo. Set once the app knows it (`CupolaApp`'s builder).
+  static double topInset = 0;
+
   /// The decoded photo, or null before [load] or if it could not be read:
   /// the room is then drawn as it always was.
   static ui.Image? image;
@@ -50,7 +54,7 @@ void paintHouse(Canvas canvas, Rect room, ColorScheme scheme) {
   final height = width * image.height / image.width;
   final photo = Rect.fromLTWH(
     room.left,
-    room.top - width * HouseBackdrop.lift,
+    room.top + HouseBackdrop.topInset - width * HouseBackdrop.lift,
     width,
     height,
   );

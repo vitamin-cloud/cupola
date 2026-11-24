@@ -218,27 +218,19 @@ class _ServiceDashboardAppBar extends ConsumerWidget {
                 ],
               ),
             ),
-            // This fork: Sonarr and Radarr carry a magnifying glass beside
-            // Activity, straight to adding something new.
+            // This fork: no Activity glyph. Sonarr and Radarr carry a
+            // magnifying glass in its corner, straight to adding something new.
             if (_addRouteOf(service) case (final route, final label))
               IconButton(
-                icon: Icon(Symbols.search_rounded, color: room.inkSecondary),
+                icon: Icon(
+                  Symbols.search_rounded,
+                  size: 30,
+                  color: room.inkSecondary,
+                ),
                 onPressed: () => context.push(route),
                 tooltip: label,
               ),
-            if (trailingAction != null)
-              trailingAction!
-            else
-              IconButton(
-                // The secondary ink, like every glyph on the band: the band is
-                // monochrome, the service is named beside it.
-                icon: Icon(
-                  Symbols.vital_signs_rounded,
-                  color: room.inkSecondary,
-                ),
-                onPressed: () => context.go('/activity'),
-                tooltip: 'Activity',
-              ),
+            ?trailingAction,
           ],
         ),
       ),

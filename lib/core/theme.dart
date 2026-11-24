@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:cupola/core/utils/blink_transition.dart';
 import 'package:cupola/core/app_radius.dart';
 import 'package:cupola/core/focus_ring.dart';
 import 'package:cupola/core/generated/design_tokens.g.dart';
@@ -1111,6 +1113,8 @@ class AppTheme {
     final Color fault = room.toneAmber;
 
     return ThemeData(
+      // This fork: every page blinks (`blinkPageTransitionsTheme`).
+      pageTransitionsTheme: blinkPageTransitionsTheme,
       useMaterial3: true,
       brightness: brightness,
       colorScheme: colorScheme,

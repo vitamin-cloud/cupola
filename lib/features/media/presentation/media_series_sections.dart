@@ -392,7 +392,7 @@ class _EpisodeHeader extends StatelessWidget {
             ),
             SizedBox(
               width: _Cols.status,
-              child: Text('Status', textAlign: TextAlign.end, style: style),
+              child: Text('Status', style: style),
             ),
           ],
         ),
@@ -421,13 +421,13 @@ class _EpisodeRow extends StatelessWidget {
     final progress = episode.progress;
     final record = episode.fromSonarr;
     final now = DateTime.now();
-    final meta = AppType.meta.weight(FontWeight.w400);
+    // Small enough that a date (`Dec 16 2026`) and a status always fit.
+    final meta = AppType.meta.weight(FontWeight.w400).copyWith(fontSize: 11);
 
     Widget status() {
       if (episode.downloading) {
         return Text(
           episode.state,
-          textAlign: TextAlign.end,
           maxLines: 2,
           style: meta.copyWith(
             color: statusToneColor(
@@ -440,20 +440,23 @@ class _EpisodeRow extends StatelessWidget {
       }
       if (quality case final q? when q.isNotEmpty) {
         return Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: room.fillStrong,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              q,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppType.meta
-                  .weight(FontWeight.w600)
-                  .copyWith(color: room.ink, fontSize: 11),
+          alignment: Alignment.centerLeft,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              decoration: BoxDecoration(
+                color: room.fillStrong,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                q,
+                maxLines: 1,
+                style: AppType.meta
+                    .weight(FontWeight.w600)
+                    .copyWith(color: room.ink, fontSize: 11),
+              ),
             ),
           ),
         );
@@ -469,14 +472,12 @@ class _EpisodeRow extends StatelessWidget {
       if (record.hasFile) {
         return Text(
           'Downloaded',
-          textAlign: TextAlign.end,
           style: meta.copyWith(color: room.inkSecondary),
         );
       }
       if (episode.missing) {
         return Text(
           'Missing',
-          textAlign: TextAlign.end,
           style: meta
               .weight(FontWeight.w600)
               .copyWith(
@@ -489,7 +490,7 @@ class _EpisodeRow extends StatelessWidget {
         );
       }
       return Align(
-        alignment: Alignment.centerRight,
+        alignment: Alignment.centerLeft,
         child: Icon(
           record.monitored
               ? Icons.bookmark_border_rounded
@@ -527,12 +528,15 @@ class _EpisodeRow extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               SizedBox(
                 width: _Cols.date,
-                child: Text(
-                  episodeAirDay(episode.airsAt, now),
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.fade,
-                  style: meta.copyWith(color: room.inkSecondary),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    episodeAirDay(episode.airsAt, now),
+                    maxLines: 1,
+                    softWrap: false,
+                    style: meta.copyWith(color: room.inkSecondary),
+                  ),
                 ),
               ),
               SizedBox(width: _Cols.status, child: status()),

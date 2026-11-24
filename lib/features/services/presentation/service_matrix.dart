@@ -1099,6 +1099,14 @@ class _ServiceMatrixCellBody extends ConsumerWidget {
               signals: signals,
               signalsFailed: signalsFailed,
               statusLabel: statusLabel,
+              // This fork: the pencil opens the connection's form, inside
+              // the Stack, with a blink.
+              onEdit: () {
+                final id =
+                    instanceId ??
+                    ref.read(currentSettingsProvider).primaryOf(service)?.id;
+                context.push(ServiceRoutes.stackEdit(service, id));
+              },
             )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1143,6 +1151,7 @@ class _CellRow extends StatelessWidget {
     required this.signals,
     required this.signalsFailed,
     required this.statusLabel,
+    required this.onEdit,
   });
 
   final ServiceKey service;
@@ -1153,6 +1162,9 @@ class _CellRow extends StatelessWidget {
   final ServiceSignalPair? signals;
   final bool signalsFailed;
   final String statusLabel;
+
+  /// Opens the connection's form.
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -1293,8 +1305,11 @@ class _CellRow extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: AppSpacing.sm),
-        Icon(Icons.chevron_right_rounded, size: 20, color: room.inkTertiary),
+        IconButton(
+          onPressed: onEdit,
+          tooltip: 'Edit ${service.title}',
+          icon: Icon(Icons.edit_outlined, size: 20, color: room.inkSecondary),
+        ),
       ],
     );
   }

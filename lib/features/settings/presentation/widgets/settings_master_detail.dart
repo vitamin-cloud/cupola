@@ -1,5 +1,6 @@
-import 'package:flutter/cupertino.dart' show CupertinoRouteTransitionMixin;
 import 'package:flutter/material.dart';
+
+import 'package:cupola/core/utils/blink_transition.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -335,19 +336,39 @@ class SettingsSectionPage extends Page<void> {
 /// The page every other settings page is: the platform's slide. Built from
 /// the page as `CupertinoPage` builds it, so a new location (another
 /// account's `?i=`) redraws it.
-class _DrillDown extends PageRoute<void>
-    with CupertinoRouteTransitionMixin<void> {
+class _DrillDown extends PageRoute<void> {
   _DrillDown({required SettingsSectionPage super.settings});
 
+  // This fork: a blink, not a page sliding over (`Blink`).
   @override
-  Widget buildContent(BuildContext context) =>
-      (settings as SettingsSectionPage).child;
+  Duration get transitionDuration => Blink.inDuration;
 
   @override
-  String? get title => null;
+  Duration get reverseTransitionDuration => Blink.outDuration;
 
   @override
   bool get maintainState => true;
+
+  @override
+  Color? get barrierColor => null;
+
+  @override
+  String? get barrierLabel => null;
+
+  @override
+  Widget buildPage(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+  ) => (settings as SettingsSectionPage).child;
+
+  @override
+  Widget buildTransitions(
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) => Blink.transition(animation, child);
 }
 
 class _BesideTheList extends PageRoute<void> {

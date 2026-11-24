@@ -298,23 +298,28 @@ class CupolaApp extends ConsumerWidget {
       // route, so a TalkBack user hears what a VoiceOver user hears. The
       // system bars in the room's ink (`ThemedSystemBars`). And Android's back
       // claimed for Settings, above every navigator (`SettingsBackClaim`).
-      builder: (context, child) => AppSnapshotCover(
-        child: ThemedSystemBars(
-          child: AnnouncementHost(
-            child: SettingsBackClaim(
-              child: DefaultTextHeightBehavior(
-                textHeightBehavior: const TextHeightBehavior(
-                  applyHeightToFirstAscent: false,
-                  applyHeightToLastDescent: false,
+      builder: (context, child) {
+        // This fork: the house photo starts below the status bar, as the
+        // remote's does.
+        HouseBackdrop.topInset = MediaQuery.paddingOf(context).top;
+        return AppSnapshotCover(
+          child: ThemedSystemBars(
+            child: AnnouncementHost(
+              child: SettingsBackClaim(
+                child: DefaultTextHeightBehavior(
+                  textHeightBehavior: const TextHeightBehavior(
+                    applyHeightToFirstAscent: false,
+                    applyHeightToLastDescent: false,
+                  ),
+                  // Where a foldable's screen creases, for the dialogs and
+                  // controls that keep off it (`fold.dart`).
+                  child: FoldHost(child: child ?? const SizedBox.shrink()),
                 ),
-                // Where a foldable's screen creases, for the dialogs and
-                // controls that keep off it (`fold.dart`).
-                child: FoldHost(child: child ?? const SizedBox.shrink()),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

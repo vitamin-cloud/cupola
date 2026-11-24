@@ -1,6 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:cupola/core/utils/blink_transition.dart';
 
 /// Utility class for common routing operations.
 class RouteUtils {
@@ -11,7 +12,8 @@ class RouteUtils {
     required Widget child,
     String? name,
   }) {
-    return CupertinoPage(key: key, name: name, child: child);
+    // This fork: no turning page, a blink (`Blink`).
+    return Blink.page(key: key, name: name, child: child);
   }
 
   static void popOrGo(BuildContext context, String fallbackLocation) {
@@ -39,7 +41,7 @@ class RouteUtils {
     required LocalKey key,
     required String location,
   }) {
-    return CupertinoPage(
+    return Blink.page(
       key: key,
       child: _RedirectWidget(location: location),
     );

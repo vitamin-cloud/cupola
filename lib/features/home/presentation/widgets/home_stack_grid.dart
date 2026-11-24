@@ -111,8 +111,12 @@ class _HomeStackGridState extends ConsumerState<HomeStackGrid> {
       builder: (context, box) {
         final w = math.min(box.maxWidth, 460.0);
         // Where the remote's apps start: on the faded lower part of the photo.
-        final gridTop = math.max(top + 190, w * 1.02);
-        final tileHeight = (w * 0.22).clamp(80.0, 96.0) + 14;
+        // The remote's own measures (its CSS): the apps start 1.017 widths
+        // below the safe area (the photo's foot, lifted 0.44 of a width), a
+        // tile is clamp(80px, 22vw, 96px) tall, its logo clamp(30px, 9vw,
+        // 40px), three to a row 10px apart inside 18px margins.
+        final gridTop = top + w * (1.5873 - 0.13 - 0.44);
+        final tileHeight = (w * 0.22).clamp(80.0, 96.0);
         final logo = (w * 0.09).clamp(30.0, 40.0);
         return ListView(
           padding: EdgeInsets.only(
@@ -226,6 +230,7 @@ class _HomeStackGridState extends ConsumerState<HomeStackGrid> {
                         settings.primaryOf(service)?.url ?? '',
                       ),
                       logo: logo,
+                      height: tileHeight,
                       onTap: () {
                         ref.read(homeLastOpenedProvider.notifier).state =
                             service;
@@ -271,6 +276,7 @@ class _Tile extends StatefulWidget {
   const _Tile({
     required this.service,
     required this.address,
+    required this.height,
     required this.logo,
     required this.onTap,
   });
@@ -278,6 +284,7 @@ class _Tile extends StatefulWidget {
   final ServiceKey service;
   final String address;
   final double logo;
+  final double height;
   final VoidCallback onTap;
 
   @override
@@ -309,13 +316,15 @@ class _TileState extends State<_Tile> {
           child: GlassPanel(
             radius: 22,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(6, 13, 6, 9),
+              padding: const EdgeInsets.fromLTRB(6, 13, 6, 10),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Icon(
                     service.icon,
-                    size: widget.logo,
+                    size: widget.address.isEmpty
+                        ? widget.logo
+                        : widget.logo.clamp(0, widget.height - 23 - 26),
                     color: const Color(0xF0F5F7FF),
                   ),
                   Column(
@@ -328,6 +337,7 @@ class _TileState extends State<_Tile> {
                         style: const TextStyle(
                           fontFamily: _face,
                           fontSize: 13,
+                          height: 1.15,
                           fontWeight: FontWeight.w500,
                           color: Color(0xEBF5F7FF),
                           shadows: [
@@ -339,19 +349,19 @@ class _TileState extends State<_Tile> {
                           ],
                         ),
                       ),
-                      if (widget.address.isNotEmpty) ...[
-                        const SizedBox(height: 2),
+                      // Small, so the tile keeps the remote's height.
+                      if (widget.address.isNotEmpty)
                         Text(
                           widget.address,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontFamily: _face,
-                            fontSize: 10,
+                            fontSize: 9,
+                            height: 1.1,
                             color: _text2,
                           ),
                         ),
-                      ],
                     ],
                   ),
                 ],

@@ -2,7 +2,6 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:cupola/core/app_animation.dart';
 import 'package:cupola/core/network/route_poster.dart';
 import 'package:cupola/core/platform/secure_screen.dart';
 import 'package:cupola/core/widgets/service_tab_bar.dart';
@@ -10,6 +9,7 @@ import 'package:cupola/features/services/domain/service_tab.dart';
 import 'package:cupola/features/services/presentation/service_bar_action.dart';
 import 'package:cupola/features/services/presentation/connection_in_view.dart';
 import 'package:cupola/features/services/presentation/service_tab_scaffold.dart';
+import 'package:cupola/core/utils/blink_transition.dart';
 import 'package:cupola/core/utils/route_utils.dart';
 import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/utils/side_pane_route.dart';
@@ -182,17 +182,7 @@ const double _serviceTabTopPadding =
 /// hierarchy; a fade is what Material prescribes for top-level destinations,
 /// and it costs one blend per frame instead of the Zoom's layered scale.
 Page<void> _tabPage(GoRouterState state, Widget child, {LocalKey? key}) =>
-    CustomTransitionPage(
-      key: key ?? state.pageKey,
-      transitionDuration: AppAnimation.durationSm,
-      reverseTransitionDuration: AppAnimation.durationSm,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-          FadeTransition(
-            opacity: animation.drive(CurveTween(curve: Curves.easeOut)),
-            child: child,
-          ),
-      child: child,
-    );
+    Blink.page(key: key ?? state.pageKey, child: child);
 
 /// A route whose page is a plain [RouteUtils.cupertinoPage] around [child].
 ///
@@ -1690,6 +1680,17 @@ RouteBase _branchRootFor(NavTab tab) => switch (tab) {
     path: ServiceRoutes.stack,
     pageBuilder: (context, state) => _tabPage(state, const StackScreen()),
     routes: [
+      // This fork: the pencil on a Stack row, the connection's form inside
+      // the Stack tab.
+      _page(
+        'edit/:service',
+        (state) => ServiceSettingsScreen(
+          service: _settingsServiceOf(state)!,
+          instanceId: state.uri.queryParameters['i'],
+        ),
+        redirect: (context, state) =>
+            _settingsServiceOf(state) == null ? ServiceRoutes.stack : null,
+      ),
       ..._mediaRoutes(),
       // Every mount takes its segment from `ServiceKey.routeParam` rather than
       // repeating the literal. Sixteen of these were spelled out by hand and
@@ -1754,6 +1755,9 @@ RouteBase _branchRootFor(NavTab tab) => switch (tab) {
     path: ServiceRoutes.discover,
     pageBuilder: (context, state) => _tabPage(state, const DiscoverPage()),
     routes: [
+      // This fork: the Region chip's page, inside Discover, so tapping it
+      // blinks the page in rather than switching to the Settings tab.
+      _page('region', (state) => const SettingsRegionScreen()),
       _page('calendar', (state) => const CalendarPage()),
       // The shelf `More from your artists`, whole: Lidarr's, so the
       // operator's (`_audienceRedirect`).
