@@ -193,13 +193,6 @@ void main() {
       expect(settings.isServiceConfigured(ServiceKey.radarr), isFalse);
     });
 
-    test('the first write takes the id whose keys predate this model', () {
-      final settings = const SettingsModel().copyWithService(
-        ServiceKey.nginxProxyManager,
-        url: 'http://nas:81',
-      );
-      expect(settings.primaryOf(ServiceKey.nginxProxyManager)?.id, 'npm');
-    });
   });
 
   group('isServiceConfigured asks all the instances', () {

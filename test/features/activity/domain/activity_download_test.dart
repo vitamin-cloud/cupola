@@ -56,32 +56,7 @@ SeerrRequest _request({
 
 void main() {
   group('downloadRoute', () {
-    test('who asked and who moves the bytes', () {
-      expect(downloadRoute(_item()), 'Radarr → qBittorrent');
-      expect(
-        downloadRoute(
-          _item(
-            service: ServiceKey.sonarr,
-            client: ServiceKey.sabnzbd,
-            clientLabel: 'SABnzbd',
-          ),
-        ),
-        'Sonarr → SABnzbd',
-      );
-    });
 
-    test('a second connection of the arr says which', () {
-      expect(
-        downloadRoute(
-          _item(
-            client: ServiceKey.sabnzbd,
-            clientLabel: 'SABnzbd',
-            connectionName: '4K',
-          ),
-        ),
-        'Radarr 4K → SABnzbd',
-      );
-    });
 
     test('a transfer no arr asked for is its client alone', () {
       expect(
@@ -259,7 +234,6 @@ void main() {
         ServiceKey.lidarr,
         ServiceKey.readarr,
         ServiceKey.qbittorrent,
-        ServiceKey.sabnzbd,
       ]) {
         expect(
           requestFor(_item(service: service, tmdbId: 5), [_request(tmdbId: 5)]),

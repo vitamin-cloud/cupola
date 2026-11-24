@@ -4,11 +4,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/core/status/media_status.dart';
-import 'package:cupola/core/widgets/download_queue_tile.dart';
 import 'package:cupola/features/qbittorrent/domain/models/torrent.dart';
 import 'package:cupola/features/qbittorrent/presentation/widgets/torrent_tile.dart';
-import 'package:cupola/features/settings/domain/service_key.dart';
 
 import 'catalog.dart';
 
@@ -202,106 +199,6 @@ void main() {
         width: 390,
       ),
       CatalogScene(
-        'Stale (sampleAge set) · the time left becomes the sample age and the '
-        'bar drains to neutral at its last position; a Usenet row keeps its '
-        'state before the age (subtitleLead)',
-        (_) => _column([
-          DownloadQueueTile(
-            title: 'Nosferatu.1922.1080p.BluRay.x264-GROUP',
-            subtitle: '9.0\u00A0GB · 12\u00A0min',
-            progress: 0.63,
-            percentage: 63,
-            accent: ServiceKey.qbittorrent.accent,
-            statusLabel: 'Downloading',
-            statusTone: StatusTone.info,
-            metrics: const [
-              DownloadQueueMetric(label: '↓ 25.0 MB/s', accented: true),
-            ],
-            sampleAge: const Duration(minutes: 6),
-            onTap: _noop,
-          ),
-          DownloadQueueTile(
-            title: 'Metropolis.1927.1080p.BluRay.x264-GROUP',
-            subtitleLead: 'Downloading',
-            subtitle: '12\u00A0min · 1.2\u00A0GB left of 3.4\u00A0GB',
-            progress: 0.65,
-            percentage: 65,
-            accent: ServiceKey.sabnzbd.accent,
-            sampleAge: const Duration(minutes: 6),
-            actions: DownloadQueueActionsMenu(
-              paused: false,
-              subject: 'Metropolis.1927.1080p.BluRay.x264-GROUP',
-              onCommand: (_) {},
-            ),
-          ),
-        ]),
-        width: 390,
-      ),
-      CatalogScene(
-        'Usenet rows (SABnzbd, NZBGet) · no chip, no metrics; the state heads '
-        'the second line and DownloadQueueActionsMenu trails the first',
-        (_) => _column([
-          DownloadQueueTile(
-            title: 'Metropolis.1927.1080p.BluRay.x264-GROUP',
-            subtitleLead: 'Downloading',
-            subtitle: '12\u00A0min · 1.2\u00A0GB left of 3.4\u00A0GB',
-            progress: 0.65,
-            percentage: 65,
-            accent: ServiceKey.sabnzbd.accent,
-            actions: DownloadQueueActionsMenu(
-              paused: false,
-              subject: 'Big.Buck.Bunny.2008.1080p',
-              onCommand: (_) {},
-            ),
-          ),
-          DownloadQueueTile(
-            title: 'Sherlock.Jr.1924.720p.BluRay.x264-GROUP',
-            subtitleLead: 'Stopped · movies',
-            subtitle: '2.1\u00A0GB left',
-            progress: 0.18,
-            percentage: 18,
-            accent: ServiceKey.nzbget.accent,
-            actions: DownloadQueueActionsMenu(
-              paused: true,
-              subject: 'Big.Buck.Bunny.2008.1080p',
-              onCommand: (_) {},
-            ),
-          ),
-          DownloadQueueTile(
-            title: 'The.Cabinet.of.Dr.Caligari.1920.1080p.BluRay.x264-GROUP',
-            subtitleLead: 'Queued · movies',
-            subtitle: 'progress unknown',
-            progress: null,
-            percentage: null,
-            accent: ServiceKey.nzbget.accent,
-            actions: DownloadQueueActionsMenu(
-              paused: false,
-              subject: 'Big.Buck.Bunny.2008.1080p',
-              onCommand: (_) {},
-            ),
-          ),
-        ]),
-        width: 390,
-      ),
-      CatalogScene(
-        'Long name and long state label · the name keeps ten of its em '
-        'beside the chip and the figure, or they go under it; nothing '
-        'overflows',
-        (_) => DownloadQueueTile(
-          title:
-              'The.Cabinet.of.Dr.Caligari.1920.Restored.Tinted.1080p.BluRay.'
-              'x264-GROUP',
-          subtitle: '6.4\u00A0GB · 3\u00A0h 10\u00A0min',
-          progress: 0.04,
-          percentage: 4,
-          accent: ServiceKey.transmission.accent,
-          statusLabel: 'Tracker unreachable',
-          statusTone: StatusTone.warning,
-          onTap: _noop,
-        ),
-        width: 390,
-      ),
-      CatalogScene(
         'TorrentTile on the desktop · the same plate in the wider queue column',
         (_) => _column([
           TorrentTile(
@@ -330,64 +227,6 @@ void main() {
         ]),
         width: 720,
         platform: CatalogPlatform.desktop,
-      ),
-      CatalogScene(
-        'Text at 200% · a downloading and a stalled TorrentTile, a selected '
-        'one, a Usenet row and a long state label, at twice the reading size',
-        (_) => _column([
-          TorrentTile(
-            torrent: _torrent(
-              'Nosferatu.1922.1080p.BluRay.x264-GROUP',
-              TorrentState.downloading,
-              'downloading',
-              progress: 0.63,
-              size: 9 * _gb,
-              dlSpeed: 25 * _mb,
-              upSpeed: 1200 * 1024,
-              eta: 720,
-            ),
-            onTap: _noop,
-          ),
-          TorrentTile(
-            torrent: _torrent(
-              'Metropolis.1927.2160p.Restored.BluRay.x265-GROUP',
-              TorrentState.stalled,
-              'stalledDL',
-              progress: 0.41,
-              size: 22 * _gb,
-            ),
-            selected: true,
-            onTap: _noop,
-            onLongPress: _noop,
-          ),
-          DownloadQueueTile(
-            title: 'Metropolis.1927.1080p.BluRay.x264-GROUP',
-            subtitleLead: 'Downloading',
-            subtitle: '12\u00A0min · 1.2\u00A0GB left of 3.4\u00A0GB',
-            progress: 0.65,
-            percentage: 65,
-            accent: ServiceKey.sabnzbd.accent,
-            actions: DownloadQueueActionsMenu(
-              paused: false,
-              subject: 'Big.Buck.Bunny.2008.1080p',
-              onCommand: (_) {},
-            ),
-          ),
-          DownloadQueueTile(
-            title:
-                'The.Cabinet.of.Dr.Caligari.1920.Restored.Tinted.1080p.BluRay.'
-                'x264-GROUP',
-            subtitle: '6.4\u00A0GB · 3\u00A0h 10\u00A0min',
-            progress: 0.04,
-            percentage: 4,
-            accent: ServiceKey.transmission.accent,
-            statusLabel: 'Tracker unreachable',
-            statusTone: StatusTone.warning,
-            onTap: _noop,
-          ),
-        ]),
-        width: 390,
-        textScale: catalogTextScale,
       ),
     ],
   );

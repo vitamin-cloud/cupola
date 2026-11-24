@@ -13,7 +13,6 @@ import 'package:cupola/features/settings/domain/connection_address.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_owner_session.dart';
 
 /// The Android half of the secure store.
 ///
@@ -206,20 +205,6 @@ class SettingsService {
       secureApiKey: 'secure_qbittorrent_password',
       username: 'qbittorrent_username',
     ),
-    ServiceKey.transmission: _ServiceStorageKeys(
-      url: 'transmission_url',
-      legacyApiKey: '',
-      secureApiKey: 'secure_transmission_password',
-      username: 'transmission_username',
-    ),
-    // Keyed `npm_*` to match `routeParam`, so a storage key, a route segment
-    // and a fixture directory all spell the service the same way.
-    ServiceKey.nginxProxyManager: _ServiceStorageKeys(
-      url: 'npm_url',
-      legacyApiKey: '',
-      secureApiKey: 'secure_npm_password',
-      username: 'npm_username',
-    ),
     ServiceKey.bazarr: _ServiceStorageKeys(
       url: 'bazarr_url',
       legacyApiKey: '',
@@ -246,17 +231,6 @@ class SettingsService {
       legacyApiKey: '',
       secureApiKey: 'secure_readarr_api_key',
     ),
-    ServiceKey.sabnzbd: _ServiceStorageKeys(
-      url: 'sabnzbd_url',
-      legacyApiKey: '',
-      secureApiKey: 'secure_sabnzbd_api_key',
-    ),
-    ServiceKey.nzbget: _ServiceStorageKeys(
-      url: 'nzbget_url',
-      legacyApiKey: '',
-      secureApiKey: 'secure_nzbget_password',
-      username: 'nzbget_username',
-    ),
     ServiceKey.unraid: _ServiceStorageKeys(
       url: 'unraid_url',
       legacyApiKey: '',
@@ -281,14 +255,6 @@ class SettingsService {
       legacyApiKey: '',
       secureApiKey: 'secure_emby_api_key',
       userId: 'emby_user_id',
-    ),
-    // The public `trr_pub_` key alone: it reads everything, and has no user
-    // behind it to pick. Without this entry the enum walks at startup would
-    // dereference a missing one.
-    ServiceKey.tracearr: _ServiceStorageKeys(
-      url: 'tracearr_url',
-      legacyApiKey: '',
-      secureApiKey: 'secure_tracearr_api_key',
     ),
   };
 
@@ -578,12 +544,10 @@ class SettingsService {
     // path above knows of them.
     final instances = [
       for (final instance in ordered)
-        await _withOwner(
-          await _withAccount(
-            instance.copyWith(
-              access: await _loadAccess(instance),
-              away: await _loadAway(instance),
-            ),
+        await _withAccount(
+          instance.copyWith(
+            access: await _loadAccess(instance),
+            away: await _loadAway(instance),
           ),
         ),
     ];
@@ -1210,7 +1174,7 @@ class SettingsService {
     // keychain.
     await _saveAccount(instance.copyWith(clearAccount: true));
     // The same for a Tracearr owner's bearer.
-    await _saveOwner(instance.copyWith(clearOwner: true));
+    await _saveOwner(instance);
   }
 
   // === Seerr accounts ======================================================
@@ -1295,66 +1259,11 @@ class SettingsService {
   // `secure_<id>_owner_session`. No password and no Plex token, ever. The
   // public key keeps its own slot: the owner is an addition to it.
 
-  /// Writes [instance]'s owner, or removes it and its token when it has none.
+  /// Clears what an old Tracearr owner sign-in left behind; this fork has no
+  /// Tracearr, so there is never one to write.
   Future<void> _saveOwner(ServiceInstance instance) async {
-    // Only a Tracearr has one: a save of any other connection touches nothing.
-    if (instance.service != ServiceKey.tracearr) return;
-    final owner = instance.owner;
-    if (owner == null) {
-      await _prefs.remove(instance.ownerStorageKey);
-      await _secureStore.delete(key: instance.ownerSessionStorageKey);
-      return;
-    }
-    await _prefs.setString(
-      instance.ownerStorageKey,
-      jsonEncode({
-        'kind': owner.kind.name,
-        'login': owner.login,
-        'displayName': owner.displayName,
-        if (owner.expiresAt case final expiresAt?)
-          'expiresAt': expiresAt.toUtc().toIso8601String(),
-        if (owner.checkedAt case final checkedAt?)
-          'checkedAt': checkedAt.toUtc().toIso8601String(),
-      }),
-    );
-    if (owner.token.isEmpty) {
-      await _secureStore.delete(key: instance.ownerSessionStorageKey);
-    } else {
-      await _secureStore.write(
-        key: instance.ownerSessionStorageKey,
-        value: owner.token,
-      );
-    }
-  }
-
-  /// [instance] with its stored Tracearr owner, when it has one. An owner
-  /// that does not parse costs the owner and never the connection.
-  Future<ServiceInstance> _withOwner(ServiceInstance instance) async {
-    if (instance.service != ServiceKey.tracearr) return instance;
-    final raw = _prefs.getString(instance.ownerStorageKey);
-    if (raw == null || raw.isEmpty) return instance;
-    final Object? decoded;
-    try {
-      decoded = jsonDecode(raw);
-    } on FormatException {
-      return instance;
-    }
-    if (decoded is! Map) return instance;
-    final kind = TracearrOwnerKind.byName(decoded['kind'] as String?);
-    if (kind == null) return instance;
-    String text(Object? value) => value is String ? value : '';
-    DateTime? date(Object? value) =>
-        value is String ? DateTime.tryParse(value) : null;
-    return instance.copyWith(
-      owner: TracearrOwnerSession(
-        kind: kind,
-        login: text(decoded['login']),
-        displayName: text(decoded['displayName']),
-        expiresAt: date(decoded['expiresAt']),
-        checkedAt: date(decoded['checkedAt']),
-        token: await _loadApiKey(instance.ownerSessionStorageKey),
-      ),
-    );
+    await _prefs.remove(instance.ownerStorageKey);
+    await _secureStore.delete(key: instance.ownerSessionStorageKey);
   }
 
   /// Where the qBittorrent sign-in refused for connection [id] is kept in

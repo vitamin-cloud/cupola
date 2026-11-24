@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:cupola/core/service_glyphs.dart';
 import 'package:cupola/core/theme.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_version.dart';
 import 'package:cupola/features/truenas/domain/truenas_version.dart';
 
 enum ServiceKey {
@@ -11,20 +10,15 @@ enum ServiceKey {
   sonarr,
   lidarr,
   qbittorrent,
-  transmission,
   bazarr,
   truenas,
   dockge,
   prowlarr,
   readarr,
-  sabnzbd,
-  nzbget,
   unraid,
-  nginxProxyManager,
   jellyfin,
   plex,
   emby,
-  tracearr,
 }
 
 /// High-level grouping used to organise services across the app.
@@ -35,8 +29,8 @@ enum ServiceKey {
 /// onboarding flow all read from it, so a new service only needs a [domain]
 /// assignment in one place.
 enum ServiceDomain {
-  media(label: 'Media'),
-  downloads(label: 'Downloads'),
+  // Named "Arr" in this fork (the *arr apps, Seerr and Prowlarr).
+  media(label: 'Arr'),
 
   /// Media servers: the only services in the app that know about *people*.
   ///
@@ -70,24 +64,16 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.sonarr ||
     ServiceKey.lidarr ||
     ServiceKey.bazarr ||
-    ServiceKey.readarr => ServiceDomain.media,
-    ServiceKey.qbittorrent ||
-    ServiceKey.transmission ||
-    ServiceKey.prowlarr ||
-    ServiceKey.sabnzbd ||
-    ServiceKey.nzbget => ServiceDomain.downloads,
+    ServiceKey.readarr ||
+    ServiceKey.prowlarr => ServiceDomain.media,
     ServiceKey.jellyfin ||
     ServiceKey.plex ||
-    ServiceKey.emby ||
-    ServiceKey.tracearr => ServiceDomain.stream,
+    ServiceKey.emby => ServiceDomain.stream,
     ServiceKey.truenas ||
     ServiceKey.dockge ||
     ServiceKey.unraid ||
-    // A reverse proxy is not a download client that happens to run on the
-    // box: it is the box's front door. Every other service in the app is
-    // usually reached *through* it, which is exactly why it belongs beside
-    // the NAS and the container manager rather than anywhere else.
-    ServiceKey.nginxProxyManager => ServiceDomain.infrastructure,
+    // This fork has no Downloads band: the torrent client sits with the box.
+    ServiceKey.qbittorrent => ServiceDomain.infrastructure,
   };
 
   /// Whether tapping this service opens a full multi-screen console (with its
@@ -100,7 +86,6 @@ extension ServiceKeyExtension on ServiceKey {
   /// the Stack's cells. The full [title] everywhere else, and always for a
   /// screen reader, which has no width to run out of.
   String get shortTitle => switch (this) {
-    ServiceKey.nginxProxyManager => 'Proxy Manager',
     _ => title,
   };
 
@@ -110,20 +95,15 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.sonarr => 'Sonarr',
     ServiceKey.lidarr => 'Lidarr',
     ServiceKey.qbittorrent => 'qBittorrent',
-    ServiceKey.transmission => 'Transmission',
-    ServiceKey.nginxProxyManager => 'Nginx Proxy Manager',
     ServiceKey.bazarr => 'Bazarr',
     ServiceKey.truenas => 'TrueNAS',
     ServiceKey.dockge => 'Dockge',
     ServiceKey.prowlarr => 'Prowlarr',
     ServiceKey.readarr => 'Readarr',
-    ServiceKey.sabnzbd => 'SABnzbd',
-    ServiceKey.nzbget => 'NZBGet',
     ServiceKey.unraid => 'Unraid',
     ServiceKey.jellyfin => 'Jellyfin',
     ServiceKey.plex => 'Plex',
     ServiceKey.emby => 'Emby',
-    ServiceKey.tracearr => 'Tracearr',
   };
 
   /// What the service is for, in a word or two: the line under "Set up X"
@@ -136,15 +116,10 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.bazarr => 'Subtitles',
     ServiceKey.readarr => 'Books\u00A0· no longer maintained upstream',
     ServiceKey.prowlarr => 'Indexers',
-    ServiceKey.qbittorrent || ServiceKey.transmission => 'Torrent client',
-    ServiceKey.sabnzbd || ServiceKey.nzbget => 'Usenet client',
+    ServiceKey.qbittorrent => 'Torrent client',
     ServiceKey.jellyfin || ServiceKey.plex || ServiceKey.emby => 'Streaming',
-    // It watches the media servers rather than serving media: the word is the
-    // one Tracearr uses of itself.
-    ServiceKey.tracearr => 'Monitoring',
     ServiceKey.truenas || ServiceKey.unraid => 'Server',
     ServiceKey.dockge => 'Containers',
-    ServiceKey.nginxProxyManager => 'Reverse proxy',
   };
 
   /// What a service knows of the others, for the two that know most of a
@@ -178,20 +153,15 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.sonarr => ServiceGlyphs.sonarr,
     ServiceKey.lidarr => ServiceGlyphs.lidarr,
     ServiceKey.qbittorrent => ServiceGlyphs.qbittorrent,
-    ServiceKey.transmission => ServiceGlyphs.transmission,
-    ServiceKey.nginxProxyManager => ServiceGlyphs.nginxProxyManager,
     ServiceKey.bazarr => ServiceGlyphs.bazarr,
     ServiceKey.truenas => ServiceGlyphs.truenas,
     ServiceKey.dockge => ServiceGlyphs.dockge,
     ServiceKey.prowlarr => ServiceGlyphs.prowlarr,
     ServiceKey.readarr => ServiceGlyphs.readarr,
-    ServiceKey.sabnzbd => ServiceGlyphs.sabnzbd,
-    ServiceKey.nzbget => ServiceGlyphs.nzbget,
     ServiceKey.unraid => ServiceGlyphs.unraid,
     ServiceKey.jellyfin => ServiceGlyphs.jellyfin,
     ServiceKey.plex => ServiceGlyphs.plex,
     ServiceKey.emby => ServiceGlyphs.emby,
-    ServiceKey.tracearr => ServiceGlyphs.tracearr,
   };
 
   /// What the interface paints for this service: the neutral lamp, the same
@@ -224,20 +194,15 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.sonarr => AppColors.sonarr,
     ServiceKey.lidarr => AppColors.lidarr,
     ServiceKey.qbittorrent => AppColors.qbittorrent,
-    ServiceKey.transmission => AppColors.transmission,
-    ServiceKey.nginxProxyManager => AppColors.nginxProxyManager,
     ServiceKey.bazarr => AppColors.bazarr,
     ServiceKey.truenas => AppColors.truenas,
     ServiceKey.dockge => AppColors.dockge,
     ServiceKey.prowlarr => AppColors.prowlarr,
     ServiceKey.readarr => AppColors.readarr,
-    ServiceKey.sabnzbd => AppColors.sabnzbd,
-    ServiceKey.nzbget => AppColors.nzbget,
     ServiceKey.unraid => AppColors.unraid,
     ServiceKey.jellyfin => AppColors.jellyfin,
     ServiceKey.plex => AppColors.plex,
     ServiceKey.emby => AppColors.emby,
-    ServiceKey.tracearr => AppColors.tracearr,
   };
 
   /// Whether this service authenticates with a single API key rather than a
@@ -254,17 +219,7 @@ extension ServiceKeyExtension on ServiceKey {
   /// the compiler ask.
   bool get usesApiKey => switch (this) {
     ServiceKey.qbittorrent ||
-    ServiceKey.dockge ||
-    ServiceKey.nzbget ||
-    // HTTP Basic, straight from `rpc-username`/`rpc-password`. Transmission
-    // mints no key of any kind.
-    ServiceKey.transmission ||
-    // Nginx Proxy Manager has **no long-lived API key at all**: the only
-    // credential it accepts is the account's own email and password, which
-    // `POST /api/tokens` exchanges for a short-lived bearer token. That is a
-    // property of the server, not a shortcut taken here; see [setupNote]
-    // for what it means for the user.
-    ServiceKey.nginxProxyManager => false,
+    ServiceKey.dockge => false,
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
@@ -273,12 +228,10 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.truenas ||
     ServiceKey.prowlarr ||
     ServiceKey.readarr ||
-    ServiceKey.sabnzbd ||
     ServiceKey.unraid ||
     ServiceKey.jellyfin ||
     ServiceKey.plex ||
-    ServiceKey.emby ||
-    ServiceKey.tracearr => true,
+    ServiceKey.emby => true,
   };
 
   /// Whether the library this service serves has to be entered through a chosen
@@ -312,17 +265,12 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.sonarr ||
     ServiceKey.lidarr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.transmission ||
     ServiceKey.bazarr ||
     ServiceKey.truenas ||
     ServiceKey.dockge ||
     ServiceKey.prowlarr ||
     ServiceKey.readarr ||
-    ServiceKey.sabnzbd ||
-    ServiceKey.nzbget ||
-    ServiceKey.unraid ||
-    ServiceKey.nginxProxyManager ||
-    ServiceKey.tracearr => false,
+    ServiceKey.unraid => false,
   };
 
   /// Says who is playing now: its answer becomes rows of Now playing,
@@ -337,23 +285,18 @@ extension ServiceKeyExtension on ServiceKey {
   bool get givesSessions => switch (this) {
     ServiceKey.jellyfin ||
     ServiceKey.plex ||
-    ServiceKey.emby ||
-    ServiceKey.tracearr => true,
+    ServiceKey.emby => true,
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
     ServiceKey.lidarr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.transmission ||
     ServiceKey.bazarr ||
     ServiceKey.truenas ||
     ServiceKey.dockge ||
     ServiceKey.prowlarr ||
     ServiceKey.readarr ||
-    ServiceKey.sabnzbd ||
-    ServiceKey.nzbget ||
-    ServiceKey.unraid ||
-    ServiceKey.nginxProxyManager => false,
+    ServiceKey.unraid => false,
   };
 
   /// Speaks the MediaBrowser API (Emby, and Jellyfin, which forked it): an API key with no
@@ -397,17 +340,9 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.readarr => 8787,
     ServiceKey.prowlarr => 9696,
     ServiceKey.bazarr => 6767,
-    ServiceKey.qbittorrent || ServiceKey.sabnzbd => 8080,
-    ServiceKey.nzbget => 6789,
-    ServiceKey.transmission => 9091,
-    // 81, not 80 or 443. Those two are the proxy *doing its job*: the
-    // hostnames it fronts. The admin interface, which is the only thing
-    // carrying an API, listens separately.
-    ServiceKey.nginxProxyManager => 81,
+    ServiceKey.qbittorrent => 8080,
     ServiceKey.jellyfin || ServiceKey.emby => 8096,
     ServiceKey.plex => 32400,
-    // The port its container image publishes.
-    ServiceKey.tracearr => 3000,
     ServiceKey.dockge => 5001,
     // Both ship a TLS web UI on the standard port.
     ServiceKey.truenas || ServiceKey.unraid => 443,
@@ -444,15 +379,9 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.unraid => 'X-Api-Key',
     ServiceKey.plex => 'X-Plex-Token',
     ServiceKey.jellyfin || ServiceKey.emby => 'X-Emby-Token',
-    ServiceKey.sabnzbd ||
     ServiceKey.truenas ||
     ServiceKey.dockge ||
-    ServiceKey.qbittorrent ||
-    ServiceKey.transmission ||
-    ServiceKey.nzbget ||
-    ServiceKey.nginxProxyManager ||
-    // Its key travels as `Authorization: Bearer`, which `ownHeaders` holds.
-    ServiceKey.tracearr => null,
+    ServiceKey.qbittorrent => null,
   };
 
   /// Every header this service's own client sets, lower-cased: its
@@ -473,13 +402,6 @@ extension ServiceKeyExtension on ServiceKey {
       'x-plex-platform',
       'x-plex-device-name',
     },
-    ServiceKey.transmission => const {
-      'authorization',
-      'x-transmission-session-id',
-    },
-    ServiceKey.nzbget ||
-    ServiceKey.nginxProxyManager ||
-    ServiceKey.tracearr => const {'authorization'},
     ServiceKey.qbittorrent => const {'referer', 'origin'},
     _ => {?credentialHeader?.toLowerCase()},
   };
@@ -510,17 +432,12 @@ extension ServiceKeyExtension on ServiceKey {
     // (`plex_capability.dart`).
     ServiceKey.unraid ||
     ServiceKey.truenas ||
-    ServiceKey.nginxProxyManager ||
     ServiceKey.plex => true,
     // Jellyfin's slot can hold a non-admin user's token, but a non-admin is
     // only ever shown sessions it may control, so no write Cupola draws can be
     // refused (see `jellyfin_client.dart`). What it loses are reads, a read
     // scope `jellyfin_provider.dart` answers.
     ServiceKey.jellyfin || ServiceKey.emby => false,
-    // The public key reads everything and is the only credential the
-    // connection needs; the owner's session, when it comes, is a second
-    // credential with its own job, not a narrower scope of this one.
-    ServiceKey.tracearr => false,
     // One key compared for equality, or one account with no role: nothing to
     // be narrower than. SABnzbd's NZB key and NZBGet's add-only user are
     // narrower, but they cannot *read* either, which makes them a connection
@@ -532,10 +449,7 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.bazarr ||
     ServiceKey.prowlarr ||
     ServiceKey.readarr ||
-    ServiceKey.sabnzbd ||
-    ServiceKey.nzbget ||
     ServiceKey.qbittorrent ||
-    ServiceKey.transmission ||
     ServiceKey.dockge => false,
   };
 
@@ -544,7 +458,6 @@ extension ServiceKeyExtension on ServiceKey {
   ///
   /// One getter so no banner, hint or toast picks the noun for itself.
   String get capabilityCredentialNoun => switch (this) {
-    ServiceKey.nginxProxyManager => 'account',
     // What Plex and the connection form call it.
     ServiceKey.plex => 'token',
     _ => 'key',
@@ -553,9 +466,7 @@ extension ServiceKeyExtension on ServiceKey {
   /// The verb that fixes a credential too narrow for a write. NPM hands out a
   /// role on an account, not a key, and "Update the key" would send the user
   /// looking for a field that does not exist.
-  String get capabilityFixLabel => this == ServiceKey.nginxProxyManager
-      ? 'Change account'
-      : 'Update the key';
+  String get capabilityFixLabel => 'Update the key';
 
   /// The word this service's secret is filed under in secure storage.
   ///
@@ -575,10 +486,7 @@ extension ServiceKeyExtension on ServiceKey {
   /// secret the first time someone noticed.
   String get credentialStorageSuffix => switch (this) {
     ServiceKey.qbittorrent ||
-    ServiceKey.transmission ||
-    ServiceKey.nginxProxyManager ||
-    ServiceKey.dockge ||
-    ServiceKey.nzbget => 'password',
+    ServiceKey.dockge => 'password',
     ServiceKey.plex => 'token',
     ServiceKey.seerr ||
     ServiceKey.radarr ||
@@ -588,11 +496,9 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.truenas ||
     ServiceKey.prowlarr ||
     ServiceKey.readarr ||
-    ServiceKey.sabnzbd ||
     ServiceKey.unraid ||
     ServiceKey.jellyfin ||
-    ServiceKey.emby ||
-    ServiceKey.tracearr => 'api_key',
+    ServiceKey.emby => 'api_key',
   };
 
   /// Whether this service may hold more than one instance.
@@ -628,8 +534,7 @@ extension ServiceKeyExtension on ServiceKey {
   /// `POST /api/tokens` rejects a bare username outright. Labelling that field
   /// "Username" would be an invitation to fail the login and then blame the
   /// password. Every other credential service really does want a username.
-  String get usernameLabel =>
-      this == ServiceKey.nginxProxyManager ? 'Email' : 'Username';
+  String get usernameLabel => 'Username';
 
   /// Where the credential lives inside *this service's* own interface.
   ///
@@ -644,19 +549,14 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.prowlarr ||
     ServiceKey.bazarr ||
     ServiceKey.seerr => 'Settings → General → API Key',
-    ServiceKey.sabnzbd => 'Config → General → API Key',
     ServiceKey.jellyfin => 'Dashboard → Advanced → API Keys',
     ServiceKey.emby => 'Settings → Advanced → API Keys',
-    ServiceKey.tracearr => 'Settings → Data & API → API',
     ServiceKey.truenas => 'Credentials → API Keys',
     ServiceKey.unraid => 'Settings → Management Access → API Keys',
     ServiceKey.plex => 'any item → Get Info → View XML → copy X-Plex-Token',
     // Web-UI login: the user already has these.
     ServiceKey.qbittorrent ||
-    ServiceKey.dockge ||
-    ServiceKey.nzbget ||
-    ServiceKey.transmission ||
-    ServiceKey.nginxProxyManager => null,
+    ServiceKey.dockge => null,
   };
 
   /// Setup guidance shown above the address field, for the services where the
@@ -702,39 +602,11 @@ extension ServiceKeyExtension on ServiceKey {
           'API Key. The key authenticates as an administrator but carries no '
           'user of its own, so pick whose watch state to read below once the '
           'connection works.',
-    // The public key is the one credential, and it is Tracearr's to show: it
-    // sits in the API card with a Generate Key button when none exists yet.
-    ServiceKey.tracearr =>
-      'Requires Tracearr $kTracearrMinVersion or newer. Copy the API key under '
-          'Settings → Data & API → API, or press Generate Key if there is none '
-          'yet. It begins trr_pub_ and only reads, which is all this '
-          'connection does.',
     ServiceKey.plex =>
       'Open any item in Plex Web, choose Get Info → View XML, and copy '
           'the X-Plex-Token from the address bar. This connection talks to '
           'your Plex server alone, so it needs a long-lived device token, not '
           'a temporary one beginning "eyJ" that only plex.tv can renew.',
-    // The single most common reason a Transmission daemon is reachable in a
-    // browser and not from a phone, and it is worth saying before the address
-    // is typed rather than after a mystifying 403.
-    ServiceKey.transmission =>
-      'Use the same username and password the Transmission web '
-          'interface asks for, and check that this device is allowed: '
-          '`rpc-whitelist` defaults to 127.0.0.1 only, so a phone on the same '
-          'network is refused until the range is widened. Note that '
-          'Transmission has one all-or-nothing credential and it can set the '
-          'script it runs when a download finishes, treat it as a login to '
-          'the machine itself, and do not reuse a password from anywhere '
-          'else.',
-    // Says the uncomfortable thing plainly, because the user cannot choose
-    // otherwise and deserves to know what they are handing over.
-    ServiceKey.nginxProxyManager =>
-      'Nginx Proxy Manager issues no API key. The only credential it '
-          'accepts is an account login, which Stack exchanges for a '
-          'short-lived token it keeps in memory and never writes to disk. '
-          'Create a dedicated user for Stack rather than using your admin '
-          'account, and point this at the admin interface (port 81 by '
-          'default), not at a hostname the proxy serves.',
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
@@ -742,9 +614,7 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.qbittorrent ||
     ServiceKey.bazarr ||
     ServiceKey.dockge ||
-    ServiceKey.prowlarr ||
-    ServiceKey.sabnzbd ||
-    ServiceKey.nzbget => null,
+    ServiceKey.prowlarr => null,
   };
 
   /// The same caveats as [setupNote], said in the onboarding walk's voice: a
@@ -780,23 +650,9 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.emby =>
       'The key signs in as an administrator but carries no user of its '
           'own, so pick whose watch state to read in Settings afterwards.',
-    ServiceKey.tracearr =>
-      'It needs Tracearr $kTracearrMinVersion or newer, and the key begins '
-          'trr_pub_.',
     ServiceKey.plex =>
       'It must be a long-lived device token: one beginning "eyJ" expires '
           'in 7 days and Stack cannot renew it without contacting plex.tv.',
-    // Transmission's one all-or-nothing credential and its `rpc-whitelist`
-    // default are both reasons a daemon that works in a browser refuses a
-    // phone, so they are worth a line here too.
-    ServiceKey.transmission =>
-      'Use the same login the Transmission web interface asks for, and widen '
-          '`rpc-whitelist`, it defaults to 127.0.0.1, so this device is '
-          'refused until it is listed.',
-    ServiceKey.nginxProxyManager =>
-      'Point this at the admin interface (port 81 by default), not at a '
-          'hostname the proxy serves, and use a dedicated account rather than '
-          'your admin one.',
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
@@ -804,9 +660,7 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.qbittorrent ||
     ServiceKey.bazarr ||
     ServiceKey.dockge ||
-    ServiceKey.prowlarr ||
-    ServiceKey.sabnzbd ||
-    ServiceKey.nzbget => null,
+    ServiceKey.prowlarr => null,
   };
 
   bool get supportsManualImport {
@@ -819,19 +673,14 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.seerr || ServiceKey.lidarr || ServiceKey.readarr => 'v1',
     ServiceKey.radarr || ServiceKey.sonarr => 'v3',
     ServiceKey.qbittorrent => 'WebUI',
-    ServiceKey.transmission => 'RPC',
-    ServiceKey.nginxProxyManager => 'API',
     ServiceKey.bazarr => 'v1',
     ServiceKey.truenas => 'v25',
     ServiceKey.dockge => 'Socket.IO',
     ServiceKey.prowlarr => 'v1',
-    ServiceKey.sabnzbd => 'API',
-    ServiceKey.nzbget => 'JSON-RPC',
     ServiceKey.unraid => 'GraphQL',
     ServiceKey.jellyfin => 'v10',
     ServiceKey.plex => 'v1',
     ServiceKey.emby => 'v4',
-    ServiceKey.tracearr => 'v2',
   };
 
   /// The endpoint used to prove a service is answering.
@@ -864,29 +713,21 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.plex => '/identity',
     // Emby answers the same anonymous route under its `/emby` base path.
     ServiceKey.emby => '/emby/System/Info/Public',
-    // Tracearr's keyless health route: it names the product and no version, so
-    // like the media servers' it proves an address, never a key. The key and
-    // the version are read by its own branches (`/api/v1/public/health`).
-    ServiceKey.tracearr => '/health',
     // Transmission (RPC envelope + session-id handshake) and Nginx Proxy
     // Manager (token exchange) join this group for the same reason: no plain
     // GET can separate "reachable" from "authenticated" for either.
     //
     // Handled over the RPC envelope in _loadVersion; the endpoint is a POST
     // with a session-id handshake, not a GET.
-    ServiceKey.transmission ||
     // Handled in _loadVersion, which reads the unauthenticated `GET /api/`
     // through the client so the token exchange is not paid for a version
     // string.
-    ServiceKey.nginxProxyManager ||
     // Handled over WebSocket in _loadVersion; no REST endpoint.
     ServiceKey.truenas ||
     // Handled over Socket.IO in _loadVersion; no REST endpoint.
     ServiceKey.dockge ||
     // Handled over the query-string API in _loadVersion; no REST endpoint.
-    ServiceKey.sabnzbd ||
     // Handled over JSON-RPC in _loadVersion; no REST endpoint.
-    ServiceKey.nzbget ||
     // Handled over GraphQL in _loadVersion; no REST endpoint.
     ServiceKey.unraid => '',
   };
@@ -896,50 +737,35 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.radarr => 'movies',
     ServiceKey.sonarr => 'series',
     ServiceKey.lidarr => 'artists',
-    ServiceKey.qbittorrent || ServiceKey.transmission => 'torrents',
-    // The hostnames it fronts. Not "hosts" on its own: a homelab already
-    // calls the physical boxes that, and this counts neither of them.
-    ServiceKey.nginxProxyManager => 'proxy hosts',
+    ServiceKey.qbittorrent => 'torrents',
     ServiceKey.bazarr => 'subtitles',
     ServiceKey.truenas => 'pools',
     ServiceKey.dockge => 'stacks',
     ServiceKey.prowlarr => 'indexers',
     ServiceKey.readarr => 'authors',
-    ServiceKey.sabnzbd => 'downloads',
-    ServiceKey.nzbget => 'downloads',
     ServiceKey.unraid => 'containers',
     // The top-level thing you enumerate on a media server. Not "movies":
     // a single Jellyfin or Plex instance mixes films, shows and music, and
     // naming one of them would both misdescribe the server and read as a
     // duplicate of Radarr's or Sonarr's own label.
     ServiceKey.jellyfin || ServiceKey.plex || ServiceKey.emby => 'libraries',
-    // What it watches over: the media servers it monitors.
-    ServiceKey.tracearr => 'servers',
   };
 
   String get routeParam => switch (this) {
     ServiceKey.seerr => 'seerr',
-    // The only service whose enum name is camelCase, and a URL is the one
-    // place that shows. Every other route segment is the lowercase name the
-    // user would type, so this one is spelled out rather than derived.
-    ServiceKey.nginxProxyManager => 'npm',
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
     ServiceKey.lidarr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.transmission ||
     ServiceKey.bazarr ||
     ServiceKey.truenas ||
     ServiceKey.dockge ||
     ServiceKey.prowlarr ||
     ServiceKey.readarr ||
-    ServiceKey.sabnzbd ||
-    ServiceKey.nzbget ||
     ServiceKey.unraid ||
     ServiceKey.jellyfin ||
     ServiceKey.plex ||
-    ServiceKey.emby ||
-    ServiceKey.tracearr => name,
+    ServiceKey.emby => name,
   };
 
   String? extractHost(String? url) {

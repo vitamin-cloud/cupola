@@ -60,16 +60,6 @@ void main() {
         platform: CatalogPlatform.desktop,
       ),
       CatalogScene(
-        'ServiceTabBar.header · Transmission, Queue, no lens',
-        (_) => ServiceTabBar.header(
-          service: ServiceKey.transmission,
-          current: _tab(ServiceKey.transmission, 'Queue'),
-          onSelected: (_) {},
-        ),
-        width: 1280,
-        platform: CatalogPlatform.desktop,
-      ),
-      CatalogScene(
         'ServiceTabBar · Radarr, Queue selected · the four *arr share this bar',
         (_) => ServiceTabBar(
           service: ServiceKey.radarr,
@@ -101,16 +91,6 @@ void main() {
         width: 1280,
         textScale: catalogTextScale,
         platform: CatalogPlatform.desktop,
-      ),
-      CatalogScene(
-        'ServiceTabBar · Nginx Proxy Manager, Certificates · wider than the '
-        'phone, so it scrolls from the start; TrueNAS draws no bar',
-        (_) => ServiceTabBar(
-          service: ServiceKey.nginxProxyManager,
-          current: _tab(ServiceKey.nginxProxyManager, 'Certificates'),
-          onSelected: (_) {},
-        ),
-        width: 390,
       ),
     ],
   );

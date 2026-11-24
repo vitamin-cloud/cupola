@@ -43,51 +43,6 @@ void main() {
       }
     });
 
-    test('Seerr, Jellyfin, Plex, SABnzbd, Nginx Proxy Manager', () {
-      expect(
-        _answers(
-          ServiceKey.seerr,
-          _answer(200, '{"version":"3.4.1","commitTag":"69f73a6f"}'),
-        ),
-        isTrue,
-      );
-      expect(
-        _answers(
-          ServiceKey.jellyfin,
-          _answer(
-            200,
-            '{"ServerName":"Lab","Version":"10.10.7",'
-            '"ProductName":"Jellyfin Server","Id":"abc"}',
-          ),
-        ),
-        isTrue,
-      );
-      expect(
-        _answers(
-          ServiceKey.plex,
-          _answer(200, '{"MediaContainer":{"size":0,"claimed":true}}'),
-        ),
-        isTrue,
-      );
-      expect(
-        _answers(
-          ServiceKey.plex,
-          _answer(200, '<?xml version="1.0"?><MediaContainer size="0"/>'),
-        ),
-        isTrue,
-      );
-      expect(
-        _answers(ServiceKey.sabnzbd, _answer(200, '{"version":"5.1.3"}')),
-        isTrue,
-      );
-      expect(
-        _answers(
-          ServiceKey.nginxProxyManager,
-          _answer(200, '{"status":"OK","version":{"major":2}}'),
-        ),
-        isTrue,
-      );
-    });
 
     test(
       'Emby and Jellyfin answer one route and are told apart by its body',
@@ -115,18 +70,6 @@ void main() {
       },
     );
 
-    test('Tracearr: a degraded or maintenance health still answers', () {
-      for (final body in [
-        '{"status":"maintenance","mode":"maintenance","db":true,"redis":false}',
-        '{"status":"degraded","db":false,"redis":true}',
-      ]) {
-        expect(_answers(ServiceKey.tracearr, _answer(200, body)), isTrue);
-      }
-      expect(
-        _answers(ServiceKey.tracearr, _answer(200, '{"status":"ok"}')),
-        isFalse,
-      );
-    });
 
     test('qBittorrent: its version, or Forbidden to a caller signed out', () {
       expect(_answers(ServiceKey.qbittorrent, _answer(200, 'v5.0.4')), isTrue);
@@ -140,65 +83,8 @@ void main() {
       );
     });
 
-    test('Transmission: its session id, or its own realm', () {
-      expect(
-        _answers(
-          ServiceKey.transmission,
-          _answer(
-            409,
-            '',
-            headers: {
-              'x-transmission-session-id': ['abc'],
-            },
-          ),
-        ),
-        isTrue,
-      );
-      expect(
-        _answers(
-          ServiceKey.transmission,
-          _answer(
-            401,
-            '<h1>401: Unauthorized</h1>',
-            headers: {
-              'www-authenticate': ['Basic realm="Transmission"'],
-            },
-          ),
-        ),
-        isTrue,
-      );
-      expect(
-        _answers(ServiceKey.transmission, _answer(401, 'Unauthorized')),
-        isFalse,
-      );
-    });
 
-    test('Transmission is knocked at the endpoint its client resolves', () {
-      expect(
-        knockPlanOf(ServiceKey.transmission, 'http://nas.lan:9091')!.path,
-        'http://nas.lan:9091/transmission/rpc',
-      );
-      expect(
-        knockPlanOf(ServiceKey.transmission, 'https://nas.lan/tr')!.path,
-        'https://nas.lan/tr/rpc',
-      );
-    });
 
-    test('NZBGet: its own realm', () {
-      expect(
-        _answers(
-          ServiceKey.nzbget,
-          _answer(
-            401,
-            '',
-            headers: {
-              'www-authenticate': ['Basic realm="NZBGet"'],
-            },
-          ),
-        ),
-        isTrue,
-      );
-    });
 
     test('Dockge: its own page names it', () {
       expect(

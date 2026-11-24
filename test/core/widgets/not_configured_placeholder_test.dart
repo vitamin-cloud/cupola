@@ -45,28 +45,7 @@ void main() {
     return router.state.uri.toString();
   }
 
-  testWidgets('the service form opens that service settings page', (
-    tester,
-  ) async {
-    final location = await pumpAndTap(
-      tester,
-      NotConfiguredPlaceholder.forService(ServiceKey.sabnzbd),
-      label: 'Set up SABnzbd',
-    );
 
-    expect(location, '/settings/service/${ServiceKey.sabnzbd.routeParam}');
-  });
-
-  testWidgets('the service form names the service it was given', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      MaterialApp(home: NotConfiguredPlaceholder.forService(ServiceKey.nzbget)),
-    );
-
-    expect(find.text('NZBGet is not set up'), findsOneWidget);
-    expect(find.text('Set up NZBGet'), findsOneWidget);
-  });
 
   testWidgets('the generic form resolves the name to the same setup form', (
     tester,

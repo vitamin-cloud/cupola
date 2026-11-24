@@ -11,12 +11,9 @@ import 'package:cupola/core/utils/dynamic_map_utils.dart';
 import 'package:cupola/features/dockge/data/dockge_client.dart';
 import 'package:cupola/features/emby/data/emby_client.dart';
 import 'package:cupola/features/jellyfin/data/jellyfin_client.dart';
-import 'package:cupola/features/npm/data/npm_client.dart';
-import 'package:cupola/features/nzbget/data/nzbget_client.dart';
 import 'package:cupola/features/plex/data/plex_client.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client_provider.dart';
-import 'package:cupola/features/sabnzbd/data/sabnzbd_client.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/discover/data/seerr_session.dart';
 import 'package:cupola/features/discover/domain/seerr_sign_in.dart';
@@ -34,8 +31,6 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/unread_secret.dart'
     show secureStoreName;
 import 'package:cupola/features/settings/domain/settings_model.dart';
-import 'package:cupola/features/tracearr/data/tracearr_client.dart';
-import 'package:cupola/features/transmission/data/transmission_client.dart';
 import 'package:cupola/features/truenas/data/truenas_ws_client.dart';
 import 'package:cupola/features/unraid/data/unraid_client.dart';
 
@@ -315,60 +310,8 @@ Future<ServiceDiagnosis> diagnoseCredentials(
     }
   }
 
-  if (service == ServiceKey.nzbget) {
-    if (urlTrimmed.isEmpty) return const ServiceDiagnosis.notConfigured();
-    final client = NzbgetClient(
-      url: urlTrimmed,
-      username: user,
-      password: pass,
-      certFingerprint: pin,
-      accessHeaders: accessHeaders,
-    );
-    return _probe(
-      client.testConnection,
-      timeout: const Duration(seconds: 6),
-      close: client.close,
-    );
-  }
 
-  if (service == ServiceKey.nginxProxyManager) {
-    if (urlTrimmed.isEmpty) return const ServiceDiagnosis.notConfigured();
-    final client = NpmClient(
-      url: urlTrimmed,
-      identity: user,
-      secret: pass,
-      certFingerprint: pin,
-      accessHeaders: accessHeaders,
-    );
-    // Checks both halves: `GET /api/` proves an NPM is there, and the login
-    // proves the credential. Only the first would go green for a wrong
-    // password, since the admin port answers 200 with its SPA for almost any
-    // request.
-    return _probe(
-      client.testConnection,
-      timeout: const Duration(seconds: 10),
-      close: client.close,
-    );
-  }
 
-  if (service == ServiceKey.transmission) {
-    if (urlTrimmed.isEmpty) return const ServiceDiagnosis.notConfigured();
-    final client = TransmissionClient(
-      url: urlTrimmed,
-      username: user,
-      password: pass,
-      certFingerprint: pin,
-      accessHeaders: accessHeaders,
-    );
-    // `session-get` in one round trip forces the CSRF handshake, validates
-    // the Basic credentials, and proves the rpc/host whitelists admit this
-    // device: the three ways a reachable Transmission still refuses to talk.
-    return _probe(
-      client.testConnection,
-      timeout: const Duration(seconds: 8),
-      close: client.close,
-    );
-  }
 
   // Named, not inferred. This used to read `if (!service.usesApiKey)`, which is
   // a *negative capability* rather than an identity, so every future
@@ -412,46 +355,7 @@ Future<ServiceDiagnosis> diagnoseCredentials(
     );
   }
 
-  if (service == ServiceKey.tracearr) {
-    final client = TracearrClient(
-      baseUrl: urlTrimmed,
-      apiKey: apiKey.trim(),
-      pinnedCertFingerprint: pin,
-      accessHeaders: accessHeaders,
-    );
-    try {
-      // The authenticated health read: its `/health` twin is anonymous and
-      // would read any key as answering. A refused key is a 401 here, a web
-      // page or another service's answer is a wrong address, and a Tracearr
-      // older than the API v2 Cupola reads says which version to install.
-      final health = await client.checkCredentialAndVersion().timeout(
-        const Duration(seconds: 6),
-      );
-      final named = (health.parsedVersion?.toString() ?? health.version)
-          ?.trim();
-      return named == null || named.isEmpty
-          ? const ServiceDiagnosis.connected()
-          : ServiceDiagnosis.connectedAs(named);
-    } catch (e) {
-      return ServiceDiagnosis.failed(e);
-    } finally {
-      client.close();
-    }
-  }
 
-  if (service == ServiceKey.sabnzbd) {
-    final client = SabnzbdClient(
-      url: urlTrimmed,
-      apiKey: apiKey.trim(),
-      certFingerprint: pin,
-      accessHeaders: accessHeaders,
-    );
-    return _probe(
-      client.testConnection,
-      timeout: const Duration(seconds: 6),
-      close: client.close,
-    );
-  }
 
   if (service == ServiceKey.unraid) {
     final client = UnraidClient(

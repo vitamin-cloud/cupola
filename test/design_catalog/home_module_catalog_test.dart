@@ -238,7 +238,6 @@ StreamActivityRow _through(
   service: ServiceKey.plex,
   instanceId: 'tracearr',
   connectionName: null,
-  through: ServiceKey.tracearr,
   session: StreamSession(
     id: '$user-$title',
     userName: user,
@@ -258,7 +257,6 @@ StreamActivityRow _through(
 
 final _tracearrSettings = settingsWithServices(const [
   ServiceKey.jellyfin,
-  ServiceKey.tracearr,
 ]);
 
 /// The calendar of the boards' household, as Coming up reads it.
@@ -394,11 +392,9 @@ StackLights _lights(
       ServiceKey.prowlarr,
       ServiceKey.bazarr,
       ServiceKey.qbittorrent,
-      ServiceKey.sabnzbd,
       ServiceKey.jellyfin,
       ServiceKey.truenas,
       ServiceKey.dockge,
-      ServiceKey.nginxProxyManager,
     ])
       (service: service, light: lights[service] ?? every),
   ],
@@ -831,30 +827,6 @@ void main() {
           ),
           streamActivityOfflineProvider.overrideWith(
             (ref) async => const <StreamOfflineSource>[],
-          ),
-        ],
-      ),
-      CatalogScene(
-        'Now playing · Tracearr did not answer: the Jellyfin rows stay, and '
-        'one line says Tracearr did not answer and what is missing',
-        (_) => const HomeNowPlayingModule(),
-        width: 390,
-        overrides: [
-          currentSettingsProvider.overrideWith((ref) => _tracearrSettings),
-          streamActivityProvider.overrideWith(
-            (ref) async => [
-              _playing('Anna', 'Sintel', 'Living room TV', 9, 0.4),
-            ],
-          ),
-          streamActivityOfflineProvider.overrideWith(
-            (ref) async => const [
-              (
-                service: ServiceKey.tracearr,
-                instanceId: 'tracearr',
-                title: 'Tracearr',
-                error: ClassifiedFailure(ServiceFailureReason.unreachable),
-              ),
-            ],
           ),
         ],
       ),

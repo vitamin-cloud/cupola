@@ -15,7 +15,6 @@ import 'package:cupola/features/media/presentation/open_media.dart';
 import 'package:cupola/features/plex/presentation/plex_capability.dart';
 import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/services/domain/service_tab.dart';
-import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/connection_presentation.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/stream/domain/models/stream_session.dart';
@@ -25,8 +24,6 @@ import 'package:cupola/features/stream/presentation/stream_session_poster.dart';
 import 'package:cupola/features/stream/presentation/widgets/stream_message_prompt.dart';
 import 'package:cupola/features/stream/presentation/widgets/stream_session_card.dart';
 import 'package:cupola/features/stream/presentation/widgets/stream_session_slab.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_navigation.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_person_provider.dart';
 
 /// Who is watching, right now: the one thing only a media server knows.
 ///
@@ -344,23 +341,7 @@ class StreamNowPlayingSection extends ConsumerWidget {
     WidgetRef ref,
     StreamSession session,
   ) {
-    if (service != ServiceKey.plex) return null;
-    if (!ref
-        .watch(currentSettingsProvider)
-        .isServiceConfigured(ServiceKey.tracearr)) {
-      return null;
-    }
-    final person = ref
-        .watch(
-          tracearrPersonOfSessionProvider((
-            service: service,
-            userId: session.userId,
-            name: session.userName,
-          )),
-        )
-        .value;
-    if (person == null) return null;
-    return () => openTracearrPerson(context, person);
+    return null;
   }
 
   /// The stop control, or null when stopping is not available.

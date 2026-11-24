@@ -3,7 +3,6 @@ library;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -20,12 +19,7 @@ import 'package:cupola/features/home/presentation/widgets/home_module_parts.dart
 import 'package:cupola/features/services/domain/services_semantics.dart';
 import 'package:cupola/features/services/domain/source_coverage.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
-import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/stream/presentation/stream_activity_provider.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_image.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_navigation.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_person_provider.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_provider.dart';
 
 /// Now playing: every playback on every media server, one row each.
 ///
@@ -163,13 +157,6 @@ class NowPlayingRow extends ConsumerWidget {
       onTap: open,
       // The door to the person is inside the row's own tap for a screen
       // reader: the visible disc is silenced with the rest of the row.
-      customSemanticsActions: {
-        if (personId != null)
-          CustomSemanticsAction(
-            label: 'Open ${session.userName} in Tracearr',
-          ): () =>
-              openTracearrPerson(context, personId),
-      },
       child: InkWell(
         onTap: open,
         excludeFromSemantics: true,
@@ -254,62 +241,25 @@ class _PersonDisc extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = row.session;
     final initial = nowPlayingInitial(session);
-    Widget disc = _Initial(initial: initial);
-    // Only while Tracearr is still set up: a row outlives a connection that
-    // was removed, and its client is not built for one that is gone.
-    if (row.tracearr case final sight?
-        when sight.avatarPath != null &&
-            ref
-                .watch(currentSettingsProvider)
-                .isServiceConfigured(ServiceKey.tracearr)) {
-      final client = ref.watch(tracearrClientForProvider(sight.instanceId));
-      final avatar = resolveTracearrImage(sight.avatarPath, client.baseUri);
-      if (avatar != null) {
-        disc = _Initial(
-          initial: initial,
-          avatarUrl: avatar.toString(),
-          avatarHeaders: client.imageHeaders,
-        );
-      }
-    }
+    final Widget disc = _Initial(initial: initial);
     final person = personId;
     final slot = SizedBox(
       width: _slot,
       height: person == null ? _disc : _slot,
       child: Align(alignment: Alignment.centerLeft, child: disc),
     );
-    if (person == null) return slot;
-    return InkResponse(
-      onTap: () => openTracearrPerson(context, person),
-      radius: _slot / 2,
-      child: slot,
-    );
+    return slot;
   }
 }
 
 /// The Tracearr person a Plex row leads to, or null where there is no door:
 /// another server's row, a row only Tracearr sees (its tap is Tracearr's Live
 /// already), a Tracearr that is not set up, or a viewer it does not know.
-String? _personDoor(WidgetRef ref, StreamActivityRow row) {
-  if (row.service != ServiceKey.plex || row.isThrough) return null;
-  if (!ref
-      .watch(currentSettingsProvider)
-      .isServiceConfigured(ServiceKey.tracearr)) {
-    return null;
-  }
-  return ref
-      .watch(
-        tracearrPersonOfSessionProvider((
-          service: row.service,
-          userId: row.session.userId,
-          name: row.session.userName,
-        )),
-      )
-      .value;
-}
+String? _personDoor(WidgetRef ref, StreamActivityRow row) => null;
 
 /// The disc with who is watching's initial, or their picture over it.
 class _Initial extends StatelessWidget {
+  // ignore: unused_element_parameter
   const _Initial({required this.initial, this.avatarUrl, this.avatarHeaders});
 
   final String initial;
@@ -359,10 +309,6 @@ class _Initial extends StatelessWidget {
 /// own, or Tracearr's Live for one only Tracearr sees, which has no page of a
 /// server Cupola is not connected to.
 void _openSessions(BuildContext context, StreamActivityRow row) {
-  if (row.isThrough) {
-    context.go(ServiceRoutes.tracearrLive);
-    return;
-  }
   context.go(
     ServiceRoutes.streamActivity(row.service, instanceId: row.instanceId),
   );

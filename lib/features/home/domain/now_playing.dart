@@ -11,7 +11,6 @@ import 'package:cupola/core/utils/dot_separator.dart';
 import 'package:cupola/core/utils/duration_format.dart';
 import 'package:cupola/core/utils/episode_code.dart';
 import 'package:cupola/features/services/domain/source_coverage.dart';
-import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/stream/domain/models/stream_session.dart';
 
 /// How many sessions the module draws before the way to the server's page.
@@ -56,9 +55,7 @@ String nowPlayingInitial(StreamSession session) {
 /// what is missing is only what Tracearr alone sees: a server Cupola has no
 /// connection to. One line, never one for each.
 String nowPlayingOfflineSentence(SourceCoverage coverage) {
-  final sentence = coverageFailureSentence(coverage);
-  if (!coverage.failedServices.contains(ServiceKey.tracearr)) return sentence;
-  return '$sentence $nowPlayingTracearrMissing';
+  return coverageFailureSentence(coverage);
 }
 
 /// What is not on the list while Tracearr is silent.

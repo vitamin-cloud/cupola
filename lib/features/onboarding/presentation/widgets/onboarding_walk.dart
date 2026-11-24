@@ -928,9 +928,7 @@ class _OnboardingWalkState extends State<OnboardingWalk> {
           focusNode: _credential,
           action: TextInputAction.next,
           onSubmitted: (_) => _pass(_password),
-          hint: service == ServiceKey.nginxProxyManager
-              ? 'The email you sign in with'
-              : 'Optional',
+          hint: 'Optional',
         ),
         const SizedBox(height: AppSpacing.lg),
         OnboardingField(

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cupola/core/status/arr_queue_snapshot.dart';
 import 'package:cupola/core/providers/navigation_refresh_provider.dart';
 import 'package:cupola/core/utils/service_routes.dart';
+import 'package:cupola/core/widgets/arr_add_scaffold.dart';
 import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/movies/domain/models/radarr_movie.dart';
@@ -59,6 +60,52 @@ MediaStatusInfo? Function(RadarrMovie movie) _statusOf(
       ),
       queue,
     );
+
+/// Opens [movie] the way the wall does: its own page under this tab, or
+/// through its TMDB id on the title page, on the lens's copy.
+void _openMovie(
+  BuildContext context,
+  String lens,
+  RadarrMovie movie,
+  String heroTag,
+) {
+  if (movie.tmdbId <= 0) {
+    context.push(ServiceRoutes.radarrMovie(movie.id, heroTag: heroTag));
+    return;
+  }
+  context.openMedia(
+    MediaKey.movie(movie.tmdbId),
+    focus: lens.isEmpty ? null : lens,
+    heroTag: heroTag,
+    posterUrl: remotePosterOf(movie.images),
+  );
+}
+
+/// This fork's page for adding a film: Radarr's lookup alone.
+class MoviesAddScreen extends ConsumerWidget {
+  const MoviesAddScreen({super.key, this.initialQuery});
+
+  final String? initialQuery;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final queue = queueSnapshotOf(ref.watch(radarrQueueSnapshotProvider));
+    final lens = ref.watch(activeInstanceProvider(ServiceKey.radarr))?.id ?? '';
+    final status = _statusOf(queue);
+    return ArrAddScaffold(
+      service: ServiceKey.radarr,
+      title: 'Add a movie',
+      hint: 'Search for a new movie',
+      queryProvider: moviesSearchQueryProvider,
+      initialQuery: initialQuery,
+      results: (context, query) => MoviesFindRadarr(
+        query: query,
+        statusOf: status,
+        onOpen: (context, movie, tag) => _openMovie(context, lens, movie, tag),
+      ),
+    );
+  }
+}
 
 class MoviesScreen extends ConsumerWidget {
   final bool showAppBar;
@@ -117,19 +164,16 @@ class MoviesScreen extends ConsumerWidget {
       heroTagPrefix: 'movie',
       libraryProvider: moviesProvider,
       searchQueryProvider: moviesSearchQueryProvider,
-      find: MediaFind(
-        scopeProvider: moviesFindScopeProvider,
-        serviceLabel: connectionName,
+      // Only what the library holds: adding a film is its own page, the
+      // band's magnifying glass, which the "ask Radarr" row opens too.
+      find: MediaFind.libraryOnly(
         libraryBody: (context, query) => MoviesFindLibrary(
           query: query,
           statusOf: status,
           settingsSelector: (settings) => settings.artworkKeyOf(lens, route),
           onOpen: open,
-          onAskRadarr: () => ref.read(moviesFindScopeProvider.notifier).state =
-              MediaFindScope.service,
+          onAskRadarr: () => context.push(ServiceRoutes.radarrAddFor(query)),
         ),
-        serviceBody: (context, query) =>
-            MoviesFindRadarr(query: query, statusOf: status, onOpen: open),
       ),
       // Search, Monitor, Profile and Remove on the movies selected.
       bulk: radarrBulk(

@@ -78,9 +78,6 @@ List<SetUpSuggestion> setUpNextOf(
       ),
     if (!any(const [
       ServiceKey.qbittorrent,
-      ServiceKey.transmission,
-      ServiceKey.sabnzbd,
-      ServiceKey.nzbget,
     ]))
       (
         service: null,

@@ -119,11 +119,6 @@ abstract final class WorldConnections {
     ServiceKey.qbittorrent,
     WorldHosts.qbittorrent,
   );
-  static final sabnzbd = _api(
-    WorldIds.sabnzbd,
-    ServiceKey.sabnzbd,
-    WorldHosts.sabnzbd,
-  );
   static final truenas = _api(
     WorldIds.truenas,
     ServiceKey.truenas,
@@ -143,19 +138,6 @@ abstract final class WorldConnections {
     ServiceKey.emby,
     WorldHosts.emby,
     viewerId: EmbyFake.operatorId,
-  );
-
-  /// Tracearr on `tower`, beside the Emby it watches, and the Jellyfin and
-  /// the Plex on `nas`: the same people and titles as the three of them.
-  static final tracearr = _api(
-    WorldIds.tracearr,
-    ServiceKey.tracearr,
-    WorldHosts.tracearr,
-  );
-  static final transmission = _login(
-    WorldIds.transmission,
-    ServiceKey.transmission,
-    WorldHosts.transmission,
   );
 
   /// The cabin's Jellyfin, named by the user: in no profile, for a test that
@@ -230,19 +212,6 @@ abstract final class WorldConnections {
     ),
   );
 
-  /// A second Nginx Proxy Manager, on `nas`, named by the user: in no
-  /// profile, for a test that adds it beside World B's.
-  static final npmNas = ProfileConnection(
-    ServiceInstance(
-      id: WorldIds.npmNas,
-      service: ServiceKey.nginxProxyManager,
-      url: WorldHosts.npmNas,
-      label: 'Home',
-      username: 'admin',
-      credential: worldKey(WorldIds.npmNas),
-    ),
-  );
-
   // World B, on `tower`: in no profile, for a test that adds one with
   // `ConfigProfile.withConnection`: the NPM and Unraid read-only cases.
   static final readarr = _api(
@@ -250,13 +219,7 @@ abstract final class WorldConnections {
     ServiceKey.readarr,
     WorldHosts.readarr,
   );
-  static final nzbget = _login('nzbget', ServiceKey.nzbget, WorldHosts.nzbget);
   static final unraid = _api('unraid', ServiceKey.unraid, WorldHosts.unraid);
-  static final npm = _login(
-    'npm',
-    ServiceKey.nginxProxyManager,
-    WorldHosts.npm,
-  );
 }
 
 SeerrKnownServer _knows(
@@ -320,7 +283,6 @@ abstract final class Profiles {
       WorldConnections.bazarr,
       WorldConnections.prowlarr,
       WorldConnections.qbittorrent,
-      WorldConnections.sabnzbd,
       WorldConnections.truenas,
       WorldConnections.dockge,
     ],
@@ -481,7 +443,6 @@ abstract final class Profiles {
       WorldConnections.lidarr,
       WorldConnections.prowlarr,
       WorldConnections.qbittorrent,
-      WorldConnections.transmission,
     ],
   );
 
@@ -541,7 +502,6 @@ abstract final class Profiles {
       WorldConnections.sonarrAnime,
       WorldConnections.bazarr,
       WorldConnections.qbittorrent,
-      WorldConnections.sabnzbd,
     ],
     seerrKnows: [
       _knows(

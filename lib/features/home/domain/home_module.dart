@@ -100,9 +100,6 @@ enum HomeModule {
       ServiceKey.lidarr,
       ServiceKey.readarr,
       ServiceKey.qbittorrent,
-      ServiceKey.transmission,
-      ServiceKey.sabnzbd,
-      ServiceKey.nzbget,
     ],
     needs: 'Needs Radarr, Sonarr or a download client',
   ),
@@ -128,7 +125,6 @@ enum HomeModule {
       ServiceKey.jellyfin,
       ServiceKey.plex,
       ServiceKey.emby,
-      ServiceKey.tracearr,
     ],
   ),
 

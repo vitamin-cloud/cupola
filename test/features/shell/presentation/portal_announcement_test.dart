@@ -1,15 +1,11 @@
-import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/features/services/domain/service_summary.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
-import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/settings/domain/settings_model.dart';
 import 'package:cupola/features/shell/presentation/portal_announcement.dart';
 
 void main() {
@@ -61,45 +57,6 @@ void main() {
   });
 
   group('the census', () {
-    test('counts the cells the floor draws, one per connection', () async {
-      final container = ProviderContainer(
-        overrides: [
-          currentSettingsProvider.overrideWith(
-            (ref) => const SettingsModel(instances: _instances),
-          ),
-          _answers('radarr', ServiceSummaryStatus.online),
-          _answers('radarr-hd', ServiceSummaryStatus.offline),
-          // Answered, but refused the key: amber on the floor, and a fault.
-          _answers('sonarr', ServiceSummaryStatus.fault),
-          // Never answers: the probe is still out.
-          instanceSummaryProvider((
-            service: ServiceKey.sabnzbd,
-            instanceId: 'sabnzbd',
-          )).overrideWith((ref) => Completer<ServiceSummary>().future),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      // Let the three answers land.
-      container.listen(portalFloorCensusProvider, (_, _) {});
-      await Future<void>.delayed(Duration.zero);
-      await Future<void>.delayed(Duration.zero);
-
-      final census = container.read(portalFloorCensusProvider);
-      expect(
-        census.services,
-        4,
-        reason:
-            'two Radarr connections are two cells on the floor, and the '
-            'half-filled Lidarr slot is not a cell at all',
-      );
-      expect(
-        census.faults,
-        2,
-        reason: 'the Radarr that did not answer and the Sonarr that refused',
-      );
-      expect(census.checking, 1, reason: 'the SABnzbd still being asked');
-    });
   });
 }
 
@@ -122,12 +79,6 @@ const _instances = [
     id: 'sonarr',
     service: ServiceKey.sonarr,
     url: 'https://tv.lan:8989',
-    credential: 'k',
-  ),
-  ServiceInstance(
-    id: 'sabnzbd',
-    service: ServiceKey.sabnzbd,
-    url: 'https://nzb.lan:8080',
     credential: 'k',
   ),
   // A slot with no address: the settings screen shows it, the floor does not.

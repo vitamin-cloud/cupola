@@ -65,21 +65,16 @@ class ServiceRoutes {
   static const dockge = '$stack/dockge';
   static const prowlarr = '$stack/prowlarr';
   static const readarr = '$stack/readarr';
-  static const sabnzbd = '$stack/sabnzbd';
-  static const nzbget = '$stack/nzbget';
   static const unraid = '$stack/unraid';
   static const jellyfin = '$stack/jellyfin';
   static const plex = '$stack/plex';
   static const emby = '$stack/emby';
-  static const tracearr = '$stack/tracearr';
 
   /// The two the file was missing. Both services shipped with their callers
   /// building `'/services/transmission'` and `'/services/npm'` by hand, which
   /// is how a single source of truth stops being one, and `npm` is precisely
   /// the segment that is *not* derivable from the enum name, so a hand-built
   /// path is a spelling nobody checks.
-  static const transmission = '$stack/transmission';
-  static const nginxProxyManager = '$stack/npm';
 
   /// The home of any service, by key.
   ///
@@ -148,56 +143,6 @@ class ServiceRoutes {
   // Tracearr watches the media servers and is not one: no libraries, no item
   // tree, five tabs of its own. A literal each, tied to the tab segments by a
   // test, for the reason the blocks above are.
-  static const tracearrOverview = '$tracearr/overview';
-  static const tracearrLive = '$tracearr/live';
-  static const tracearrHistory = '$tracearr/history';
-  static const tracearrUsers = '$tracearr/users';
-  static const tracearrViolations = '$tracearr/violations';
-
-  /// A person's page, opened from the page at [from], under the tab [from] is
-  /// in so Back returns to the row it was opened from, as a title's page does
-  /// (`mediaMountFor`): `/stack/tracearr/users/:id` from the Users tab (the
-  /// spelling a deep link uses), `/stack/tracearr/<tab>/person/:id` from any
-  /// other tab of Tracearr, and the Users spelling from anywhere else.
-  ///
-  /// The id is Tracearr's own, one segment, so a link resolves from the path
-  /// alone.
-  static String tracearrPerson(String id, {required String from}) {
-    final encoded = Uri.encodeComponent(id);
-    return switch (Uri.parse(from).pathSegments) {
-      ['stack', 'tracearr', final tab, ...]
-          when const {
-            'overview',
-            'live',
-            'history',
-            'violations',
-          }.contains(tab) =>
-        '$tracearr/$tab/person/$encoded',
-      _ => '$tracearrUsers/$encoded',
-    };
-  }
-
-  /// One violation, inside the Violations tab. The id is a path segment, so a
-  /// deep link (a Needs you card, a notification) resolves from the path
-  /// alone. [instanceId] names the Tracearr connection it was read from
-  /// (`?i=`), only when given: a stale or missing one reads the lens.
-  static String tracearrViolation(String id, {String? instanceId}) =>
-      _withQuery('$tracearrViolations/${Uri.encodeComponent(id)}', {
-        'i': instanceId,
-      });
-
-  /// The Violations tab narrowed to one person (`?user=`), which is where a
-  /// person's page leads with its Violations button. [userId] is Tracearr's
-  /// own id for the person (`TracearrUser.id`), a UUID: a value that is not one
-  /// is ignored by the tab, since the server answers a 400 to it.
-  static String tracearrViolationsOf(String userId) =>
-      _withQuery(tracearrViolations, {'user': userId});
-
-  /// The Violations tab of one Tracearr connection (`?i=`), which is where a
-  /// notification of several violations opens: the tab reads the lens, and
-  /// the screen brings the connection the link names under it.
-  static String tracearrViolationsOn(String instanceId) =>
-      _withQuery(tracearrViolations, {'i': instanceId});
 
   static const plexOverview = '$plex/overview';
 
@@ -435,11 +380,23 @@ class ServiceRoutes {
   static const radarrOverview = '$radarr/overview';
   static const radarrLibrary = '$radarr/library';
 
+  /// This fork's page for adding a film: Radarr's lookup, nothing of the
+  /// library. [radarrAddFor] opens it on some words.
+  static const radarrAdd = '$radarrLibrary/add';
+  static String radarrAddFor(String query) =>
+      _withQuery(radarrAdd, {if (query.trim().isNotEmpty) 'q': query.trim()});
+
   /// The film, inside the Library tab's branch.
   static const radarrMovieBase = '$radarrLibrary/movie';
 
   static const sonarrOverview = '$sonarr/overview';
   static const sonarrLibrary = '$sonarr/library';
+
+  /// This fork's page for adding a series: Sonarr's lookup, nothing of the
+  /// library. [sonarrAddFor] opens it on some words.
+  static const sonarrAdd = '$sonarrLibrary/add';
+  static String sonarrAddFor(String query) =>
+      _withQuery(sonarrAdd, {if (query.trim().isNotEmpty) 'q': query.trim()});
 
   /// The show, inside the Library tab's branch: the same move as the film and
   /// for the same reason: a detail pushed *inside* its tab survives a switch
@@ -483,27 +440,14 @@ class ServiceRoutes {
   /// Transmission has no detail route to move, and that absence is the shape
   /// rather than an omission: the torrent list is expandable rows and there has
   /// never been a page to push, so Queue is a leaf branch.
-  static const transmissionOverview = '$transmission/overview';
-  static const transmissionQueue = '$transmission/queue';
-  static const transmissionLabels = '$transmission/labels';
-  static const transmissionSession = '$transmission/session';
 
   /// SABnzbd and NZBGet both keep a History tab, and neither has a job detail:
   /// a queue slot and a history slot are each one row that expands, so both
   /// Queue branches are leaves like Transmission's.
-  static const sabnzbdOverview = '$sabnzbd/overview';
-  static const sabnzbdQueue = '$sabnzbd/queue';
-  static const sabnzbdHistory = '$sabnzbd/history';
-  static const sabnzbdServers = '$sabnzbd/servers';
 
   /// NZBGet carries the widest bar of the four: five tabs, because the daemon
   /// keeps its feeds and its log as first-class things the other three do not
   /// have.
-  static const nzbgetOverview = '$nzbget/overview';
-  static const nzbgetQueue = '$nzbget/queue';
-  static const nzbgetHistory = '$nzbget/history';
-  static const nzbgetFeeds = '$nzbget/feeds';
-  static const nzbgetMessages = '$nzbget/messages';
 
   // ── Bazarr, under the tab model ───────────────────────────────────────────
   //
@@ -645,15 +589,6 @@ class ServiceRoutes {
   /// Three of the five segments are hyphenated where the label has a space, and
   /// that is `ServiceTab.segment`'s job rather than a spelling invented here.
   /// Like Unraid, NPM shipped one path and there is nothing to forward.
-  static const npmOverview = '$nginxProxyManager/overview';
-  static const npmProxyHosts = '$nginxProxyManager/proxy-hosts';
-  static const npmCertificates = '$nginxProxyManager/certificates';
-  static const npmAccessLists = '$nginxProxyManager/access-lists';
-  static const npmAuditLog = '$nginxProxyManager/audit-log';
-
-  /// One proxy host's custom Nginx block, a child of the Proxy hosts tab,
-  /// e.g. `/stack/npm/proxy-hosts/4/advanced`.
-  static String npmAdvanced(int hostId) => '$npmProxyHosts/$hostId/advanced';
 
   /// ## `i`: which connection a detail page belongs to
   ///
@@ -804,7 +739,6 @@ class ServiceRoutes {
     ServiceKey.plex,
     ServiceKey.emby,
     // Its Live and History rows open the title they are about.
-    ServiceKey.tracearr,
   };
 
   /// Where a title opened from [path] lands: under the service tab [path] is

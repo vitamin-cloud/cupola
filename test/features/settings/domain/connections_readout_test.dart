@@ -62,10 +62,6 @@ void main() {
     final readout = ConnectionsReadout.from(
       states: {
         ServiceKey.radarr: answering(ServiceKey.radarr),
-        ServiceKey.sabnzbd: failed(
-          ServiceKey.sabnzbd,
-          ServiceFailureReason.onlyAtHome,
-        ),
       },
       notSetUp: const [],
       registrySize: 17,
@@ -106,10 +102,6 @@ void main() {
             ServiceKey.bazarr,
             ServiceFailureReason.unauthorized,
           ),
-          ServiceKey.sabnzbd: failed(
-            ServiceKey.sabnzbd,
-            ServiceFailureReason.unreachable,
-          ),
         },
         notSetUp: const [],
       );
@@ -137,36 +129,6 @@ void main() {
   });
 
   group('failures group by state', () {
-    test('two services in one state are one row that names both', () {
-      final readout = ConnectionsReadout.from(
-        states: {
-          ServiceKey.sabnzbd: failed(
-            ServiceKey.sabnzbd,
-            ServiceFailureReason.unreachable,
-          ),
-          ServiceKey.unraid: failed(
-            ServiceKey.unraid,
-            ServiceFailureReason.unreachable,
-          ),
-        },
-        notSetUp: const [],
-      );
-
-      expect(readout.faults, hasLength(1));
-      expect(
-        readout.faults.single.names,
-        '${ServiceKey.sabnzbd.title} and ${ServiceKey.unraid.title}',
-      );
-      // The words come from `describeConnection` and nowhere else.
-      expect(
-        readout.faults.single.presentation.label,
-        describeConnection(
-          ServiceKey.sabnzbd,
-          status: ServiceConnectionStatus.disconnected,
-          reason: ServiceFailureReason.unreachable,
-        ).label,
-      );
-    });
 
     test('different causes stay apart, because the fixes differ', () {
       final readout = ConnectionsReadout.from(
@@ -175,10 +137,6 @@ void main() {
             ServiceKey.bazarr,
             ServiceFailureReason.unauthorized,
           ),
-          ServiceKey.sabnzbd: failed(
-            ServiceKey.sabnzbd,
-            ServiceFailureReason.unreachable,
-          ),
         },
         notSetUp: const [],
       );
@@ -186,7 +144,6 @@ void main() {
       expect(readout.faults, hasLength(2));
       expect(readout.faults.map((group) => group.services.single), [
         ServiceKey.bazarr,
-        ServiceKey.sabnzbd,
       ]);
     });
 

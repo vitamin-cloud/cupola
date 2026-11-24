@@ -3,8 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/status/read_clock.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
-import 'package:cupola/features/settings/domain/service_instance.dart';
-import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 
 void main() {
@@ -57,37 +55,11 @@ void main() {
   });
 
   group('queueReadKey', () {
-    test('names the service and the connection', () {
-      expect(
-        queueReadKey(ServiceKey.sabnzbd, 'home'),
-        isNot(queueReadKey(ServiceKey.sabnzbd, 'seedbox')),
-      );
-      expect(
-        queueReadKey(ServiceKey.sabnzbd, 'home'),
-        isNot(queueReadKey(ServiceKey.nzbget, 'home')),
-      );
-      expect(
-        queueReadKey(ServiceKey.sabnzbd, 'home'),
-        queueReadKey(ServiceKey.sabnzbd, 'home'),
-      );
-    });
   });
 
   group('Ref.queueReadNoter', () {
     final settings = SettingsModel(
       instances: [
-        const ServiceInstance(
-          id: 'home',
-          service: ServiceKey.sabnzbd,
-          url: 'https://home.example.com',
-          credential: 'home-key',
-        ),
-        const ServiceInstance(
-          id: 'seedbox',
-          service: ServiceKey.sabnzbd,
-          url: 'https://seedbox.example.com',
-          credential: 'seedbox-key',
-        ),
       ],
     );
 
@@ -96,7 +68,6 @@ void main() {
         overrides: [
           currentSettingsProvider.overrideWith((ref) => settings),
           initialActiveInstancesProvider.overrideWithValue({
-            ServiceKey.sabnzbd: lens,
           }),
           readClockProvider.overrideWithValue(clock),
         ],
@@ -105,47 +76,7 @@ void main() {
       return container;
     }
 
-    test('files the read under the connection the lens was on', () {
-      final clock = ReadClock(now: () => DateTime(2026, 10, 12, 9));
-      final noted = Provider<void Function()>(
-        (ref) => ref.queueReadNoter(ServiceKey.sabnzbd),
-      );
-      final container = containerOn('seedbox', clock);
 
-      container.read(noted)();
 
-      expect(clock.at(queueReadKey(ServiceKey.sabnzbd, 'seedbox')), isNotNull);
-      expect(clock.at(queueReadKey(ServiceKey.sabnzbd, 'home')), isNull);
-    });
-
-    test('notes nothing until the returned call is made', () {
-      final clock = ReadClock();
-      final noted = Provider<void Function()>(
-        (ref) => ref.queueReadNoter(ServiceKey.sabnzbd),
-      );
-      final container = containerOn('home', clock);
-
-      container.read(noted);
-
-      expect(clock.at(queueReadKey(ServiceKey.sabnzbd, 'home')), isNull);
-    });
-
-    test('still notes after its provider was disposed', () {
-      // A request in flight when the provider is invalidated lands on a
-      // disposed ref; the read still came back and is still noted.
-      final clock = ReadClock();
-      final noted = Provider.autoDispose<void Function()>(
-        (ref) => ref.queueReadNoter(ServiceKey.sabnzbd),
-      );
-      final container = containerOn('home', clock);
-      final subscription = container.listen(noted, (_, _) {});
-      final note = subscription.read();
-
-      subscription.close();
-      container.invalidate(noted);
-      note();
-
-      expect(clock.at(queueReadKey(ServiceKey.sabnzbd, 'home')), isNotNull);
-    });
   });
 }

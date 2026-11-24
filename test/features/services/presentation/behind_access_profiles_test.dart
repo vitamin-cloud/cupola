@@ -193,63 +193,6 @@ void main() {
     });
   });
 
-  group('every client carries its connection\'s token', () {
-    final connections = <ProfileConnection>[
-      WorldConnections.radarr,
-      WorldConnections.lidarr,
-      WorldConnections.prowlarr,
-      WorldConnections.bazarr,
-      WorldConnections.seerr,
-      WorldConnections.qbittorrent,
-      WorldConnections.sabnzbd,
-      WorldConnections.jellyfin,
-      WorldConnections.plex,
-      WorldConnections.transmission,
-      WorldConnections.nzbget,
-      WorldConnections.unraid,
-      WorldConnections.npm,
-      WorldConnections.truenas,
-      WorldConnections.dockge,
-    ];
-
-    for (final connection in connections) {
-      final service = connection.service;
-      final behind = Profiles.p1
-          .withConnection(connection)
-          .withBehaviour(
-            connection.id,
-            const ConnectionBehaviour.behindCloudflareAccess(
-              serviceToken: _token,
-            ),
-          );
-      final withToken = behind.withConnection(
-        behind.connection(connection.id).withAccess(_token.access),
-      );
-
-      test(
-        '${service.title}: with the token, Home and the test pass',
-        () async {
-          final summary = await _probe(withToken, connection.id);
-          final diagnosis = await _test(withToken, connection.id);
-
-          expect(summary.isOnline, isTrue, reason: '${summary.failureReason}');
-          expect(diagnosis.isConnected, isTrue, reason: '${diagnosis.reason}');
-        },
-      );
-
-      test('${service.title}: without it, the gateway is named', () async {
-        final summary = await _probe(behind, connection.id);
-        final diagnosis = await _test(behind, connection.id);
-
-        expect(summary.failureReason, ServiceFailureReason.accessGateway);
-        expect(
-          summary.failure?.gateway?.kind,
-          AccessGatewayKind.cloudflareAccess,
-        );
-        expect(diagnosis.reason, ServiceFailureReason.accessGateway);
-      });
-    }
-  });
 
   group('a proxy password in front of Jellyfin', () {
     const password = ProxyPassword(username: 'matt', password: 'proxy-pw');

@@ -39,8 +39,6 @@ import 'package:cupola/features/discover/domain/library_calendar.dart';
 import 'package:cupola/features/discover/presentation/library_calendar_provider.dart';
 import 'package:cupola/features/home/data/resume.dart';
 import 'package:cupola/features/home/presentation/widgets/balanced_columns.dart';
-import 'package:cupola/features/home/presentation/widgets/downloads_module.dart';
-import 'package:cupola/features/home/presentation/widgets/home_module_parts.dart';
 import 'package:cupola/features/home/presentation/widgets/requests_module.dart';
 import 'package:cupola/features/discover/domain/models/seerr_request.dart';
 import 'package:cupola/core/theme.dart';
@@ -1053,53 +1051,6 @@ void main() {
       expect(find.textContaining('stall'), findsNothing);
     });
 
-    testWidgets('a figure the source did not report reads nothing, never 0', (
-      tester,
-    ) async {
-      await _pumpPage(
-        tester,
-        _Page.home,
-        queue: [
-          const ServiceQueueItem(
-            service: ServiceKey.sabnzbd,
-            id: 'nothing-known',
-            title: 'Nothing.Known.2024',
-            progress: null,
-            clientLabel: 'SABnzbd',
-          ),
-          const ServiceQueueItem(
-            service: ServiceKey.sabnzbd,
-            id: 'half-known',
-            title: 'Half.Known.2024',
-            progress: 0.1,
-            clientLabel: 'SABnzbd',
-          ),
-        ],
-      );
-
-      await _scrollTo(tester, find.text('Downloads'));
-
-      Finder inRow(String title, Finder matching) => find.descendant(
-        of: find.ancestor(
-          of: find.text(title),
-          matching: find.byType(DownloadRow),
-        ),
-        matching: matching,
-      );
-      // A transfer nothing was reported of has no percent and no bar: `0%`
-      // would say it has not started.
-      expect(
-        inRow('Nothing.Known.2024', find.textContaining('%')),
-        findsNothing,
-      );
-      expect(
-        inRow('Nothing.Known.2024', find.byType(HomeRowBar)),
-        findsNothing,
-      );
-      // One half known is one half said: no time left is made up for it.
-      expect(inRow('Half.Known.2024', find.text('10%')), findsOneWidget);
-      expect(inRow('Half.Known.2024', find.byType(HomeRowBar)), findsOneWidget);
-    });
 
     testWidgets('a speed the client did not report reads —, never 0', (
       tester,

@@ -15,7 +15,6 @@ import 'package:cupola/core/status/read_clock.dart';
 import 'package:cupola/core/status/silence_clock.dart';
 import 'package:cupola/core/widgets/async_value_widget.dart';
 import 'package:cupola/core/widgets/service_offline_state.dart';
-import 'package:cupola/features/services/domain/service_summary.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -317,29 +316,5 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('from a failed probe says what the page handed it', (
-      tester,
-    ) async {
-      await pump(
-        tester,
-        ServiceOfflineState.fromSummary(
-          summary: const ServiceSummary(
-            service: ServiceKey.sabnzbd,
-            status: ServiceSummaryStatus.offline,
-            host: 'nas.local',
-            version: null,
-          ),
-          since: const Duration(minutes: 6),
-          onRetry: () {},
-        ),
-      );
-
-      expect(
-        find.textContaining('It has not answered for 6 minutes.'),
-        findsOneWidget,
-      );
-
-      await unmount(tester);
-    });
   });
 }

@@ -138,9 +138,9 @@ class ServiceHomeScreen extends StatelessWidget {
           // Steps aside while a library of the service selects: the header
           // of the selection stands in its place.
           child: LibrarySelectionHide(
-            child: tabsFor(service) == null
-                ? GlassSurface(child: _band())
-                : GlassSurface.continued(child: _band()),
+            // The tabs below ride their own frosted slab now, so the band
+            // ends on its own fade rather than running into theirs.
+            child: GlassSurface(child: _band()),
           ),
         ),
       ],
@@ -217,6 +217,14 @@ class _ServiceDashboardAppBar extends ConsumerWidget {
                 ],
               ),
             ),
+            // This fork: Sonarr and Radarr carry a magnifying glass beside
+            // Activity, straight to adding something new.
+            if (_addRouteOf(service) case (final route, final label))
+              IconButton(
+                icon: Icon(Symbols.search_rounded, color: room.inkSecondary),
+                onPressed: () => context.push(route),
+                tooltip: label,
+              ),
             if (trailingAction != null)
               trailingAction!
             else
@@ -236,3 +244,11 @@ class _ServiceDashboardAppBar extends ConsumerWidget {
     );
   }
 }
+
+/// Where a service's add page is, and what its button is called, or null for
+/// a service without one.
+(String, String)? _addRouteOf(ServiceKey service) => switch (service) {
+  ServiceKey.sonarr => (ServiceRoutes.sonarrAdd, 'Add a series'),
+  ServiceKey.radarr => (ServiceRoutes.radarrAdd, 'Add a movie'),
+  _ => null,
+};

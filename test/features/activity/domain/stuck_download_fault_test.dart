@@ -158,27 +158,6 @@ void main() {
   });
 
   group('the ways out', () {
-    test('a torrent added to qBittorrent by hand asks for peers again; one '
-        "in Transmission opens its client, the app's only way in", () {
-      // qBittorrent 5, live: a magnet nobody shares, no arr behind it.
-      final byHand = _stuck(
-        service: ServiceKey.qbittorrent,
-        id: '0123456789abcdef0123456789abcdef01234567',
-        downloadId: null,
-      );
-      expect(canLookForPeers(byHand), isTrue);
-      expect(stuckActionsFor(byHand).primary, StuckAction.lookForPeers);
-      expect(stuckActionsFor(byHand).secondary, [StuckAction.keepWaiting]);
-
-      final transmission = _stuck(
-        service: ServiceKey.transmission,
-        client: ServiceKey.transmission,
-        clientLabel: 'Transmission',
-        id: '89abcdef0123456789abcdef0123456789abcdef',
-        downloadId: null,
-      );
-      expect(stuckActionsFor(transmission).primary, StuckAction.openClient);
-    });
 
     test('nobody has the file: another download first, then Remove and '
         'Keep waiting', () {
@@ -197,34 +176,7 @@ void main() {
       ]);
     });
 
-    test('a usenet client cannot be asked for peers', () {
-      final actions = stuckActionsFor(
-        _stuck(
-          client: ServiceKey.sabnzbd,
-          clientLabel: 'SABnzbd',
-          swarmSeeds: 3,
-        ),
-      );
-      expect(actions.primary, StuckAction.tryAnotherDownload);
-    });
 
-    test('a torrent no arr asked for: peers, or its client', () {
-      expect(
-        stuckActionsFor(
-          _stuck(service: ServiceKey.qbittorrent, id: 'abc123'),
-        ).primary,
-        StuckAction.lookForPeers,
-      );
-      final transmission = stuckActionsFor(
-        _stuck(
-          service: ServiceKey.transmission,
-          client: ServiceKey.transmission,
-          clientLabel: 'Transmission',
-        ),
-      );
-      expect(transmission.primary, StuckAction.openClient);
-      expect(transmission.secondary, [StuckAction.keepWaiting]);
-    });
 
     test('a failed download is not kept waiting: it will not move', () {
       final actions = stuckActionsFor(_stuck(fault: InFlightFault.failed));

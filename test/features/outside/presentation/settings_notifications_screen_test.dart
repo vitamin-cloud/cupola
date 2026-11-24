@@ -90,7 +90,6 @@ void main() {
     const withTracearr = [
       ServiceKey.seerr,
       ServiceKey.radarr,
-      ServiceKey.tracearr,
     ];
 
     testWidgets('is a third switch, off, once Tracearr is set up', (

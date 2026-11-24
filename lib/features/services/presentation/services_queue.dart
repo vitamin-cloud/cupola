@@ -10,11 +10,7 @@ import 'package:cupola/core/utils/arr_activity_display.dart';
 import 'package:cupola/core/utils/arr_model_helpers.dart';
 import 'package:cupola/core/utils/dynamic_map_utils.dart';
 import 'package:cupola/core/utils/episode_code.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_provider.dart';
 import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
-import 'package:cupola/features/sabnzbd/data/sabnzbd_client.dart';
-import 'package:cupola/features/sabnzbd/domain/models/sabnzbd_models.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_provider.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/music/data/lidarr_service.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
@@ -31,7 +27,6 @@ import 'package:cupola/features/services/domain/queue_title.dart';
 import 'package:cupola/features/services/domain/source_coverage.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
-import 'package:cupola/features/transmission/presentation/transmission_provider.dart';
 import 'package:cupola/features/media/domain/media_key.dart';
 import 'package:cupola/features/services/presentation/services_history.dart';
 import 'package:cupola/features/services/presentation/services_probe.dart';
@@ -317,10 +312,9 @@ class ServiceQueueItem {
   /// Whether this transfer is moving now: active, and not waiting its turn.
   bool get isMoving => isActive && !queued;
 
-  /// Whether this row's client dates the last byte it received (qBittorrent,
-  /// Transmission), so that its own clock, not a flag, decides a stall.
-  bool get measuresIdle =>
-      service == ServiceKey.qbittorrent || service == ServiceKey.transmission;
+  /// Whether this row's client dates the last byte it received (qBittorrent),
+  /// so that its own clock, not a flag, decides a stall.
+  bool get measuresIdle => service == ServiceKey.qbittorrent;
 }
 
 /// Everything currently transferring, across every configured source.
@@ -486,21 +480,6 @@ List<Future<ServicesQueue>> _readDownloadClients(
       _readQueueSource(
         source,
         () => whole(_loadQbittorrentQueueItems(ref, asked(source))),
-      ),
-    for (final source in watchMergeConnections(ref, ServiceKey.transmission))
-      _readQueueSource(
-        source,
-        () => whole(_loadTransmissionQueueItems(ref, asked(source))),
-      ),
-    for (final source in watchMergeConnections(ref, ServiceKey.sabnzbd))
-      _readQueueSource(
-        source,
-        () => whole(_loadSabnzbdQueueItems(ref, asked(source))),
-      ),
-    for (final source in watchMergeConnections(ref, ServiceKey.nzbget))
-      _readQueueSource(
-        source,
-        () => whole(_loadNzbgetQueueItems(ref, asked(source))),
       ),
   ];
 }
@@ -714,28 +693,6 @@ Future<List<UnnamedDownload>> _clientList(Ref ref, InstanceRef client) async {
           in (await ref.watch(qbittorrentServiceForProvider(id)).mainData())
               .torrents)
         (id: torrent.hash, name: torrent.name, category: torrent.category),
-    ],
-    ServiceKey.transmission => [
-      for (final torrent
-          in await ref.watch(transmissionClientForProvider(id)).torrents())
-        (
-          id: torrent.hashString,
-          name: torrent.name,
-          category: torrent.labels.firstOrNull,
-        ),
-    ],
-    ServiceKey.sabnzbd => [
-      for (final slot
-          in (await ref
-                  .watch(sabnzbdClientForProvider(id))
-                  .getQueue(limit: SabnzbdClient.wholeQueue))
-              .slots)
-        (id: slot.nzoId, name: slot.filename, category: slot.category),
-    ],
-    ServiceKey.nzbget => [
-      for (final group
-          in await ref.watch(nzbgetClientForProvider(id)).listGroups())
-        (id: group.downloadId, name: group.name, category: group.category),
     ],
     _ => throw ArgumentError.value(client.service, 'service', 'not a client'),
   };
@@ -1022,84 +979,6 @@ Future<List<ServiceQueueItem>> _loadQbittorrentQueueItems(
   ];
 }
 
-/// Transmission's torrents, as in-flight items: the incoming ones, and any
-/// torrent reporting a fault. See [transmissionInFlight] for the rule.
-///
-/// It used to be no source at all. A Sonarr grab moving through Transmission
-/// was drawn off the arr's queue alone, with the arr's minute-old progress and
-/// no rate, and a torrent added by hand was not on Home anywhere.
-Future<List<ServiceQueueItem>> _loadTransmissionQueueItems(
-  Ref ref,
-  MergeConnection source,
-) async {
-  // As qBittorrent: the lens's list is the one the Transmission page holds.
-  final torrents = source.isLens
-      ? await ref.read(transmissionTorrentsProvider.future)
-      : await ref
-            .watch(transmissionClientForProvider(source.instanceId))
-            .torrents();
-  final now = ref.watch(stallClockProvider)();
-  final read = [
-    for (final torrent in torrents)
-      if (transmissionInFlight(torrent, now: now) case final reading?)
-        (torrent: torrent, reading: reading),
-  ];
-
-  // `rateDownload` is per torrent; the client's rate is their sum, carried on
-  // each of its rows and counted once.
-  final clientRate = read.fold<int>(
-    0,
-    (sum, row) => sum + row.torrent.rateDownload,
-  );
-
-  return [
-    for (final (:torrent, :reading) in read)
-      ServiceQueueItem(
-        service: ServiceKey.transmission,
-        id: torrent.hashString,
-        title: torrent.name,
-        progress: torrent.progress,
-        // `sizeWhenDone` is what this torrent will weigh with its unwanted
-        // files skipped, and `leftUntilDone` is measured against it, so the
-        // pair is taken together or not at all.
-        doneBytes: torrent.sizeWhenDone > 0
-            ? torrent.sizeWhenDone - torrent.leftUntilDone
-            : null,
-        totalBytes: torrent.sizeWhenDone > 0 ? torrent.sizeWhenDone : null,
-        // Negative is "not available" (-1) or "unknown" (-2), never a time.
-        etaSeconds: torrent.eta < 0 ? null : torrent.eta,
-        clientLabel: serviceWithConnection(
-          ServiceKey.transmission,
-          source.name,
-          joiner: ' ',
-        ),
-        clientService: ServiceKey.transmission,
-        instanceId: source.instanceId,
-        clientInstanceId: source.instanceId,
-        clientRateBytesPerSecond: clientRate,
-        fault: reading.fault,
-        warning: reading.reason,
-        held: reading.held,
-        queued: reading.queued,
-        // This torrent's own `rateDownload`.
-        rateBytesPerSecond: torrent.rateDownload,
-        stalledSince: reading.fault == null
-            ? null
-            : idleSince(
-                lastActivity: torrent.activityDate,
-                added: torrent.addedDate,
-                started: torrent.startDate,
-              ),
-        detail: joinDisplayParts([
-          formatSpeed(torrent.rateDownload),
-          countedNoun(torrent.peersSendingToUs, 'peer', 'peers'),
-        ]),
-        route: ServiceRoutes.forService(ServiceKey.transmission),
-        category: torrent.labels.firstOrNull,
-      ),
-  ];
-}
-
 /// qBittorrent's "no estimate" sentinel, in seconds (100 days).
 ///
 /// Printed literally it reads `100 d left`, which is not an estimate: it is the
@@ -1107,198 +986,6 @@ Future<List<ServiceQueueItem>> _loadTransmissionQueueItems(
 const int _qbNoEta = 8640000;
 
 int? _qbEta(int eta) => eta <= 0 || eta >= _qbNoEta ? null : eta;
-
-/// SABnzbd's queue, as in-flight items, with its faults: a job SABnzbd paused
-/// itself, and every job of a queue its disk stopped. See
-/// [sabnzbdSlotInFlight].
-Future<List<ServiceQueueItem>> _loadSabnzbdQueueItems(
-  Ref ref,
-  MergeConnection source,
-) async {
-  final queue = source.isLens
-      ? await ref.read(sabnzbdQueueProvider.future)
-      : await ref
-            .watch(sabnzbdClientForProvider(source.instanceId))
-            .getQueue(limit: SabnzbdClient.wholeQueue);
-  final rate = (queue.kbPerSec * 1024).round();
-  const megabyte = 1024 * 1024;
-  final stoppedByDisk = sabnzbdQueueStoppedByDisk(queue);
-
-  // A queue somebody paused holds every job in it; one its disk stopped
-  // stalls them.
-  final pausedOnPurpose = queue.paused && !stoppedByDisk;
-  final read = [
-    for (final slot in queue.slots)
-      (
-        slot: slot,
-        reading: sabnzbdSlotInFlight(
-          slot,
-          stoppedByDisk: stoppedByDisk,
-          pausedOnPurpose: pausedOnPurpose,
-        ),
-      ),
-  ];
-
-  // When each queued job starts: the finish of the one ahead of it.
-  final startsIn = sabnzbdStartsInSeconds([
-    for (final slot in queue.slots) parseClockDuration(slot.timeLeft),
-  ]);
-  // SABnzbd reports one speed, for the whole queue. It is the speed of the
-  // job that is downloading when exactly one is, and nobody's otherwise.
-  final downloading = [
-    for (final (:slot, :reading) in read)
-      if (_isMovingSlot(slot, reading)) slot.nzoId,
-  ];
-
-  return [
-    for (final (index, (:slot, :reading)) in read.indexed)
-      ServiceQueueItem(
-        service: ServiceKey.sabnzbd,
-        id: slot.nzoId,
-        title: slot.filename,
-        progress: slot.progress,
-        // The slot's own `mb` (what the job weighs) and `mbleft` (what is
-        // still to come), taken together or not at all: a slot that carried
-        // no usable `mb` reads `—`, never a total inferred from the
-        // percentage.
-        doneBytes: switch (slot.mb) {
-          final double total => ((total - slot.mbLeft) * megabyte).round(),
-          null => null,
-        },
-        totalBytes: switch (slot.mb) {
-          final double total => (total * megabyte).round(),
-          null => null,
-        },
-        etaSeconds: parseClockDuration(slot.timeLeft),
-        clientLabel: serviceWithConnection(
-          ServiceKey.sabnzbd,
-          source.name,
-          joiner: ' ',
-        ),
-        clientService: ServiceKey.sabnzbd,
-        instanceId: source.instanceId,
-        clientInstanceId: source.instanceId,
-        clientRateBytesPerSecond: rate,
-        fault: reading.fault,
-        // A job or a queue paused on purpose is stopped *on purpose*, which
-        // the tone rule files under neutral: held, not a fault, not a
-        // decision, and not in flight. A queue its disk stopped is a fault,
-        // and says so.
-        held: reading.held,
-        queued: reading.queued,
-        startsInSeconds: reading.queued ? startsIn[index] : null,
-        rateBytesPerSecond:
-            downloading.length == 1 && downloading.single == slot.nzoId
-            ? rate
-            : null,
-        warning: reading.reason,
-        route: ServiceRoutes.forService(ServiceKey.sabnzbd),
-        category: slot.category,
-      ),
-  ];
-}
-
-/// Whether a SABnzbd slot is fetching articles right now: moving by the
-/// client's reading, and in the `Downloading` or `Fetching` status.
-bool _isMovingSlot(SabnzbdQueueSlot slot, InFlightReading reading) {
-  if (reading.fault != null || reading.held || reading.queued) return false;
-  final status = slot.status.toLowerCase();
-  return status == 'downloading' || status == 'fetching';
-}
-
-Future<List<ServiceQueueItem>> _loadNzbgetQueueItems(
-  Ref ref,
-  MergeConnection source,
-) async {
-  // The queue and the client's status, side by side: `listgroups` carries no
-  // rate at all, and NZBGet reports one only for the whole client, in
-  // `status`. Read without it, NZBGet's bytes were the one transfer the
-  // eyebrow's sum left out.
-  final (groups, status) = source.isLens
-      ? await (
-          ref.read(nzbgetQueueProvider.future),
-          ref.read(nzbgetStatusProvider.future),
-        ).wait
-      : await (
-          ref.watch(nzbgetClientForProvider(source.instanceId)).listGroups(),
-          ref.watch(nzbgetClientForProvider(source.instanceId)).status(),
-        ).wait;
-  const megabyte = 1024 * 1024;
-  final stoppedByDisk = nzbgetQueueStoppedByDisk(status, groups);
-
-  final read = [
-    for (final group in groups)
-      (
-        group: group,
-        reading: nzbgetGroupInFlight(
-          group,
-          stoppedByDisk: stoppedByDisk,
-          pausedOnPurpose: status.paused && !stoppedByDisk,
-        ),
-      ),
-  ];
-  // NZBGet reports one speed, for the whole client. It is the speed of the
-  // group that is downloading when exactly one is, and nobody's otherwise.
-  // A group being unpacked or repaired reads as moving too, and is not
-  // downloading.
-  final downloading = [
-    for (final (:group, :reading) in read)
-      if (reading.fault == null &&
-          !reading.held &&
-          !reading.queued &&
-          group.status.toUpperCase() == 'DOWNLOADING')
-        group.nzbId,
-  ];
-
-  return read
-      .map(
-        (row) => ServiceQueueItem(
-          service: ServiceKey.nzbget,
-          // The key an \*arr row names this job by (its `drone` parameter,
-          // else the NZBID), so [joinQueueSources] can meet the two.
-          id: row.group.downloadId,
-          title: row.group.name,
-          progress: row.group.progress,
-          // Both sizes are nullable now: NZBGet reporting neither the `*MB`
-          // key nor the `*Hi`/`*Lo` pair used to read as zero megabytes, which
-          // made an unmeasured job render as a finished one.
-          doneBytes: switch ((
-            row.group.fileSizeMb,
-            row.group.remainingSizeMb,
-          )) {
-            (final int total, final int left) => (total - left) * megabyte,
-            _ => null,
-          },
-          totalBytes: switch (row.group.fileSizeMb) {
-            final int total => total * megabyte,
-            _ => null,
-          },
-          // NZBGet reports a rate for the whole client and none per group, so
-          // there is nothing to divide into an estimate. `—`, not a guess.
-          etaSeconds: null,
-          clientLabel: serviceWithConnection(
-            ServiceKey.nzbget,
-            source.name,
-            joiner: ' ',
-          ),
-          clientService: ServiceKey.nzbget,
-          instanceId: source.instanceId,
-          clientInstanceId: source.instanceId,
-          clientRateBytesPerSecond: status.downloadRateBytes,
-          fault: row.reading.fault,
-          warning: row.reading.reason,
-          held: row.reading.held,
-          queued: row.reading.queued,
-          rateBytesPerSecond:
-              downloading.length == 1 && downloading.single == row.group.nzbId
-              ? status.downloadRateBytes
-              : null,
-          route: ServiceRoutes.forService(ServiceKey.nzbget),
-          category: row.group.category,
-        ),
-      )
-      .toList(growable: false);
-}
 
 /// `0:03:21` / `00:03:21.5` → seconds. Null when the source said nothing.
 ///
@@ -1348,25 +1035,19 @@ Future<_QueueRead> _loadServiceQueueItems(
     // the rest have no queue at all.
     ServiceKey.seerr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.transmission ||
     ServiceKey.bazarr ||
     ServiceKey.truenas ||
     ServiceKey.dockge ||
     ServiceKey.prowlarr ||
-    ServiceKey.sabnzbd ||
-    ServiceKey.nzbget ||
     ServiceKey.unraid ||
     // A reverse proxy moves no bytes on anyone's behalf; it has nothing to
     // contribute to an in-flight queue.
-    ServiceKey.nginxProxyManager ||
     // A media server has no acquisition queue at all. Its live work is
     // outbound playback, which is a different record with different actions
     // and does not belong in a queue row.
     ServiceKey.jellyfin ||
     ServiceKey.plex ||
-    ServiceKey.emby ||
-    // Tracearr watches playback and moves nothing: no queue of its own.
-    ServiceKey.tracearr => const ArrRecordPage(records: [], total: 0),
+    ServiceKey.emby => const ArrRecordPage(records: [], total: 0),
   };
   final records = page.records.whereType<Map>().map(stringKeyMap);
   final now = ref.watch(stallClockProvider)();
@@ -1711,19 +1392,14 @@ String? _queueTypeLabel(ServiceKey service) {
     // name behind it.
     ServiceKey.seerr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.transmission ||
     ServiceKey.bazarr ||
     ServiceKey.truenas ||
     ServiceKey.dockge ||
     ServiceKey.prowlarr ||
-    ServiceKey.sabnzbd ||
-    ServiceKey.nzbget ||
     ServiceKey.unraid ||
-    ServiceKey.nginxProxyManager ||
     ServiceKey.jellyfin ||
     ServiceKey.plex ||
-    ServiceKey.emby ||
-    ServiceKey.tracearr => null,
+    ServiceKey.emby => null,
   };
 }
 

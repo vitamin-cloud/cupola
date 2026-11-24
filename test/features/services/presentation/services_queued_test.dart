@@ -6,7 +6,6 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/core/status/media_names.dart';
 import 'package:cupola/features/services/domain/in_flight.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -102,21 +101,6 @@ ServiceQueueItem _row({
 
 void main() {
   group('what each source says is queued', () {
-    test('P1: Sintel waits its turn in SABnzbd, and an arr row joined to it '
-        'takes the word', () async {
-      final items = await _items(await _start(Profiles.p1));
-
-      final sintel = _byDownload(items, WorldDownloads.sintel4k.id);
-      expect(sintel.service, ServiceKey.radarr);
-      expect(sintel.clientService, ServiceKey.sabnzbd);
-      expect(sintel.queued, isTrue);
-      expect(sintel.isActive, isTrue);
-      expect(sintel.isMoving, isFalse);
-
-      final elephants = _byDownload(items, WorldDownloads.elephantsDream4k.id);
-      expect(elephants.queued, isFalse);
-      expect(elephants.isMoving, isTrue);
-    });
 
     test(
       'P7: an arr whose client says nothing reads its own `queued`',
@@ -148,39 +132,7 @@ void main() {
       );
     });
 
-    test('Transmission download wait is queued', () async {
-      final items = await _items(
-        await _start(Profiles.p4.withDownloads([_transmissionQueued])),
-      );
 
-      final queued = _of(items, _transmissionQueued.id);
-      expect(queued.queued, isTrue);
-      expect(queued.service, ServiceKey.transmission);
-      expect(queued.isMoving, isFalse);
-    });
-
-    test('an NZBGet group QUEUED is queued', () async {
-      final items = await _items(
-        await _start(
-          Profiles.p4.withConnection(WorldConnections.nzbget).withDownloads([
-            _nzbget(
-              'nzbget-q-0001',
-              'Spring.2019.1080p.WEB',
-              DownloadState.queued,
-            ),
-            _nzbget(
-              'nzbget-d-0001',
-              'Tears.of.Steel.2012.1080p',
-              DownloadState.downloading,
-              speed: 8 * _mb,
-            ),
-          ]),
-        ),
-      );
-
-      expect(_named(items, 'Spring.2019.1080p.WEB').queued, isTrue);
-      expect(_named(items, 'Tears.of.Steel.2012.1080p').queued, isFalse);
-    });
 
     test('a queue somebody paused holds a queued job, as it did', () async {
       final items = await _items(
@@ -211,22 +163,6 @@ void main() {
       expect(joined.isMoving, isTrue);
     });
 
-    test('and queued at the client overrules an arr that says it is '
-        'downloading', () {
-      final joined = join(
-        _row(service: ServiceKey.radarr, downloadId: 'abc'),
-        _row(
-          service: ServiceKey.sabnzbd,
-          id: 'abc',
-          queued: true,
-          startsInSeconds: 360,
-        ),
-      ).single;
-
-      expect(joined.queued, isTrue);
-      expect(joined.startsInSeconds, 360);
-      expect(joined.isMoving, isFalse);
-    });
 
     test('a fault or a pause outranks a wait', () {
       final held = join(
@@ -267,22 +203,6 @@ void main() {
       },
     );
 
-    test('naming a row keeps everything it carries', () {
-      final named = _row(
-        service: ServiceKey.sabnzbd,
-        queued: true,
-        startsInSeconds: 60,
-        rate: 5,
-        tmdbId: 1,
-        tvdbId: 2,
-      ).withNames(const MediaNames.raw('Other'));
-
-      expect(named.queued, isTrue);
-      expect(named.startsInSeconds, 60);
-      expect(named.rateBytesPerSecond, 5);
-      expect(named.tmdbId, 1);
-      expect(named.tvdbId, 2);
-    });
   });
 
   group('when a SABnzbd job starts', () {
@@ -348,64 +268,7 @@ void main() {
       );
     });
 
-    test('NZBGet gives its rate to the one group that downloads', () async {
-      final items = await _items(
-        await _start(
-          Profiles.p4.withConnection(WorldConnections.nzbget).withDownloads([
-            _nzbget(
-              'nzbget-d-0001',
-              'Tears.of.Steel.2012.1080p',
-              DownloadState.downloading,
-              speed: 8 * _mb,
-            ),
-            _nzbget(
-              'nzbget-q-0001',
-              'Spring.2019.1080p.WEB',
-              DownloadState.queued,
-            ),
-          ]),
-        ),
-      );
 
-      expect(
-        _named(items, 'Tears.of.Steel.2012.1080p').rateBytesPerSecond,
-        8 * _mb,
-      );
-      expect(_named(items, 'Spring.2019.1080p.WEB').rateBytesPerSecond, isNull);
-    });
-
-    test(
-      'and to none when two do: the speed is the pair\'s, not either\'s',
-      () async {
-        final items = await _items(
-          await _start(
-            Profiles.p4.withConnection(WorldConnections.nzbget).withDownloads([
-              _nzbget(
-                'nzbget-d-0001',
-                'Tears.of.Steel.2012.1080p',
-                DownloadState.downloading,
-                speed: 8 * _mb,
-              ),
-              _nzbget(
-                'nzbget-d-0002',
-                'Spring.2019.1080p.WEB',
-                DownloadState.downloading,
-                speed: 2 * _mb,
-              ),
-            ]),
-          ),
-        );
-
-        expect(
-          _named(items, 'Tears.of.Steel.2012.1080p').rateBytesPerSecond,
-          isNull,
-        );
-        expect(
-          _named(items, 'Spring.2019.1080p.WEB').rateBytesPerSecond,
-          isNull,
-        );
-      },
-    );
 
     test('an arr row no client row joined has none', () async {
       // P7: the device is away and SABnzbd and qBittorrent do not answer.

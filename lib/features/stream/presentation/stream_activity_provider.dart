@@ -12,11 +12,7 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 import 'package:cupola/features/stream/domain/models/stream_session.dart';
 import 'package:cupola/features/stream/domain/stream_activity_row.dart';
-import 'package:cupola/features/stream/presentation/stream_activity_merge.dart';
 import 'package:cupola/features/stream/presentation/stream_backend.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_live_provider.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_sessions_provider.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_stream_session.dart';
 
 export 'package:cupola/features/stream/domain/stream_activity_row.dart';
 
@@ -51,14 +47,6 @@ final streamSessionsForProvider =
       ref,
       key,
     ) async {
-      // Tracearr is not a media server: it has no backend, and never reaches
-      // one. Its own arm reads its streams and says them as sessions.
-      if (key.service == ServiceKey.tracearr) {
-        final streams = await ref.watch(
-          tracearrStreamsForProvider(key.instanceId).future,
-        );
-        return streams.streams.map(tracearrStreamSession).toList();
-      }
       final backend = streamBackendOf(key.service);
       final lens = ref.watch(activeInstanceProvider(key.service))?.id ?? '';
       if (key.instanceId.isEmpty || key.instanceId == lens) {
@@ -90,11 +78,6 @@ const streamSessionsInterval = Duration(seconds: 15);
 /// read, and the in-flight skip leaves that one alone.
 final streamSessionsPollProvider = Provider.autoDispose
     .family<void, StreamConnection>((ref, key) {
-      // Tracearr's list is moved by the live feed and by reading it again,
-      // which is the notifier's own `refresh`: invalidating a read over that
-      // list would hand back what it already holds.
-      final isTracearr = key.service == ServiceKey.tracearr;
-
       // Whether the connection is the lens's. Watched, so the poll is built
       // again the moment the lens moves (a room or the Stack keeps it alive
       // across the move): a tick and the due-now gate below are then both
@@ -110,11 +93,6 @@ final streamSessionsPollProvider = Provider.autoDispose
       );
 
       ProviderBase<AsyncValue<Object?>> source() {
-        if (isTracearr) {
-          return inView
-              ? tracearrLiveProvider
-              : tracearrStreamsForProvider(key.instanceId);
-        }
         if (!inView) return streamSessionsForProvider(key);
         return streamBackendOf(key.service).sessions;
       }
@@ -124,13 +102,7 @@ final streamSessionsPollProvider = Provider.autoDispose
         id: 'stream.sessions.${key.service.name}.${key.instanceId}',
         interval: streamSessionsInterval,
         dueNow: ref.exists(read) && !ref.read(read).isLoading,
-        onTick: () {
-          if (isTracearr && inView) {
-            unawaited(ref.read(tracearrLiveProvider.notifier).refresh());
-          } else {
-            ref.readAgainUnlessInFlight([source()]);
-          }
-        },
+        onTick: () => ref.readAgainUnlessInFlight([source()]),
       );
     });
 
@@ -146,24 +118,6 @@ List<({StreamConnection key, String? name})> _streamConnections(Ref ref) {
           name: settings.connectionName(instance.id),
         ),
   ];
-}
-
-/// The names of each service's connections that have one, lower-cased: what
-/// a Tracearr server's own name is compared with when it is told which of
-/// two connections of a service a stream is on
-/// (`SettingsModel.connectionName` is null for a service with only one).
-Map<ServiceKey, Set<String>> _connectionNames(Ref ref) {
-  final settings = ref.watch(currentSettingsProvider);
-  final names = <ServiceKey, Set<String>>{};
-  for (final service in mediaServers) {
-    for (final instance in settings.configuredInstancesOf(service)) {
-      final name = settings.connectionName(instance.id)?.trim().toLowerCase();
-      if (name != null && name.isNotEmpty) {
-        (names[service] ??= {}).add(name);
-      }
-    }
-  }
-  return names;
 }
 
 /// Whether a connection whose sessions read failed is a Plex holding a shared
@@ -221,7 +175,6 @@ final streamActivityProvider = FutureProvider<List<StreamActivityRow>>((
   ref,
 ) async {
   final rows = <StreamActivityRow>[];
-  final sightings = <TracearrSightings>[];
   var answered = 0;
   Object? failure;
   StackTrace? failureStack;
@@ -231,17 +184,6 @@ final streamActivityProvider = FutureProvider<List<StreamActivityRow>>((
   // counted.
   for (final connection in _streamConnections(ref)) {
     try {
-      if (connection.key.service == ServiceKey.tracearr) {
-        final seen = await ref.watch(
-          tracearrStreamsForProvider(connection.key.instanceId).future,
-        );
-        answered++;
-        sightings.add((
-          instanceId: connection.key.instanceId,
-          streams: seen.streams,
-        ));
-        continue;
-      }
       final sessions = await ref.watch(
         streamSessionsForProvider(connection.key).future,
       );
@@ -271,13 +213,7 @@ final streamActivityProvider = FutureProvider<List<StreamActivityRow>>((
     Error.throwWithStackTrace(failure, failureStack!);
   }
 
-  final merged = sightings.isEmpty
-      ? rows
-      : mergeTracearrStreams(
-          native: rows,
-          sightings: sightings,
-          connectionNames: _connectionNames(ref),
-        );
+  final merged = rows;
 
   // Transcodes first: the rows that are costing the box something are the rows
   // worth reading first, and the per-service order underneath has to stay stable

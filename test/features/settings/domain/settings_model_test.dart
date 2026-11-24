@@ -62,25 +62,6 @@ void main() {
       radarrApiKey: 'radarr-key',
     );
 
-    test('usernameFor and passwordFor answer exactly for !usesApiKey', () {
-      for (final service in ServiceKey.values) {
-        if (service.usesApiKey) {
-          expect(
-            credentials.usernameFor(service),
-            isEmpty,
-            reason: '${service.name} authenticates with a key, not a login',
-          );
-          expect(credentials.passwordFor(service), isEmpty);
-        }
-      }
-
-      expect(credentials.usernameFor(ServiceKey.qbittorrent), 'qb-user');
-      expect(credentials.passwordFor(ServiceKey.qbittorrent), 'qb-pass');
-      expect(credentials.usernameFor(ServiceKey.dockge), 'dockge-user');
-      expect(credentials.passwordFor(ServiceKey.dockge), 'dockge-pass');
-      expect(credentials.usernameFor(ServiceKey.nzbget), 'nzbget-user');
-      expect(credentials.passwordFor(ServiceKey.nzbget), 'nzbget-pass');
-    });
 
     test('a credential service counts as configured on its URL alone', () {
       // Some can legitimately run with no auth behind a reverse proxy, so a

@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/status/read_clock.dart';
 import 'package:cupola/core/status/silence_clock.dart';
-import 'package:cupola/features/settings/domain/service_key.dart';
 
 void main() {
   group('SilenceClock', () {
@@ -138,17 +137,6 @@ void main() {
   });
 
   group('silenceKey', () {
-    test('names the service and the connection', () {
-      expect(silenceKey(ServiceKey.sabnzbd, 'home'), 'sabnzbd:home');
-      expect(
-        silenceKey(ServiceKey.sabnzbd, 'home'),
-        isNot(silenceKey(ServiceKey.sabnzbd, 'seedbox')),
-      );
-      expect(
-        silenceKey(ServiceKey.sabnzbd, 'home'),
-        isNot(silenceKey(ServiceKey.nzbget, 'home')),
-      );
-    });
   });
 
   group('silenceClockProvider', () {

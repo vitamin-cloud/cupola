@@ -119,25 +119,6 @@ void main() {
     );
   });
 
-  test('a service gaining a connection tests the new one', () async {
-    final harness = await ProfileHarness.start(Profiles.p1);
-    final container = harness.container();
-    await _readAll(container);
-    final before = container.read(
-      serviceDiagnosisProvider(ServiceKey.nzbget).future,
-    );
-    expect((await before).isConfigured, isFalse);
-
-    await _write(
-      container,
-      (s) => s.copyWithInstance(WorldConnections.nzbget.instance),
-    );
-
-    final after = await container.read(
-      serviceDiagnosisProvider(ServiceKey.nzbget).future,
-    );
-    expect(after.isConfigured, isTrue);
-  });
 
   test('a Seerr account is tested again when its session moves, and only '
       'its service', () async {

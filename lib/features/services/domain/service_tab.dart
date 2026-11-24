@@ -34,11 +34,6 @@ enum ServiceTab {
 
   // ── Download clients ─────────────────────────────────────────────────────
   rss('rss', 'RSS'),
-  labels('labels', 'Labels'),
-  session('session', 'Session'),
-  servers('servers', 'Servers'),
-  feeds('feeds', 'Feeds'),
-  messages('messages', 'Messages'),
 
   // ── Prowlarr ─────────────────────────────────────────────────────────────
   indexers('indexers', 'Indexers'),
@@ -52,13 +47,6 @@ enum ServiceTab {
   activities('activities', 'Activities'),
   playlists('playlists', 'Playlists'),
 
-  // ── Tracearr ─────────────────────────────────────────────────────────────
-  // Its Users and History are the shared tabs above; these two are its own.
-  // `Live`, not Activity: in Cupola Activity is the tab of a media server's
-  // sessions, and these are streams in flight with their bandwidth.
-  live('live', 'Live'),
-  violations('violations', 'Violations'),
-
   // ── Infrastructure ───────────────────────────────────────────────────────
   stacks('stacks', 'Stacks'),
   terminal('terminal', 'Terminal'),
@@ -66,11 +54,7 @@ enum ServiceTab {
   docker('docker', 'Docker'),
   vms('vms', 'VMs'),
   notifications('notifications', 'Notifications'),
-  shares('shares', 'Shares'),
-  proxyHosts('proxy-hosts', 'Proxy hosts'),
-  certificates('certificates', 'Certificates'),
-  accessLists('access-lists', 'Access lists'),
-  auditLog('audit-log', 'Audit log');
+  shares('shares', 'Shares');
 
   const ServiceTab(this.segment, this.label);
 
@@ -133,12 +117,6 @@ const Map<ServiceKey, List<ServiceTab>> serviceTabs = {
     ServiceTab.queue,
     ServiceTab.rss,
   ],
-  ServiceKey.transmission: [
-    ServiceTab.overview,
-    ServiceTab.queue,
-    ServiceTab.labels,
-    ServiceTab.session,
-  ],
   // Apps is a section of Prowlarr's own Settings page, not a tab
   // (decision 26, bonus rule 2).
   ServiceKey.prowlarr: [
@@ -146,20 +124,6 @@ const Map<ServiceKey, List<ServiceTab>> serviceTabs = {
     ServiceTab.indexers,
     ServiceTab.history,
     ServiceTab.stats,
-  ],
-  // Config likewise moves to that service's Settings page (decision 27).
-  ServiceKey.sabnzbd: [
-    ServiceTab.overview,
-    ServiceTab.queue,
-    ServiceTab.history,
-    ServiceTab.servers,
-  ],
-  ServiceKey.nzbget: [
-    ServiceTab.overview,
-    ServiceTab.queue,
-    ServiceTab.history,
-    ServiceTab.feeds,
-    ServiceTab.messages,
   ],
   ServiceKey.jellyfin: [
     ServiceTab.overview,
@@ -178,15 +142,6 @@ const Map<ServiceKey, List<ServiceTab>> serviceTabs = {
     ServiceTab.devices,
     ServiceTab.tasks,
     ServiceTab.activity,
-  ],
-  // The guardian's room: what is playing, what was played, who, and what broke
-  // a rule. Five tabs, in the order a person asks them.
-  ServiceKey.tracearr: [
-    ServiceTab.overview,
-    ServiceTab.live,
-    ServiceTab.history,
-    ServiceTab.users,
-    ServiceTab.violations,
   ],
   // Five tabs: the drawn set (decision 17), with On deck moved into
   // Activities beside who is watching (decision `P-stream-library-browse`).
@@ -210,13 +165,6 @@ const Map<ServiceKey, List<ServiceTab>> serviceTabs = {
     ServiceTab.vms,
     ServiceTab.notifications,
     ServiceTab.shares,
-  ],
-  ServiceKey.nginxProxyManager: [
-    ServiceTab.overview,
-    ServiceTab.proxyHosts,
-    ServiceTab.certificates,
-    ServiceTab.accessLists,
-    ServiceTab.auditLog,
   ],
 };
 

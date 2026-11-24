@@ -234,7 +234,6 @@ const _railServices = <DesktopRailService>[
     count: null,
   ),
   (service: ServiceKey.qbittorrent, tone: null, state: null, count: null),
-  (service: ServiceKey.sabnzbd, tone: null, state: null, count: null),
   (service: ServiceKey.truenas, tone: null, state: null, count: null),
   (service: ServiceKey.dockge, tone: null, state: null, count: null),
 ];

@@ -304,17 +304,12 @@ final class RoleGate {
       ServiceKey.sonarr ||
       ServiceKey.lidarr ||
       ServiceKey.qbittorrent ||
-      ServiceKey.transmission ||
       ServiceKey.bazarr ||
       ServiceKey.truenas ||
       ServiceKey.dockge ||
       ServiceKey.prowlarr ||
       ServiceKey.readarr ||
-      ServiceKey.sabnzbd ||
-      ServiceKey.nzbget ||
-      ServiceKey.unraid ||
-      ServiceKey.nginxProxyManager ||
-      ServiceKey.tracearr => false,
+      ServiceKey.unraid => false,
     };
   }
 

@@ -115,25 +115,6 @@ import 'package:cupola/features/readarr/presentation/readarr_overview_screen.dar
 import 'package:cupola/features/readarr/presentation/readarr_library_screen.dart';
 import 'package:cupola/features/readarr/presentation/readarr_activity_screen.dart';
 import 'package:cupola/features/readarr/presentation/readarr_history_screen.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_overview_screen.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_screen.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_tab_screens.dart';
-import 'package:cupola/features/npm/presentation/npm_advanced_config_screen.dart';
-import 'package:cupola/features/npm/presentation/npm_overview_screen.dart';
-import 'package:cupola/features/npm/presentation/npm_screen.dart';
-import 'package:cupola/features/transmission/presentation/transmission_overview_screen.dart';
-import 'package:cupola/features/transmission/presentation/transmission_screen.dart';
-import 'package:cupola/features/transmission/presentation/transmission_tab_screens.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_overview_screen.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_screen.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_tab_screens.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_history_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_live_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_overview_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_person_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_users_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_violation_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_violations_screen.dart';
 import 'package:cupola/features/stream/presentation/stream_libraries_screen.dart';
 import 'package:cupola/features/stream/presentation/stream_overview_screen.dart';
 import 'package:cupola/features/stream/presentation/stream_item_screen.dart';
@@ -801,6 +782,12 @@ RouteBase _radarrRoutes() => _serviceRoutes(
   },
   inside: {
     ServiceTab.library: [
+      // This fork's add page, under the Library it adds to.
+      GoRoute(
+        path: 'add',
+        builder: (context, state) =>
+            MoviesAddScreen(initialQuery: state.uri.queryParameters['q']),
+      ),
       _libraryDetail<RadarrMovie>(
         'movie/:id',
         heroPrefix: 'movie',
@@ -855,6 +842,12 @@ RouteBase _sonarrRoutes() => _serviceRoutes(
   },
   inside: {
     ServiceTab.library: [
+      // This fork's add page, under the Library it adds to.
+      GoRoute(
+        path: 'add',
+        builder: (context, state) =>
+            SeriesAddScreen(initialQuery: state.uri.queryParameters['q']),
+      ),
       _libraryDetail<SonarrSeries>(
         'series/:id',
         heroPrefix: 'series',
@@ -1243,53 +1236,6 @@ RouteBase _prowlarrRoutes() => _serviceRoutes(
   },
 );
 
-/// SABnzbd. Like Transmission it needs no compatibility tail: a queue slot and
-/// a history slot are each one row that expands, so it never had a detail page
-/// and its bare root is the only path it ever shipped.
-///
-/// `SabnzbdScreen` is still the whole queue page: the readouts above it now
-/// have their own home on Overview, so Queue takes it unsplit.
-RouteBase _sabnzbdRoutes() => _serviceRoutes(
-  ServiceKey.sabnzbd,
-  roots: {
-    ServiceTab.overview: (state) =>
-        const SabnzbdOverviewScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.queue: (state) => const SabnzbdScreen(
-      showAppBar: false,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.history: (state) =>
-        const SabnzbdHistoryScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.servers: (state) =>
-        const SabnzbdServersScreen(topPadding: _serviceTabTopPadding),
-  },
-);
-
-/// NZBGet. Like Transmission and SABnzbd it needs no compatibility tail: a
-/// group is an expanding row, never a pushed page. Its five tabs are the widest
-/// bar of the four clients because the daemon keeps feeds and a log as
-/// first-class things the others do not have.
-///
-/// `NzbgetScreen` is still readouts and group list together, so Queue takes it
-/// unsplit for the reason SABnzbd's does.
-RouteBase _nzbgetRoutes() => _serviceRoutes(
-  ServiceKey.nzbget,
-  roots: {
-    ServiceTab.overview: (state) =>
-        const NzbgetOverviewScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.queue: (state) => const NzbgetScreen(
-      showAppBar: false,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.history: (state) =>
-        const NzbgetHistoryScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.feeds: (state) =>
-        const NzbgetFeedsScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.messages: (state) =>
-        const NzbgetMessagesScreen(topPadding: _serviceTabTopPadding),
-  },
-);
-
 /// Unraid.
 ///
 /// **No compatibility tail at all**, which is Unraid's own difference and the
@@ -1318,143 +1264,6 @@ RouteBase _unraidRoutes() => _serviceRoutes(
     ServiceTab.shares: (state) =>
         const UnraidScreen.shares(topPadding: _serviceTabTopPadding),
   },
-);
-
-/// Transmission. Its own difference is that it needs **no compatibility tail
-/// at all**: the only path it ever shipped is its bare root, because its
-/// torrent list expands rows in place and never had a detail page to push.
-RouteBase _transmissionRoutes() => _serviceRoutes(
-  ServiceKey.transmission,
-  roots: {
-    ServiceTab.overview: (state) =>
-        const TransmissionOverviewScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.queue: (state) => const TransmissionScreen(
-      showAppBar: false,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.labels: (state) =>
-        const TransmissionLabelsScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.session: (state) =>
-        const TransmissionSessionScreen(topPadding: _serviceTabTopPadding),
-  },
-);
-
-/// Nginx Proxy Manager. Like Unraid it needs **no compatibility tail**: the
-/// only path it ever shipped is its bare root.
-///
-/// What is NPM's own is that **becoming a tab changes nothing about who may
-/// write.** The per-control gate in `npm_write_gate.dart` travels with each
-/// control, and the permission band that explains it is drawn on *both* halves
-/// of the split rather than on the tab that has the most controls: Proxy hosts
-/// carries the host menu's Enable/Disable, Certificates carries Renew, and
-/// splitting a page across a bar must not leave a control on one tab and the
-/// sentence explaining why it is attenuated on another.
-///
-/// Every tab has a concrete read surface. Proxy hosts and Certificates retain
-/// the original page sections, while Access lists and Audit log use dedicated
-/// `NpmClient` queries. The per-control permission band still travels with the
-/// tab that owns the write, so adding read coverage does not weaken mutation
-/// gating.
-RouteBase _npmRoutes() => _serviceRoutes(
-  ServiceKey.nginxProxyManager,
-  roots: {
-    ServiceTab.overview: (state) =>
-        const NpmOverviewScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.proxyHosts: (state) =>
-        const NpmScreen.proxyHosts(topPadding: _serviceTabTopPadding),
-    ServiceTab.certificates: (state) =>
-        const NpmScreen.certificates(topPadding: _serviceTabTopPadding),
-    ServiceTab.accessLists: (state) =>
-        const NpmScreen.accessLists(topPadding: _serviceTabTopPadding),
-    ServiceTab.auditLog: (state) =>
-        const NpmScreen.auditLog(topPadding: _serviceTabTopPadding),
-  },
-  inside: {
-    ServiceTab.proxyHosts: [
-      // A child, so the URL leaves the tab root and the service header steps
-      // aside for the page's own app bar (`isServiceTabRoot`).
-      _page(
-        ':hostId/advanced',
-        (state) => NpmAdvancedConfigScreen(
-          hostId: RouteUtils.safeIntParam(state, 'hostId')!,
-        ),
-        redirect: (context, state) =>
-            RouteUtils.safeIntParam(state, 'hostId') == null
-            ? ServiceRoutes.npmProxyHosts
-            : null,
-      ),
-    ],
-  },
-);
-
-/// Tracearr: the guardian of the media servers, in the Stream band and not one
-/// of them, so it is not [_streamRoutes]: it has no libraries and no item tree,
-/// and five tabs of its own.
-///
-/// Its shell mounts `ConnectionInViewScope` like the Stream band's (the page
-/// header names the connection the visit has in view). Live and History rows
-/// open a title, which is why Tracearr is in
-/// `ServiceRoutes.mediaMountServices`: the title's page lands under the tab it
-/// was opened from, and Back returns to the row.
-RouteBase _tracearrRoutes() => _serviceRoutes(
-  ServiceKey.tracearr,
-  scope: (state, shell) => ConnectionInViewScope(
-    service: ServiceKey.tracearr,
-    location: state.uri,
-    child: shell,
-  ),
-  roots: {
-    ServiceTab.overview: (state) =>
-        const TracearrOverviewScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.live: (state) =>
-        const TracearrLiveScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.history: (state) =>
-        const TracearrHistoryScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.users: (state) =>
-        const TracearrUsersScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.violations: (state) => TracearrViolationsScreen(
-      topPadding: _serviceTabTopPadding,
-      // From a person's page: that person's violations only.
-      userId: state.uri.queryParameters['user'],
-      // From a notification of several: the Tracearr they came off.
-      instanceId: state.uri.queryParameters['i'],
-    ),
-  },
-  // A violation resolves from the path alone, so a card in Needs you and a
-  // notification open it cold (`?i=` names the Tracearr connection it came
-  // off). A person's page sits under the tab it was opened from so Back returns
-  // to the row (`ServiceRoutes.tracearrPerson`): `users/:id` under Users, the
-  // spelling a deep link uses, and `person/:id` under the others. The id is
-  // Tracearr's own and the page resolves from it alone.
-  inside: {
-    ServiceTab.users: [_tracearrPerson(':id')],
-    ServiceTab.overview: [_tracearrPerson('person/:id')],
-    ServiceTab.live: [_tracearrPerson('person/:id')],
-    ServiceTab.history: [_tracearrPerson('person/:id')],
-    ServiceTab.violations: [
-      _tracearrPerson('person/:id'),
-      _page(
-        ':id',
-        (state) => TracearrViolationScreen(
-          violationId: state.pathParameters['id']!,
-          instanceId: state.uri.queryParameters['i'],
-        ),
-        redirect: (context, state) =>
-            (state.pathParameters['id']?.trim().isEmpty ?? true)
-            ? ServiceRoutes.tracearrViolations
-            : null,
-      ),
-    ],
-  },
-);
-
-GoRoute _tracearrPerson(String path) => _page(
-  path,
-  (state) => TracearrPersonScreen(userId: state.pathParameters['id']!),
-  redirect: (context, state) =>
-      (state.pathParameters['id']?.trim().isEmpty ?? true)
-      ? ServiceRoutes.tracearrUsers
-      : null,
 );
 
 /// The route spellings of one media server, by key.
@@ -1904,15 +1713,10 @@ RouteBase _branchRootFor(NavTab tab) => switch (tab) {
       _dockgeRoutes(),
       _prowlarrRoutes(),
       _readarrRoutes(),
-      _sabnzbdRoutes(),
-      _nzbgetRoutes(),
       _unraidRoutes(),
-      _transmissionRoutes(),
-      _npmRoutes(),
       _streamRoutes(ServiceKey.jellyfin),
       _streamRoutes(ServiceKey.plex),
       _streamRoutes(ServiceKey.emby),
-      _tracearrRoutes(),
     ],
   ),
   NavTab.activity => GoRoute(

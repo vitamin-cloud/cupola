@@ -19,7 +19,6 @@ const _configured = [
   ServiceKey.radarr,
   ServiceKey.sonarr,
   ServiceKey.qbittorrent,
-  ServiceKey.sabnzbd,
   ServiceKey.jellyfin,
 ];
 

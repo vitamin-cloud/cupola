@@ -10,17 +10,13 @@ import 'package:cupola/features/dockge/presentation/dockge_provider.dart';
 import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/music/data/lidarr_service.dart';
-import 'package:cupola/features/npm/presentation/npm_provider.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_provider.dart';
 import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_provider.dart';
 import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_provider.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/transmission/presentation/transmission_provider.dart';
 import 'package:cupola/features/truenas/presentation/truenas_provider.dart';
 import 'package:cupola/features/unraid/presentation/unraid_provider.dart';
 
@@ -89,22 +85,6 @@ void main() {
         'qbittorrent': (
           key: ServiceKey.qbittorrent,
           read: (c) => c.read(qbittorrentServiceProvider),
-        ),
-        'sabnzbd': (
-          key: ServiceKey.sabnzbd,
-          read: (c) => c.read(sabnzbdClientProvider),
-        ),
-        'nzbget': (
-          key: ServiceKey.nzbget,
-          read: (c) => c.read(nzbgetClientProvider),
-        ),
-        'transmission': (
-          key: ServiceKey.transmission,
-          read: (c) => c.read(transmissionClientProvider),
-        ),
-        'npm': (
-          key: ServiceKey.nginxProxyManager,
-          read: (c) => c.read(npmClientProvider),
         ),
         'unraid': (
           key: ServiceKey.unraid,

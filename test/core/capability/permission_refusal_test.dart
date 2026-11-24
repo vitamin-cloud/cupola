@@ -2,8 +2,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/capability/permission_refusal.dart';
-import 'package:cupola/core/network/connection_failure.dart';
-import 'package:cupola/features/npm/data/npm_client.dart';
 
 DioException _status(int code) {
   final request = RequestOptions(path: '/api/v3/movie');
@@ -40,27 +38,7 @@ void main() {
   });
 
   group('Nginx Proxy Manager', () {
-    test('a forbidden NpmException is a refusal', () {
-      expect(
-        isPermissionRefusal(
-          const NpmException(
-            'no',
-            reason: ServiceFailureReason.unauthorized,
-            forbidden: true,
-          ),
-        ),
-        isTrue,
-      );
-    });
 
-    test('a wrong password is not, though it shares the reason', () {
-      expect(
-        isPermissionRefusal(
-          const NpmException('no', reason: ServiceFailureReason.unauthorized),
-        ),
-        isFalse,
-      );
-    });
   });
 
   test('anything else is not a refusal', () {

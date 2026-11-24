@@ -54,9 +54,7 @@ String? credentialScopeQualifier(ServiceKey service, CapabilityGrant grant) {
   if (grant.basis == CapabilityBasis.unanswered) return null;
   final noun = service.capabilityCredentialNoun;
   if (grant.scopeFor(null).isRestricted) {
-    return service == ServiceKey.nginxProxyManager
-        ? 'view-only $noun'
-        : 'read-only $noun';
+    return 'read-only $noun';
   }
   if (grant.writable != null) {
     // A Plex token that reads the server and not who is watching belongs to
@@ -291,13 +289,6 @@ String? transportWarningFor(ServiceKey service, String rawUrl) {
   if (!cleartext) return null;
   if (service == ServiceKey.truenas) {
     return const TrueNasInsecureTransportException().failureDetail;
-  }
-  if (service == ServiceKey.sabnzbd &&
-      UrlUtils.cleartextWarning(rawUrl) != null) {
-    return 'This address is off your local network, and SABnzbd sends its '
-        'API key inside the address itself: over http:// it can be read on '
-        "the way and is kept in every proxy's log. Use https:// if the "
-        'instance supports it.';
   }
   return null;
 }

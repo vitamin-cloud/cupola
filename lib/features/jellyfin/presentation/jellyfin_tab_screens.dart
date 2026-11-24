@@ -19,8 +19,6 @@ import 'package:cupola/features/stream/presentation/stream_watching.dart';
 import 'package:cupola/features/stream/presentation/stream_activity_provider.dart';
 import 'package:cupola/features/stream/presentation/stream_connection_provider.dart';
 import 'package:cupola/features/stream/presentation/widgets/stream_now_playing_section.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_navigation.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_person_provider.dart';
 
 /// Read-only household users from Jellyfin's `/Users` endpoint.
 ///
@@ -386,27 +384,11 @@ class _UserRow extends ConsumerWidget {
       semanticLabel:
           '$name, $state, $lastActivity${person == null ? '' : ', in Tracearr'}',
     );
-    if (person == null) return row;
-    return PressableScale(
-      onTap: () => openTracearrPerson(context, person),
-      semanticHint: 'opens the person in Tracearr',
-      child: row,
-    );
+    return row;
   }
 
-  String? _tracearrPerson(WidgetRef ref) {
-    final settings = ref.watch(currentSettingsProvider);
-    if (!settings.isServiceConfigured(ServiceKey.tracearr)) return null;
-    return ref
-        .watch(
-          tracearrPersonByAccountProvider((
-            service: service,
-            serverUserId: user.id,
-            serverName: settings.connectionName(instanceId),
-          )),
-        )
-        .value;
-  }
+  // No Tracearr in this fork: a user is never one of its people.
+  String? _tracearrPerson(WidgetRef ref) => null;
 }
 
 class _DeviceRow extends StatelessWidget {

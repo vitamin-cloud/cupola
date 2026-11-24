@@ -85,8 +85,8 @@ final _elephants = _download(
   progress: 0.31,
   eta: 360,
   rate: 18 * _mb,
-  client: ServiceKey.sabnzbd,
-  clientLabel: 'SABnzbd',
+  client: ServiceKey.qbittorrent,
+  clientLabel: 'qBittorrent',
   connectionName: '4K',
 );
 
@@ -130,8 +130,8 @@ final _queued = _download(
   progress: 0,
   queued: true,
   startsIn: 360,
-  client: ServiceKey.sabnzbd,
-  clientLabel: 'SABnzbd',
+  client: ServiceKey.qbittorrent,
+  clientLabel: 'qBittorrent',
   connectionName: '4K',
 );
 

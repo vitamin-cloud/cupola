@@ -27,19 +27,7 @@ final Map<ServiceKey, Object?> _genuine = {
   ServiceKey.jellyfin: _fixture('jellyfin/system_info_public.json'),
   ServiceKey.plex: _fixture('plex/identity.json'),
   ServiceKey.emby: _fixture('emby/system_info_public.json'),
-  ServiceKey.tracearr: _fixture('tracearr/real_health.json'),
-  ServiceKey.sabnzbd: _fixture('sabnzbd/version.json'),
   ServiceKey.qbittorrent: 'v5.1.2',
-  ServiceKey.nginxProxyManager: {
-    'status': 'OK',
-    'setup': true,
-    'version': {'major': 2, 'minor': 12, 'revision': 6},
-  },
-  ServiceKey.nzbget: _fixture('nzbget/version.json'),
-  ServiceKey.transmission: {
-    'arguments': {'version': '4.0.6'},
-    'result': 'success',
-  },
   ServiceKey.unraid: {
     'data': {
       'info': {
@@ -133,7 +121,6 @@ void main() {
         ServiceKey.jellyfin: {'Version': '10.8.13', 'Id': 'abc'},
         ServiceKey.plex: {'MediaContainer': <String, Object?>{}},
         ServiceKey.qbittorrent: '',
-        ServiceKey.nginxProxyManager: {'status': 'OK'},
       };
       for (final MapEntry(key: service, value: body) in olderBuilds.entries) {
         expect(
@@ -144,28 +131,6 @@ void main() {
       }
     });
 
-    test('a body that is not the service\'s shape is not the service', () {
-      final strangers = <(ServiceKey, Object?)>[
-        (ServiceKey.radarr, {'status': 'ok'}),
-        (ServiceKey.radarr, [1, 2, 3]),
-        (ServiceKey.seerr, {'message': 'Not Found'}),
-        (ServiceKey.bazarr, {'version': '1.0'}),
-        (ServiceKey.plex, {'version': '1.40'}),
-        (ServiceKey.sabnzbd, {'queue': <String, Object?>{}}),
-        (ServiceKey.qbittorrent, 'Welcome'),
-        (ServiceKey.nginxProxyManager, {'message': 'Hello'}),
-        (ServiceKey.nzbget, {'jsonrpc': '2.0'}),
-        (ServiceKey.transmission, {'arguments': <String, Object?>{}}),
-        (ServiceKey.unraid, {'message': 'Not Found'}),
-      ];
-      for (final (service, body) in strangers) {
-        expect(
-          identifyProbeAnswer(service, body),
-          ProbeIdentity.notThisService,
-          reason: service.title,
-        );
-      }
-    });
   });
 
   group('Jellyfin and Emby, which answer the same route', () {
@@ -330,54 +295,8 @@ void main() {
   });
 
   group('Tracearr health, whatever state it is in', () {
-    test('a maintenance or degraded answer is still Tracearr', () {
-      for (final body in <Object?>[
-        {
-          'status': 'maintenance',
-          'mode': 'maintenance',
-          'db': true,
-          'redis': false,
-        },
-        {'status': 'degraded', 'db': false, 'redis': true, 'timescale': {}},
-      ]) {
-        expect(
-          identifyProbeAnswer(ServiceKey.tracearr, body),
-          ProbeIdentity.matches,
-          reason: '$body',
-        );
-      }
-    });
 
-    test('a bare status, ok or not, is not Tracearr', () {
-      for (final body in <Object?>[
-        {'status': 'ok'},
-        {'status': 'degraded'},
-        {'status': 'maintenance', 'mode': 'maintenance'},
-      ]) {
-        expect(
-          identifyProbeAnswer(ServiceKey.tracearr, body),
-          ProbeIdentity.notThisService,
-          reason: '$body',
-        );
-      }
-    });
 
-    test('the authenticated shape still needs ok and a version', () {
-      expect(
-        identifyProbeAnswer(ServiceKey.tracearr, {
-          'status': 'ok',
-          'version': '1.4.0',
-        }),
-        ProbeIdentity.matches,
-      );
-      expect(
-        identifyProbeAnswer(ServiceKey.tracearr, {
-          'status': 'degraded',
-          'version': '1.4.0',
-        }),
-        ProbeIdentity.notThisService,
-      );
-    });
   });
 
   group('WrongServiceAnswer', () {

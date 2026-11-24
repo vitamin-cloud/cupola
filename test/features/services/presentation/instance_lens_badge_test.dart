@@ -260,37 +260,6 @@ void main() {
     expect(prefs.getString('active_instances'), contains('radarr-hd11111'));
   });
 
-  testWidgets('the service name yields before the badge does', (tester) async {
-    // "Nginx Proxy Manager" is the longest title in the registry, and this is
-    // the case that used to overflow the Row outright; the title had no
-    // Flexible, no maxLines and no overflow, and the text scaler is opt-in per
-    // call site rather than global.
-    const npm = ServiceInstance(
-      id: 'npm',
-      service: ServiceKey.nginxProxyManager,
-      label: 'Casa',
-      url: 'https://nas.lan:81',
-      credential: 'k',
-    );
-    const npmTwo = ServiceInstance(
-      id: 'npm-second1',
-      service: ServiceKey.nginxProxyManager,
-      label: 'Ufficio',
-      url: 'https://office.lan:81',
-      credential: 'k',
-    );
-
-    await _pump(
-      tester,
-      settings: const SettingsModel(instances: [npm, npmTwo]),
-      service: ServiceKey.nginxProxyManager,
-      barWidth: 240,
-    );
-
-    expect(tester.takeException(), isNull);
-    // The badge kept its whole label; the title is the one that gave way.
-    expect(find.text('Casa'), findsOneWidget);
-  });
 
   testWidgets('announces itself as the lens, not as a service switcher', (
     tester,

@@ -6,6 +6,7 @@ import 'package:cupola/core/status/arr_queue_snapshot.dart';
 import 'package:cupola/core/providers/navigation_refresh_provider.dart';
 import 'package:cupola/core/utils/arr_model_helpers.dart';
 import 'package:cupola/core/utils/service_routes.dart';
+import 'package:cupola/core/widgets/arr_add_scaffold.dart';
 import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/features/media/domain/media_key.dart';
 import 'package:cupola/features/media/presentation/open_media.dart';
@@ -68,6 +69,53 @@ MediaStatusInfo? Function(SonarrSeries series) _statusOf(
       queue,
     );
 
+/// Opens [series] the way the wall does: its own page under this tab, or
+/// through its TMDB id on the title page, on the lens's copy.
+void _openSeries(
+  BuildContext context,
+  String lens,
+  SonarrSeries series,
+  String heroTag,
+) {
+  if (series.tmdbId <= 0) {
+    context.push(ServiceRoutes.sonarrSeries(series.id, heroTag: heroTag));
+    return;
+  }
+  context.openMedia(
+    MediaKey.tv(series.tmdbId),
+    focus: lens.isEmpty ? null : lens,
+    heroTag: heroTag,
+    posterUrl: remotePosterOf(series.images),
+  );
+}
+
+/// This fork's page for adding a series: Sonarr's lookup alone.
+class SeriesAddScreen extends ConsumerWidget {
+  const SeriesAddScreen({super.key, this.initialQuery});
+
+  final String? initialQuery;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final queue = queueSnapshotOf(ref.watch(sonarrQueueSnapshotProvider));
+    final lens = ref.watch(activeInstanceProvider(ServiceKey.sonarr))?.id ?? '';
+    final status = _statusOf(queue);
+    return ArrAddScaffold(
+      service: ServiceKey.sonarr,
+      title: 'Add a series',
+      hint: 'Search for a new series',
+      queryProvider: seriesSearchQueryProvider,
+      initialQuery: initialQuery,
+      results: (context, query) => SeriesFindSonarr(
+        query: query,
+        statusOf: status,
+        onOpen: (context, series, tag) =>
+            _openSeries(context, lens, series, tag),
+      ),
+    );
+  }
+}
+
 class SeriesScreen extends ConsumerWidget {
   final bool showAppBar;
   final double topPadding;
@@ -121,19 +169,16 @@ class SeriesScreen extends ConsumerWidget {
       heroTagPrefix: 'series',
       libraryProvider: seriesProvider,
       searchQueryProvider: seriesSearchQueryProvider,
-      find: MediaFind(
-        scopeProvider: seriesFindScopeProvider,
-        serviceLabel: connectionName,
+      // Only what the library holds: adding a series is its own page, the
+      // band's magnifying glass, which the "ask Sonarr" row opens too.
+      find: MediaFind.libraryOnly(
         libraryBody: (context, query) => SeriesFindLibrary(
           query: query,
           statusOf: status,
           settingsSelector: (settings) => settings.artworkKeyOf(lens, route),
           onOpen: open,
-          onAskSonarr: () => ref.read(seriesFindScopeProvider.notifier).state =
-              MediaFindScope.service,
+          onAskSonarr: () => context.push(ServiceRoutes.sonarrAddFor(query)),
         ),
-        serviceBody: (context, query) =>
-            SeriesFindSonarr(query: query, statusOf: status, onOpen: open),
       ),
       // Search, Monitor, Profile and Remove on the series selected.
       bulk: sonarrBulk(

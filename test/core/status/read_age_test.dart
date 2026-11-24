@@ -24,7 +24,7 @@ class _Page extends ConsumerWidget {
     onBuild();
     final age = ref.watchQueueReadAge(
       context,
-      ServiceKey.sabnzbd,
+      ServiceKey.qbittorrent,
       underBand: underBand,
     );
     return Text(age == null ? 'no age' : formatDurationAge(age));
@@ -62,11 +62,11 @@ class _HostState extends State<_Host> {
 
 void main() {
   final settings = settingsWith(
-    sabnzbdUrl: 'http://sab.test',
-    sabnzbdApiKey: 'key',
+    qbittorrentUrl: 'http://qb.test',
+    qbittorrentUsername: 'admin',
   );
-  final connection = settings.primaryOf(ServiceKey.sabnzbd)!.id;
-  final key = queueReadKey(ServiceKey.sabnzbd, connection);
+  final connection = settings.primaryOf(ServiceKey.qbittorrent)!.id;
+  final key = queueReadKey(ServiceKey.qbittorrent, connection);
   final readAt = DateTime(2026, 10, 12, 9);
 
   late DateTime now;
@@ -159,7 +159,7 @@ void main() {
 
     testWidgets('is not told the age of another connection', (tester) async {
       clock = ReadClock(now: () => now)
-        ..note(queueReadKey(ServiceKey.sabnzbd, 'seedbox'), readAt);
+        ..note(queueReadKey(ServiceKey.qbittorrent, 'seedbox'), readAt);
       await pump(tester);
 
       expect(find.text('no age'), findsOneWidget);

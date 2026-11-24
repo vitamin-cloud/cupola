@@ -393,9 +393,6 @@ typedef DownloadClientHandle = ({
 
 const _clients = {
   ServiceKey.qbittorrent,
-  ServiceKey.transmission,
-  ServiceKey.sabnzbd,
-  ServiceKey.nzbget,
 };
 
 DownloadClientHandle? downloadClientOf(ServiceQueueItem item) {
@@ -408,7 +405,7 @@ DownloadClientHandle? downloadClientOf(ServiceQueueItem item) {
   // A torrent's hash in the case its client reads it; an \*arr records it
   // upper-cased.
   final id =
-      client == ServiceKey.qbittorrent || client == ServiceKey.transmission
+      client == ServiceKey.qbittorrent
       ? raw.toLowerCase()
       : raw;
   return (client: client, instanceId: instanceId, id: id);

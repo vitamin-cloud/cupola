@@ -127,20 +127,6 @@ void main() {
   });
 
   group('the note under a partial total', () {
-    test('names what is missing, silence first, and no reasons', () {
-      final coverage = SourceCoverage.merge([
-        SourceCoverage.answeredBy(ServiceKey.radarr),
-        SourceCoverage.failure(ServiceKey.qbittorrent, refused),
-        SourceCoverage.failure(ServiceKey.sabnzbd, silent),
-        SourceCoverage.failure(ServiceKey.lidarr, silent),
-      ]);
-
-      expect(
-        coverageNote(coverage),
-        'Not in the total: Lidarr, SABnzbd, qBittorrent',
-      );
-      expect(coverage.anyDidNotAnswer, isTrue);
-    });
 
     test('counts past two names', () {
       final coverage = SourceCoverage.merge([
@@ -225,9 +211,6 @@ void main() {
           ServiceKey.lidarr,
           ServiceKey.readarr,
           ServiceKey.qbittorrent,
-          ServiceKey.transmission,
-          ServiceKey.sabnzbd,
-          ServiceKey.nzbget,
         ])
           SourceCoverage.failure(service, slow),
       ]);
@@ -263,18 +246,6 @@ void main() {
       );
     });
 
-    test('a key and a sign-in refused are two sentences', () {
-      final coverage = SourceCoverage.merge([
-        SourceCoverage.failure(ServiceKey.radarr, refused),
-        SourceCoverage.failure(ServiceKey.qbittorrent, refused),
-        SourceCoverage.failure(ServiceKey.transmission, refused),
-      ]);
-      expect(
-        coverageFailureSentence(coverage),
-        'Radarr answered but refused the key. qBittorrent and Transmission '
-        'answered but refused the sign-in.',
-      );
-    });
 
     test('a fault that cannot be said of many says each', () {
       const gateway = ClassifiedFailure(ServiceFailureReason.accessGateway);

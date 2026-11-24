@@ -119,8 +119,9 @@ class ServiceTabBar extends StatelessWidget {
     // audience that cannot scroll the bar to find out what is on it.
     final strip = SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      // Inside the phone's frosted slab the pills sit close to its edge.
       padding: EdgeInsets.symmetric(
-        horizontal: _header ? AppSpacing.sm : AppSpacing.lg,
+        horizontal: _header ? AppSpacing.sm : AppSpacing.xs,
       ),
       child: Row(
         // Stretch, so every cell is the bar's full height and the whole

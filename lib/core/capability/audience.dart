@@ -46,17 +46,12 @@ Audience audienceOf(Iterable<AudienceConnection> connections) {
           ServiceKey.sonarr ||
           ServiceKey.lidarr ||
           ServiceKey.qbittorrent ||
-          ServiceKey.transmission ||
           ServiceKey.bazarr ||
           ServiceKey.truenas ||
           ServiceKey.dockge ||
           ServiceKey.prowlarr ||
           ServiceKey.readarr ||
-          ServiceKey.sabnzbd ||
-          ServiceKey.nzbget ||
-          ServiceKey.unraid ||
-          ServiceKey.nginxProxyManager ||
-          ServiceKey.tracearr:
+          ServiceKey.unraid:
         return Audience.operator;
     }
   }

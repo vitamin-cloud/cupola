@@ -62,17 +62,12 @@ const List<ServiceKey> _tabbedServices = [
   ServiceKey.readarr,
   ServiceKey.bazarr,
   ServiceKey.qbittorrent,
-  ServiceKey.transmission,
-  ServiceKey.sabnzbd,
-  ServiceKey.nzbget,
   ServiceKey.prowlarr,
   ServiceKey.jellyfin,
   ServiceKey.plex,
   ServiceKey.emby,
-  ServiceKey.tracearr,
   ServiceKey.dockge,
   ServiceKey.unraid,
-  ServiceKey.nginxProxyManager,
 ];
 
 /// Every page pushed from inside a tab's branch, by the branch that owns it, in
@@ -115,18 +110,6 @@ _tabDetailPaths = [
   (service: ServiceKey.plex, tab: ServiceTab.libraries, path: ':id'),
   (service: ServiceKey.emby, tab: ServiceTab.libraries, path: 'item/:id'),
   (service: ServiceKey.emby, tab: ServiceTab.libraries, path: ':id'),
-  // A person's page, under the tab it is opened from so Back returns to the
-  // row (`ServiceRoutes.tracearrPerson`): `users/:id` under Users, the spelling
-  // a deep link uses, and `person/:id` under the four other tabs.
-  (service: ServiceKey.tracearr, tab: ServiceTab.users, path: ':id'),
-  (service: ServiceKey.tracearr, tab: ServiceTab.overview, path: 'person/:id'),
-  (service: ServiceKey.tracearr, tab: ServiceTab.live, path: 'person/:id'),
-  (service: ServiceKey.tracearr, tab: ServiceTab.history, path: 'person/:id'),
-  (
-    service: ServiceKey.tracearr,
-    tab: ServiceTab.violations,
-    path: 'person/:id',
-  ),
   // An issue, opened from the Issues list and from the title's page. Seerr's
   // see-alls, person and collection went with Discover to the app's own tab; a
   // title, a person and a collection hang under every tab of its bar like
@@ -134,7 +117,6 @@ _tabDetailPaths = [
   (service: ServiceKey.seerr, tab: ServiceTab.issues, path: ':issueId'),
   // A violation, opened from Violations' list, the Overview and Needs you; a
   // title opens under every tab like everywhere else (`_mediaPaths`).
-  (service: ServiceKey.tracearr, tab: ServiceTab.violations, path: ':id'),
   // The new-stack editor is not a detail, and it is here for the reason one
   // would be: it is reached from the Stacks list's own header and from nowhere
   // else, so Stacks is the tab that owns it. The compose editor of an existing
@@ -142,14 +124,6 @@ _tabDetailPaths = [
   // row of its own.
   (service: ServiceKey.dockge, tab: ServiceTab.stacks, path: 'new'),
   (service: ServiceKey.dockge, tab: ServiceTab.stacks, path: 'stack/:name'),
-  // A proxy host's custom Nginx block, opened from the host's own menu. Its
-  // page carries its own app bar, which the service header would sit on top
-  // of anywhere but a child of the tab.
-  (
-    service: ServiceKey.nginxProxyManager,
-    tab: ServiceTab.proxyHosts,
-    path: ':hostId/advanced',
-  ),
 ];
 
 /// The title's own page, hung last under every tab of the services that open
@@ -176,9 +150,6 @@ const List<String> _mediaPaths = [
 ///  * Unraid: it was one page, and the split produced sections rather than
 ///    pages.
 const List<ServiceKey> _servicesWithoutTabDetails = [
-  ServiceKey.transmission,
-  ServiceKey.sabnzbd,
-  ServiceKey.nzbget,
   ServiceKey.unraid,
 ];
 

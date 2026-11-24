@@ -39,16 +39,6 @@ const _onDisk = <ServiceKey, ({String url, String secret, String? username})>{
     secret: 'secure_qbittorrent_password',
     username: 'qbittorrent_username',
   ),
-  ServiceKey.transmission: (
-    url: 'transmission_url',
-    secret: 'secure_transmission_password',
-    username: 'transmission_username',
-  ),
-  ServiceKey.nginxProxyManager: (
-    url: 'npm_url',
-    secret: 'secure_npm_password',
-    username: 'npm_username',
-  ),
   ServiceKey.bazarr: (
     url: 'bazarr_url',
     secret: 'secure_bazarr_api_key',
@@ -74,16 +64,6 @@ const _onDisk = <ServiceKey, ({String url, String secret, String? username})>{
     secret: 'secure_readarr_api_key',
     username: null,
   ),
-  ServiceKey.sabnzbd: (
-    url: 'sabnzbd_url',
-    secret: 'secure_sabnzbd_api_key',
-    username: null,
-  ),
-  ServiceKey.nzbget: (
-    url: 'nzbget_url',
-    secret: 'secure_nzbget_password',
-    username: 'nzbget_username',
-  ),
   ServiceKey.unraid: (
     url: 'unraid_url',
     secret: 'secure_unraid_api_key',
@@ -102,11 +82,6 @@ const _onDisk = <ServiceKey, ({String url, String secret, String? username})>{
   ServiceKey.emby: (
     url: 'emby_url',
     secret: 'secure_emby_api_key',
-    username: null,
-  ),
-  ServiceKey.tracearr: (
-    url: 'tracearr_url',
-    secret: 'secure_tracearr_api_key',
     username: null,
   ),
 };
@@ -208,13 +183,6 @@ void main() {
       );
     });
 
-    test('follows routeParam, not the enum name, for the one that differs', () {
-      // `nginxProxyManager` is the only camelCase enum name, and `npm_*` is
-      // what is on disk. Deriving from `name` here would orphan the key.
-      final npm = _primary(ServiceKey.nginxProxyManager);
-      expect(npm.id, 'npm');
-      expect(npm.isPrimarySlot, isTrue);
-    });
   });
 
   group('isConfigured', () {

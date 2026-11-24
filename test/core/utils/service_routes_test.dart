@@ -45,18 +45,6 @@ void main() {
       expect(ServiceRoutes.legacyServices, '/services');
     });
 
-    test('the two that used to be built by hand are constants now', () {
-      expect(
-        ServiceRoutes.transmission,
-        ServiceRoutes.forService(ServiceKey.transmission),
-      );
-      // The one segment that is not the enum name.
-      expect(ServiceRoutes.nginxProxyManager, '/stack/npm');
-      expect(
-        ServiceRoutes.nginxProxyManager,
-        ServiceRoutes.forService(ServiceKey.nginxProxyManager),
-      );
-    });
 
     test('builds Radarr detail routes with optional hero tag', () {
       // The film moved under `library/`: it is a page inside the Library tab's
@@ -196,71 +184,8 @@ void main() {
       );
     });
 
-    test('the Transmission tab roots are spelled by the tabs they mount', () {
-      // Four literals, and no detail constant under any of them: the torrent
-      // list expands rows in place, so Queue is a leaf and there has never been
-      // a page to push from it.
-      expect(
-        ServiceRoutes.transmissionOverview,
-        '${ServiceRoutes.transmission}/${ServiceTab.overview.segment}',
-      );
-      expect(
-        ServiceRoutes.transmissionQueue,
-        '${ServiceRoutes.transmission}/${ServiceTab.queue.segment}',
-      );
-      expect(
-        ServiceRoutes.transmissionLabels,
-        '${ServiceRoutes.transmission}/${ServiceTab.labels.segment}',
-      );
-      expect(
-        ServiceRoutes.transmissionSession,
-        '${ServiceRoutes.transmission}/${ServiceTab.session.segment}',
-      );
-    });
 
-    test('the SABnzbd tab roots are spelled by the tabs they mount', () {
-      expect(
-        ServiceRoutes.sabnzbdOverview,
-        '${ServiceRoutes.sabnzbd}/${ServiceTab.overview.segment}',
-      );
-      expect(
-        ServiceRoutes.sabnzbdQueue,
-        '${ServiceRoutes.sabnzbd}/${ServiceTab.queue.segment}',
-      );
-      expect(
-        ServiceRoutes.sabnzbdHistory,
-        '${ServiceRoutes.sabnzbd}/${ServiceTab.history.segment}',
-      );
-      expect(
-        ServiceRoutes.sabnzbdServers,
-        '${ServiceRoutes.sabnzbd}/${ServiceTab.servers.segment}',
-      );
-    });
 
-    test('the NZBGet tab roots are spelled by the tabs they mount', () {
-      // Five, the widest bar of the four download clients, and the one where a
-      // hand-kept list is most likely to drift from the table that draws it.
-      expect(
-        ServiceRoutes.nzbgetOverview,
-        '${ServiceRoutes.nzbget}/${ServiceTab.overview.segment}',
-      );
-      expect(
-        ServiceRoutes.nzbgetQueue,
-        '${ServiceRoutes.nzbget}/${ServiceTab.queue.segment}',
-      );
-      expect(
-        ServiceRoutes.nzbgetHistory,
-        '${ServiceRoutes.nzbget}/${ServiceTab.history.segment}',
-      );
-      expect(
-        ServiceRoutes.nzbgetFeeds,
-        '${ServiceRoutes.nzbget}/${ServiceTab.feeds.segment}',
-      );
-      expect(
-        ServiceRoutes.nzbgetMessages,
-        '${ServiceRoutes.nzbget}/${ServiceTab.messages.segment}',
-      );
-    });
 
     test('the Seerr tab roots are spelled by the tabs they mount', () {
       // The same tie the four \*arr and the four download clients carry, and it
@@ -742,39 +667,6 @@ void main() {
       expect(ServiceRoutes.unraidVms, '/stack/unraid/vms');
     });
 
-    test('the NPM tab roots are spelled by the tabs they mount', () {
-      // Five, three of them hyphenated where the label has a space. The
-      // spelling is `ServiceTab.segment`'s and not one invented here, which is
-      // the half of this case that a hand-written literal can silently lose:
-      // `proxyHosts` would resolve to nothing and read as a 404 on a tab the
-      // bar still draws.
-      expect(
-        ServiceRoutes.npmOverview,
-        '${ServiceRoutes.nginxProxyManager}/${ServiceTab.overview.segment}',
-      );
-      expect(
-        ServiceRoutes.npmProxyHosts,
-        '${ServiceRoutes.nginxProxyManager}/${ServiceTab.proxyHosts.segment}',
-      );
-      expect(
-        ServiceRoutes.npmCertificates,
-        '${ServiceRoutes.nginxProxyManager}/${ServiceTab.certificates.segment}',
-      );
-      expect(
-        ServiceRoutes.npmAccessLists,
-        '${ServiceRoutes.nginxProxyManager}/${ServiceTab.accessLists.segment}',
-      );
-      expect(
-        ServiceRoutes.npmAuditLog,
-        '${ServiceRoutes.nginxProxyManager}/${ServiceTab.auditLog.segment}',
-      );
-      // Written out once, because two irregularities meet here: the service
-      // segment is `npm` rather than the enum name, and three tab segments are
-      // hyphenated.
-      expect(ServiceRoutes.npmProxyHosts, '/stack/npm/proxy-hosts');
-      expect(ServiceRoutes.npmAccessLists, '/stack/npm/access-lists');
-      expect(ServiceRoutes.npmAuditLog, '/stack/npm/audit-log');
-    });
 
     test('every tab of the three infrastructure services has a constant', () {
       // The other half of the tie above: those cases prove each constant is
@@ -793,13 +685,6 @@ void main() {
           ServiceRoutes.unraidVms,
           ServiceRoutes.unraidNotifications,
           ServiceRoutes.unraidShares,
-        ],
-        ServiceKey.nginxProxyManager: [
-          ServiceRoutes.npmOverview,
-          ServiceRoutes.npmProxyHosts,
-          ServiceRoutes.npmCertificates,
-          ServiceRoutes.npmAccessLists,
-          ServiceRoutes.npmAuditLog,
         ],
       };
 

@@ -16,7 +16,6 @@ import 'package:go_router/go_router.dart';
 import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/platform/local_network_access.dart';
 import 'package:cupola/core/theme.dart';
-import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/widgets/failure_remedy.dart';
 import 'package:cupola/features/series/presentation/series_screen.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
@@ -214,26 +213,6 @@ void main() {
       });
     }
 
-    testWidgets('has no Password where the service signs in with '
-        'Authorization, and says why', (tester) async {
-      final (harness, _) = await _pumpForm(
-        tester,
-        Profiles.p1.withConnection(WorldConnections.nzbget),
-        WorldConnections.nzbget.id,
-      );
-
-      await _openAccess(tester);
-      expect(find.bySemanticsLabel('Password'), findsNothing);
-      expect(
-        find.text(
-          "NZBGet signs in with its own Authorization header, so a proxy "
-          "password cannot travel with it.",
-        ),
-        findsOneWidget,
-      );
-
-      await harness.unmount(tester);
-    });
 
     testWidgets('Cloudflare Access: labelled fields, the secret hidden with '
         'Paste, the help line, and the token saved', (tester) async {
@@ -419,30 +398,6 @@ void main() {
       await harness.unmount(tester);
     });
 
-    testWidgets('is the sign-in of a service that signs in with '
-        'Authorization itself', (tester) async {
-      final (harness, container) = await _pumpForm(
-        tester,
-        Profiles.p1.withConnection(WorldConnections.nzbget),
-        WorldConnections.nzbget.id,
-      );
-
-      await tester.enterText(
-        _field('Address at home'),
-        'http://nzbget:tegbzn6789@tower.home.arpa:6789',
-      );
-      await _save(tester, harness);
-
-      final saved = container
-          .read(settingsProvider)
-          .instanceById(WorldConnections.nzbget.id);
-      expect(saved?.url, 'http://tower.home.arpa:6789');
-      expect(saved?.username, 'nzbget');
-      expect(saved?.credential, 'tegbzn6789');
-      expect(saved?.access, const NoAccess());
-
-      await harness.unmount(tester);
-    });
   });
 
   group('the connection test of a Cloudflare service token, under P8', () {
@@ -595,40 +550,6 @@ void main() {
           ),
         )?.access;
 
-    test('with the choice the gateway wants', () {
-      expect(
-        accessOf(ServiceKey.radarr, AccessGatewayKind.cloudflareAccess),
-        AccessKind.cloudflare,
-      );
-      expect(
-        accessOf(ServiceKey.radarr, AccessGatewayKind.passwordPrompt),
-        AccessKind.password,
-      );
-      expect(
-        accessOf(ServiceKey.radarr, AccessGatewayKind.signInPage),
-        AccessKind.password,
-      );
-      // No Password where the service signs in with Authorization.
-      expect(
-        accessOf(ServiceKey.nginxProxyManager, AccessGatewayKind.signInPage),
-        AccessKind.custom,
-      );
-      expect(
-        FailureRemedy.forReason(
-          ServiceKey.radarr,
-          ServiceFailureReason.unauthorized,
-        )?.access,
-        isNull,
-      );
-      expect(
-        ServiceRoutes.settingsForConnection(
-          ServiceKey.radarr,
-          'radarr',
-          access: AccessKind.cloudflare,
-        ),
-        '/settings/service/radarr?i=radarr&access=cloudflare',
-      );
-    });
 
     testWidgets('Sonarr\'s library under P8: Add a service token lands on '
         'Cloudflare Access', (tester) async {

@@ -86,13 +86,6 @@ void main() {
   });
 
   group('the word for a secret', () {
-    test('is the registry\'s: key, token, or password for a sign-in', () {
-      expect(pairSecretWord(ServiceKey.radarr), 'key');
-      expect(pairSecretWord(ServiceKey.seerr), 'key');
-      expect(pairSecretWord(ServiceKey.plex), 'token');
-      expect(pairSecretWord(ServiceKey.qbittorrent), 'password');
-      expect(pairSecretWord(ServiceKey.nginxProxyManager), 'password');
-    });
 
     test('of a connection: its secret, or its access', () {
       final radarr = _connection(ServiceKey.radarr);

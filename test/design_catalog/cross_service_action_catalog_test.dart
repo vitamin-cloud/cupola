@@ -126,7 +126,7 @@ Widget _toggle(String connectionId) => CapabilityGatedAction.toggle(
 );
 
 Widget _save(String connectionId) => CapabilityGatedAction.builder(
-  service: ServiceKey.nginxProxyManager,
+  service: ServiceKey.dockge,
   connectionId: connectionId,
   resource: 'proxy_hosts',
   hint: 'requires an admin account',
@@ -170,7 +170,7 @@ Widget _menu(String connectionId) => Builder(
                 PopupMenuItem<String>(
                   value: 'disable',
                   child: CapabilityGatedMenuLabel(
-                    service: ServiceKey.nginxProxyManager,
+                    service: ServiceKey.dockge,
                     connectionId: connectionId,
                     resource: 'proxy_hosts',
                     text: 'Disable…',

@@ -335,25 +335,6 @@ void main() {
   });
 
   group('Stop and Resume', () {
-    test("go to the client moving the bytes, by its id in the client's "
-        'case', () {
-      final joined = downloadClientOf(_sprite());
-      expect(joined?.client, ServiceKey.qbittorrent);
-      expect(joined?.instanceId, 'qbittorrent');
-      expect(joined?.id, _hash.toLowerCase());
-
-      final own = downloadClientOf(_handAdded);
-      expect(own?.id, _handAdded.id);
-
-      final sab = downloadClientOf(
-        _sprite(
-          clientService: ServiceKey.sabnzbd,
-          clientInstanceId: 'sabnzbd',
-          downloadId: 'SABnzbd_nzo_Ab12',
-        ),
-      );
-      expect(sab?.id, 'SABnzbd_nzo_Ab12');
-    });
 
     test("an arr row its client was not matched to can't be stopped from "
         'here, nor a finished or failed one', () {

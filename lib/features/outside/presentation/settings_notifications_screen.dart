@@ -87,16 +87,10 @@ class _SettingsNotificationsScreenState
         (settings) => settings.isServiceConfigured(ServiceKey.seerr),
       ),
     );
-    final tracearr = ref.watch(
-      currentSettingsProvider.select(
-        (settings) => settings.isServiceConfigured(ServiceKey.tracearr),
-      ),
-    );
     final kinds = ref.watch(outsideNoticeKindsProvider);
-    // The switch stays while it is on even if Tracearr is gone, so it can be
-    // turned off: a run keeps being asked for while any switch is on.
-    final flagged =
-        !requester && (tracearr || kinds.contains(OutsideNoticeKind.flagged));
+    // This fork has no Tracearr: the switch shows only while an old setting
+    // has it on, so it can be turned off.
+    final flagged = !requester && kinds.contains(OutsideNoticeKind.flagged);
     // Only when one is on: a permission nobody asked for being off is not a
     // fault, it is the default.
     final blocked =

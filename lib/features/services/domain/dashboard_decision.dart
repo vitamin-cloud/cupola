@@ -54,9 +54,6 @@ enum DecisionSource {
   /// Prowlarr's failing indexers.
   indexers([ServiceKey.prowlarr]),
 
-  /// Nginx Proxy Manager's certificates close to expiry.
-  certificates([ServiceKey.nginxProxyManager]),
-
   /// The transfers that stopped being transfers. One source and not eight: a
   /// stall is joined across an \*arr and the client moving its bytes, and read
   /// apart the same stall would be two decisions until the second arrived.
@@ -66,9 +63,6 @@ enum DecisionSource {
     ServiceKey.lidarr,
     ServiceKey.readarr,
     ServiceKey.qbittorrent,
-    ServiceKey.transmission,
-    ServiceKey.sabnzbd,
-    ServiceKey.nzbget,
   ]),
 
   /// The storage servers' own alerts: TrueNAS's at warning or worse, and
@@ -95,27 +89,15 @@ enum DecisionSource {
   /// The problems people reported with what they watch, which Seerr holds
   /// open. One source per Seerr, apart from its requests: it reads Seerr's own
   /// count and one page of the newest open issues.
-  issues([ServiceKey.seerr]),
-
-  /// Tracearr's violations of severity high that nobody has looked at. Not
-  /// faults: a rule was broken, which is the person's to read, and nothing
-  /// Cupola reaches stopped working. Read a page past [kNeedsYouViolationCap]
-  /// so the count can say it is a floor.
-  violations([ServiceKey.tracearr]);
+  issues([ServiceKey.seerr]);
 
   const DecisionSource(this.services);
 
   /// The services this source reads.
   final List<ServiceKey> services;
 
-  /// The sources a notification of Needs you reads: every one but
-  /// [violations], whose decisions are blue and never a fault, so no notice of
-  /// Needs you could say them. A violation is read in the background only by
-  /// the Flagged notification, which asks Tracearr for what came since.
-  static final List<DecisionSource> faultSources = [
-    for (final source in values)
-      if (source != violations) source,
-  ];
+  /// The sources a notification of Needs you reads: all of them.
+  static final List<DecisionSource> faultSources = [...values];
 }
 
 /// How many violations Needs you draws. The source reads one more, so that a

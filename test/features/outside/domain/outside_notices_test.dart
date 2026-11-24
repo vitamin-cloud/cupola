@@ -241,31 +241,6 @@ void main() {
       expect(old.seen.keys, ['needsYou:Charge']);
     });
 
-    test('Needs you leaves a violation out: blue, never a fault', () {
-      final notices = needsYouNotices([
-        DashboardDecision(
-          kind: DecisionKind.violation,
-          id: 'tracearr-violation-tracearr-a',
-          service: ServiceKey.tracearr,
-          title: 'Too many streams',
-          detail: 'Anna',
-          occurredAt: null,
-          route: '/stack/tracearr/violations/a',
-        ),
-        DashboardDecision(
-          kind: DecisionKind.stalledDownload,
-          id: 'stalled-Charge',
-          service: ServiceKey.qbittorrent,
-          title: 'Charge',
-          detail: 'detail',
-          occurredAt: null,
-        ),
-      ], now: now);
-      expect(notices.map((notice) => notice.kind), [
-        OutsideNoticeKind.needsYou,
-      ]);
-      expect(notices.single.body, 'Charge is stuck');
-    });
   });
 
   group('the words', () {

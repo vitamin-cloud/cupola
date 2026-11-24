@@ -9,7 +9,6 @@ void main() {
       expect(ServiceKey.values.where((s) => s.hasScopedCredential).toSet(), {
         ServiceKey.unraid,
         ServiceKey.truenas,
-        ServiceKey.nginxProxyManager,
         // A shared account's token is refused who is watching.
         ServiceKey.plex,
       });
@@ -23,14 +22,6 @@ void main() {
   });
 
   group('the capability copy', () {
-    test('an NPM login is an account, changed; everything else a key', () {
-      expect(ServiceKey.nginxProxyManager.capabilityFixLabel, 'Change account');
-      expect(ServiceKey.nginxProxyManager.capabilityCredentialNoun, 'account');
-      for (final service in [ServiceKey.unraid, ServiceKey.truenas]) {
-        expect(service.capabilityFixLabel, 'Update the key');
-        expect(service.capabilityCredentialNoun, 'key');
-      }
-    });
 
     test('a Plex credential is a token, as Plex and its form call it', () {
       expect(ServiceKey.plex.capabilityCredentialNoun, 'token');

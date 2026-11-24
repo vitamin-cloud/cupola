@@ -7,14 +7,10 @@ import 'package:cupola/core/capability/capability_scope.dart';
 import 'package:cupola/core/capability/connection_capability.dart';
 import 'package:cupola/core/models/service_kpi.dart';
 import 'package:cupola/core/network/connection_failure.dart';
-import 'package:cupola/core/platform/device_time_zone.dart';
 import 'package:cupola/core/providers/provider_retry.dart';
 import 'package:cupola/core/status/arr_queue_snapshot.dart';
 import 'package:cupola/core/status/lexicon.dart';
-import 'package:cupola/core/utils/dot_separator.dart';
-import 'package:cupola/core/utils/duration_format.dart';
 import 'package:cupola/core/utils/percent_format.dart';
-import 'package:cupola/core/utils/string_utils.dart';
 import 'package:cupola/features/settings/domain/connection_presentation.dart';
 import 'package:cupola/features/bazarr/presentation/bazarr_provider.dart';
 import 'package:cupola/features/bazarr/domain/models/bazarr_models.dart';
@@ -40,12 +36,8 @@ import 'package:cupola/features/music/presentation/music_provider.dart';
 import 'package:cupola/features/series/presentation/series_provider.dart';
 import 'package:cupola/features/prowlarr/domain/models/prowlarr_models.dart';
 import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
-import 'package:cupola/features/nzbget/domain/models/nzbget_models.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_provider.dart';
 import 'package:cupola/features/readarr/domain/models/readarr_models.dart';
 import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_provider.dart';
-import 'package:cupola/features/sabnzbd/domain/models/sabnzbd_models.dart';
 import 'package:cupola/features/qbittorrent/domain/models/parse_utils.dart';
 import 'package:cupola/features/qbittorrent/domain/models/torrent.dart';
 import 'package:cupola/features/qbittorrent/domain/torrent_list_order.dart';
@@ -56,17 +48,6 @@ import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/npm/domain/models/npm_models.dart';
-import 'package:cupola/features/npm/presentation/npm_provider.dart';
-import 'package:cupola/features/transmission/domain/models/transmission_models.dart';
-import 'package:cupola/features/transmission/presentation/transmission_provider.dart';
-import 'package:cupola/features/tracearr/data/tracearr_client.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_page.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_media_stats.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_server.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_violation.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_live_provider.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_provider.dart';
 import 'package:cupola/features/truenas/presentation/truenas_provider.dart';
 import 'package:cupola/features/truenas/domain/models/dashboard.dart';
 import 'package:cupola/features/unraid/domain/models/unraid_models.dart';
@@ -115,28 +96,8 @@ final serviceKpiProvider = FutureProvider.autoDispose
           return _prowlarrKpis(ref);
         case ServiceKey.readarr:
           return _readarrKpis(ref);
-        case ServiceKey.sabnzbd:
-          return _sabnzbdKpis(ref);
-        case ServiceKey.nzbget:
-          return _nzbgetKpis(ref);
         case ServiceKey.unraid:
           return _unraidKpis(ref);
-        case ServiceKey.transmission:
-          return _transmissionKpis(ref);
-        case ServiceKey.nginxProxyManager:
-          return _npmKpis(ref);
-        case ServiceKey.tracearr:
-          return _tracearrKpis(ref);
-        // Providers, not the clients directly: the figures need a failure that
-        // survives the fetch, and the provider layer is what makes that
-        // shareable with the Overview, invalidatable with the rest and
-        // overridable by name in a test. The sessions are the very read the
-        // room's Now playing and its light take, so the figure cannot say
-        // `1 stream` over a list that has moved on (or the other way round).
-        //
-        // What a refusal means is asked through the container, captured now:
-        // the answer is needed after the reads, past an `await`, where this
-        // `autoDispose` provider's `ref` must not be used.
         case ServiceKey.jellyfin || ServiceKey.emby:
           final container = ref.container;
           final providers = mediaBrowserProvidersOf(service);
@@ -210,28 +171,12 @@ List<ProviderOrFamily> serviceKpiSources(ServiceKey service) =>
         prowlarrIndexersProvider,
         prowlarrIndexerStatsProvider,
       ],
-      ServiceKey.sabnzbd => [sabnzbdQueueProvider, sabnzbdServerStatsProvider],
-      ServiceKey.nzbget => [nzbgetStatusProvider, nzbgetQueueProvider],
       ServiceKey.unraid => [unraidArrayProvider, unraidDockerProvider],
-      ServiceKey.transmission => [
-        transmissionStatsProvider,
-        transmissionTorrentsProvider,
-      ],
-      ServiceKey.nginxProxyManager => [
-        npmProxyHostsProvider,
-        npmCertificatesProvider,
-      ],
       ServiceKey.jellyfin => [
         jellyfinSessionsProvider,
         jellyfinStrictLibrariesProvider,
       ],
       ServiceKey.emby => [embySessionsProvider, embyStrictLibrariesProvider],
-      ServiceKey.tracearr => [
-        tracearrLiveProvider,
-        tracearrTodayProvider,
-        tracearrUnseenViolationsProvider,
-        tracearrServersProvider,
-      ],
       ServiceKey.plex => [plexSessionsProvider, plexStrictLibrariesProvider],
     };
 
@@ -319,21 +264,13 @@ final serviceKpiForProvider = FutureProvider.autoDispose
         ServiceKey.dockge => await _dockgeKpisFor(ref, key.instanceId),
         ServiceKey.prowlarr => await _prowlarrKpisFor(ref, key.instanceId),
         ServiceKey.readarr => await _readarrKpisFor(ref, key.instanceId),
-        ServiceKey.sabnzbd => await _sabnzbdKpisFor(ref, key.instanceId),
-        ServiceKey.nzbget => await _nzbgetKpisFor(ref, key.instanceId),
         ServiceKey.unraid => await _unraidKpisFor(ref, key.instanceId),
-        ServiceKey.transmission => await _transmissionKpisFor(
-          ref,
-          key.instanceId,
-        ),
-        ServiceKey.nginxProxyManager => await _npmKpisFor(ref, key.instanceId),
         ServiceKey.jellyfin || ServiceKey.emby => await _mediaBrowserKpisFor(
           ref,
           key.service,
           key.instanceId,
         ),
         ServiceKey.plex => await _plexKpisFor(ref, key.instanceId),
-        ServiceKey.tracearr => await _tracearrKpisFor(ref, key.instanceId),
       };
       // `noProviderRetry`, like the provider above it. The lens path awaits
       // `serviceKpiProvider(...).future`, which settles into a stable error
@@ -1610,401 +1547,6 @@ String queueFigure(ArrRecordPage page) {
   return page.cutShort
       ? Lexicon.floor(page.records.length)
       : '${page.records.length}';
-}
-
-Future<List<ServiceKpi>> _sabnzbdKpis(Ref ref) async {
-  // Started together (see [_sabnzbdKpisFor]). The stats call is optional: its
-  // failure is ignored, so the queue KPIs still show when it fails.
-  final queueFuture = ref.watch(sabnzbdQueueProvider.future);
-  final statsFuture = ref
-      .watch(sabnzbdServerStatsProvider.future)
-      .then<SabnzbdServerStats?>((value) => value, onError: (_) => null);
-  return _sabnzbdKpisFrom(await queueFuture, await statsFuture);
-}
-
-Future<List<ServiceKpi>> _sabnzbdKpisFor(Ref ref, String instanceId) async {
-  final client = ref.watch(sabnzbdClientForProvider(instanceId));
-  // Independent reads, started together: see [_readarrKpisFor]. The stats call
-  // stays optional, so it carries its own fallback instead of failing the pair.
-  final queueFuture = client.getQueue();
-  final statsFuture = client.getServerStats().then<SabnzbdServerStats?>(
-    (value) => value,
-    onError: (_) => null,
-  );
-  return _sabnzbdKpisFrom(await queueFuture, await statsFuture);
-}
-
-List<ServiceKpi> _sabnzbdKpisFrom(
-  SabnzbdQueue queue,
-  SabnzbdServerStats? stats,
-) {
-  final kpis = <ServiceKpi>[
-    ServiceKpi(
-      label: 'Download',
-      value: queue.speedLabel,
-      icon: Icons.south_rounded,
-      tone: _activityIf(queue.kbPerSec > 0),
-    ),
-    ServiceKpi(
-      // [SabnzbdQueue.jobCount], never `slots.length`: the client asks for a
-      // 50-slot page, so a queue deeper than the page read `50` forever: a
-      // figure that stops moving exactly when there is something to watch.
-      // `jobCount` prefers the server's own `noofslots_total` and falls back to
-      // the rows in hand when the payload carried no total.
-      label: 'Queue',
-      value: '${queue.jobCount}',
-      icon: Icons.list_rounded,
-    ),
-    ServiceKpi(
-      label: 'Remaining',
-      value: queue.sizeLeftLabel,
-      icon: Icons.hourglass_bottom_rounded,
-    ),
-    _usenetStatusKpi(
-      paused: queue.paused,
-      stoppedByDisk: sabnzbdQueueStoppedByDisk(queue),
-    ),
-  ];
-  // Lifetime total is a nice-to-have; a stats failure must not drop the whole
-  // KPI row, so it is fetched defensively and simply omitted on error.
-  if (stats != null) {
-    kpis.add(
-      ServiceKpi(
-        label: 'Total',
-        value: stats.totalLabel,
-        icon: Icons.download_done_rounded,
-      ),
-    );
-  }
-  return kpis;
-}
-
-Future<List<ServiceKpi>> _nzbgetKpis(Ref ref) async {
-  final results = await Future.wait([
-    ref.watch(nzbgetStatusProvider.future),
-    ref.watch(nzbgetQueueProvider.future),
-  ]);
-  return _nzbgetKpisFrom(
-    results[0] as NzbgetStatus,
-    results[1] as List<NzbgetGroup>,
-  );
-}
-
-Future<List<ServiceKpi>> _nzbgetKpisFor(Ref ref, String instanceId) async {
-  final client = ref.watch(nzbgetClientForProvider(instanceId));
-  final results = await Future.wait([client.status(), client.listGroups()]);
-  return _nzbgetKpisFrom(
-    results[0] as NzbgetStatus,
-    results[1] as List<NzbgetGroup>,
-  );
-}
-
-List<ServiceKpi> _nzbgetKpisFrom(
-  NzbgetStatus status,
-  List<NzbgetGroup> groups,
-) {
-  return [
-    ServiceKpi(
-      label: 'Download',
-      value: status.rateLabel,
-      icon: Icons.south_rounded,
-      tone: _activityIf(status.downloadRateBytes > 0),
-    ),
-    ServiceKpi(
-      label: 'Queue',
-      value: '${groups.length}',
-      icon: Icons.list_rounded,
-    ),
-    ServiceKpi(
-      label: 'Remaining',
-      value: status.remainingLabel,
-      icon: Icons.hourglass_bottom_rounded,
-    ),
-    _usenetStatusKpi(
-      paused: status.paused,
-      stoppedByDisk: nzbgetQueueStoppedByDisk(status, groups),
-      quotaReached: status.quotaReached,
-    ),
-  ];
-}
-
-/// A usenet client's Status figure: `Active`, `Stopped`, `Quota reached` or
-/// `Disk full`.
-///
-/// Pausing the queue is something the user did on purpose, so it is neither
-/// a fault nor a backlog: it is the client obeying. It used to be flagged
-/// amber, which put "you pressed pause" in the same colour as "your disk is
-/// full" (decision 15). Both clients stop on a full disk by flipping the same
-/// switch, though, and that one is a fault: amber, in the word Home's
-/// downloads use for it, never `Stopped` beside a Home that says the disk is
-/// full. A download quota NZBGet reached stops it too, by the user's own
-/// rule: neutral like a pause, and said for what it is, so it is not taken
-/// for a pause nobody remembers making.
-ServiceKpi _usenetStatusKpi({
-  required bool paused,
-  required bool stoppedByDisk,
-  bool quotaReached = false,
-}) => ServiceKpi(
-  label: 'Status',
-  value: stoppedByDisk
-      ? diskFullReason
-      : quotaReached
-      ? 'Quota reached'
-      : paused
-      ? StateWord.stopped.label
-      : 'Active',
-  icon: stoppedByDisk
-      ? Icons.storage_rounded
-      : paused || quotaReached
-      ? Icons.pause_circle_rounded
-      : Icons.play_circle_rounded,
-  tone: _faultIf(stoppedByDisk),
-);
-
-/// Transmission's rail, shaped like qBittorrent's so the two torrent clients
-/// read the same way in the matrix: `Download` first, flagged while bytes are
-/// actually moving, so the resting cell says "0 B/s" rather than a library
-/// total.
-Future<List<ServiceKpi>> _transmissionKpis(Ref ref) async {
-  final results = await Future.wait([
-    ref.watch(transmissionStatsProvider.future),
-    ref.watch(transmissionTorrentsProvider.future),
-  ]);
-  return _transmissionKpisFrom(
-    results[0] as TransmissionStats,
-    results[1] as List<TransmissionTorrent>,
-  );
-}
-
-Future<List<ServiceKpi>> _transmissionKpisFor(
-  Ref ref,
-  String instanceId,
-) async {
-  final client = ref.watch(transmissionClientForProvider(instanceId));
-  final results = await Future.wait([client.stats(), client.torrents()]);
-  return _transmissionKpisFrom(
-    results[0] as TransmissionStats,
-    results[1] as List<TransmissionTorrent>,
-  );
-}
-
-List<ServiceKpi> _transmissionKpisFrom(
-  TransmissionStats stats,
-  List<TransmissionTorrent> torrents,
-) {
-  final downloading = torrents.where((t) => t.status.isIncoming).length;
-  final stalled = torrents.where((t) => t.warning != null).length;
-
-  return [
-    ServiceKpi(
-      label: 'Download',
-      value: stats.downloadSpeedLabel,
-      icon: Icons.south_rounded,
-      tone: _activityIf(stats.downloadSpeed > 0),
-    ),
-    ServiceKpi(
-      label: 'Upload',
-      value: stats.uploadSpeedLabel,
-      icon: Icons.north_rounded,
-    ),
-    ServiceKpi(
-      label: 'Active',
-      value: '${stats.activeTorrentCount}',
-      icon: Icons.bolt_rounded,
-    ),
-    ServiceKpi(
-      label: 'Downloading',
-      value: '$downloading',
-      icon: Icons.download_rounded,
-    ),
-    ServiceKpi(
-      label: StateWord.stuck.label,
-      value: '$stalled',
-      icon: Icons.report_gmailerrorred_rounded,
-      tone: _faultIf(stalled > 0),
-    ),
-  ];
-}
-
-/// Nginx Proxy Manager's rail.
-///
-/// `Offline` is the metric that earns its place: a reverse proxy is either
-/// serving every hostname it claims or it is not, and a host that is switched on
-/// while nginx has refused its configuration is invisible from every other
-/// screen in the app: the site simply stops answering. Expiring certificates
-/// are the second, for the same reason a day later.
-Future<List<ServiceKpi>> _npmKpis(Ref ref) async {
-  final results = await Future.wait([
-    ref.watch(npmProxyHostsProvider.future),
-    ref.watch(npmCertificatesProvider.future),
-  ]);
-  return _npmKpisFrom(
-    results[0] as List<NpmProxyHost>,
-    results[1] as List<NpmCertificate>,
-    DateTime.now(),
-  );
-}
-
-Future<List<ServiceKpi>> _npmKpisFor(Ref ref, String instanceId) async {
-  final client = ref.watch(npmClientForProvider(instanceId));
-  final results = await Future.wait([
-    client.proxyHosts(),
-    client.certificates(),
-  ]);
-  return _npmKpisFrom(
-    results[0] as List<NpmProxyHost>,
-    results[1] as List<NpmCertificate>,
-    DateTime.now(),
-  );
-}
-
-List<ServiceKpi> _npmKpisFrom(
-  List<NpmProxyHost> hosts,
-  List<NpmCertificate> certificates,
-  DateTime now,
-) {
-  final broken = hosts.where((h) => h.hasConfigError).length;
-  final disabled = hosts.where((h) => !h.enabled).length;
-  final expiring = certificates.where((c) => c.isExpiringSoon(now)).length;
-
-  return [
-    ServiceKpi(
-      label: 'Config errors',
-      value: '$broken',
-      icon: Icons.error_outline_rounded,
-      tone: _faultIf(broken > 0),
-    ),
-    ServiceKpi(
-      label: 'Hosts',
-      value: '${hosts.length}',
-      icon: Icons.alt_route_rounded,
-    ),
-    ServiceKpi(
-      label: 'Expiring',
-      value: '$expiring',
-      icon: Icons.lock_clock_rounded,
-      tone: _faultIf(expiring > 0),
-    ),
-    ServiceKpi(
-      label: 'Certificates',
-      value: '${certificates.length}',
-      icon: Icons.lock_outline_rounded,
-    ),
-    ServiceKpi(
-      label: 'Disabled',
-      value: '$disabled',
-      icon: Icons.pause_circle_rounded,
-    ),
-  ];
-}
-
-/// Tracearr's rail: what is playing, what was played today, what broke a rule
-/// and has not been looked at, and how many of its servers it reaches.
-///
-/// **Each figure is its own read.** Tracearr answers four routes and a rail
-/// that went to an em dash whole because one of them failed would lose the
-/// three it could still say; a figure whose source did not answer reads `—`,
-/// never `0`. When none answered the failure takes the rail, as every other
-/// rail's does, so the page says the server did not answer once, not four
-/// times. The unseen figure is a **floor** (`25+`) when more follow the first
-/// page, since the API gives no total.
-///
-/// **Streams counts the rows Live draws** (`tracearrLiveProvider`, the
-/// list the Overview's Playing section also reads), so the rail and the section
-/// cannot disagree after an event moves the list. Only the count is selected:
-/// a progress tick, which moves no row, must not rebuild the rail.
-Future<List<ServiceKpi>> _tracearrKpis(Ref ref) => _tracearrKpisFrom(
-  ref.watch(tracearrLiveProvider.selectAsync((live) => live.streams.length)),
-  ref.watch(tracearrTodayProvider.future),
-  ref.watch(tracearrUnseenViolationsProvider.future),
-  ref.watch(tracearrServersProvider.future),
-);
-
-Future<List<ServiceKpi>> _tracearrKpisFor(Ref ref, String instanceId) {
-  final client = ref.watch(tracearrClientForProvider(instanceId));
-  final zone = ref.read(deviceTimeZoneProvider);
-  return _tracearrKpisFrom(
-    client.getStreams().then((live) => live.streams.length),
-    zone().then((zone) => client.getToday(timezone: zone)),
-    client.getViolations(
-      pageSize: kTracearrCountPage,
-      filter: const TracearrViolationFilter.unseen(),
-    ),
-    client.getServers(),
-  );
-}
-
-Future<List<ServiceKpi>> _tracearrKpisFrom(
-  Future<int> streams,
-  Future<TracearrToday> today,
-  Future<TracearrPage<TracearrViolation>> unseen,
-  Future<TracearrServers> servers,
-) async {
-  final results = await Future.wait<Object?>([
-    _failureOr(streams),
-    _failureOr(today),
-    _failureOr(unseen),
-    _failureOr(servers),
-  ]);
-  final failures = results.whereType<_ReadFailed>().toList();
-  if (failures.length == results.length) throw failures.first.error;
-  T? read<T>(int index) => switch (results[index]) {
-    final T value => value,
-    _ => null,
-  };
-
-  final playing = read<int>(0);
-  final day = read<TracearrToday>(1);
-  final unseenPage = read<TracearrPage<TracearrViolation>>(2);
-  final watched = read<TracearrServers>(3);
-  final unseenCount = unseenPage == null
-      ? null
-      : tracearrUnseenCount(unseenPage);
-  // Servers kept for their history are not watched any more, so they are
-  // neither of the two numbers.
-  final polled = watched?.servers.where((s) => !s.historical).toList();
-  final reached = polled?.where((s) => s.isUp).length;
-
-  return [
-    _figure(
-      label: 'Streams',
-      value: playing == null ? null : '$playing',
-      icon: Icons.play_circle_outline_rounded,
-      tone: playing == null ? null : _activityIf(playing > 0),
-    ),
-    // Plays and the time they took, as the spec has it, for the device's own
-    // day: the read carries the device's IANA zone (`deviceTimeZoneProvider`),
-    // and falls back to Tracearr's UTC day only when there is none or Tracearr
-    // refuses it.
-    _figure(
-      label: 'Today',
-      value: day == null
-          ? null
-          : day.watchTime == Duration.zero
-          ? countLabel(day.todayPlays, 'play')
-          : '${countLabel(day.todayPlays, 'play')}$dotSeparator'
-                '${formatTimeSpan(day.watchTime)}',
-      icon: Icons.today_rounded,
-    ),
-    _figure(
-      label: 'Unseen',
-      value: unseenCount == null
-          ? null
-          : unseenCount.isFloor
-          ? Lexicon.floor(unseenCount.count)
-          : '${unseenCount.count}',
-      icon: Icons.flag_outlined,
-      // Information, never a fault: a rule was broken and nobody looked, which
-      // is the person's to read and not something that stopped working.
-      tone: unseenCount == null ? null : _activityIf(unseenCount.count > 0),
-    ),
-    _figure(
-      label: 'Servers',
-      value: polled == null ? null : '$reached of ${polled.length}',
-      icon: Icons.dns_outlined,
-      tone: polled == null ? null : _faultIf(reached! < polled.length),
-    ),
-  ];
 }
 
 /// A read that failed, carried as a value so its siblings are still awaited.

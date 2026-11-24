@@ -27,11 +27,11 @@ class _Page extends ConsumerWidget {
     onBuild();
     final span = ref.watchSilence(
       context,
-      ServiceKey.sabnzbd,
+      ServiceKey.qbittorrent,
       silent: silent,
       instanceId: instanceId,
     );
-    final since = ref.silentSince(ServiceKey.sabnzbd, instanceId: instanceId);
+    final since = ref.silentSince(ServiceKey.qbittorrent, instanceId: instanceId);
     final spoken = span == null ? null : formatElapsedSpan(span);
     return Text(
       '${span == null ? 'no span' : spoken ?? 'under a minute'}'
@@ -44,14 +44,14 @@ final _settings = SettingsModel(
   instances: [
     const ServiceInstance(
       id: 'home',
-      service: ServiceKey.sabnzbd,
-      url: 'http://home.sab.test',
+      service: ServiceKey.qbittorrent,
+      url: 'http://home.qb.test',
       credential: 'home-key',
     ),
     const ServiceInstance(
       id: 'seedbox',
-      service: ServiceKey.sabnzbd,
-      url: 'http://seedbox.sab.test',
+      service: ServiceKey.qbittorrent,
+      url: 'http://seedbox.qb.test',
       credential: 'seedbox-key',
     ),
   ],
@@ -67,7 +67,7 @@ void main() {
   setUp(() {
     now = silentAt.add(const Duration(minutes: 6));
     silence = SilenceClock(now: () => now)
-      ..noteSilent(silenceKey(ServiceKey.sabnzbd, 'home'), silentAt);
+      ..noteSilent(silenceKey(ServiceKey.qbittorrent, 'home'), silentAt);
     builds = 0;
     PollProbe.instance.reset();
   });
@@ -83,7 +83,7 @@ void main() {
         overrides: [
           currentSettingsProvider.overrideWith((ref) => _settings),
           initialActiveInstancesProvider.overrideWithValue({
-            ServiceKey.sabnzbd: lens,
+            ServiceKey.qbittorrent: lens,
           }),
           readClockProvider.overrideWithValue(ReadClock(now: () => now)),
           silenceClockProvider.overrideWithValue(silence),

@@ -18,18 +18,13 @@ import 'package:cupola/features/home/data/home_layout_provider.dart';
 import 'package:cupola/features/home/data/stack_lights.dart';
 import 'package:cupola/features/home/data/storage.dart';
 import 'package:cupola/features/home/domain/home_module.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_provider.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_provider.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_provider.dart';
 import 'package:cupola/features/services/domain/service_summary.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/stream/presentation/stream_activity_provider.dart';
 import 'package:cupola/features/stream/presentation/stream_backend.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_live_provider.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_sessions_provider.dart';
-import 'package:cupola/features/transmission/presentation/transmission_provider.dart';
 
 /// How often the Home reads its live modules again while it is seen.
 const homeLiveInterval = Duration(seconds: 30);
@@ -39,10 +34,6 @@ const homeLiveInterval = Duration(seconds: 30);
 /// connection and which nothing else drops while their pages are away.
 final List<ProviderOrFamily> homeDownloadsSources = [
   allTorrentsProvider,
-  transmissionTorrentsProvider,
-  sabnzbdQueueProvider,
-  nzbgetQueueProvider,
-  nzbgetStatusProvider,
   servicesQueueProvider,
 ];
 
@@ -51,10 +42,6 @@ final List<ProviderOrFamily> homeDownloadsSources = [
 /// stands (it does not watch them).
 final List<ProviderOrFamily> downloadClientLists = [
   allTorrentsProvider,
-  transmissionTorrentsProvider,
-  sabnzbdQueueProvider,
-  nzbgetQueueProvider,
-  nzbgetStatusProvider,
 ];
 
 /// Reads the queue again at once when a write succeeded whose follow-up
@@ -80,8 +67,6 @@ void readDownloadsAfterWrite(
 /// it saw last.
 final List<ProviderOrFamily> homeSessionsSources = [
   for (final service in mediaServers) streamBackendOf(service).sessions,
-  tracearrLiveProvider,
-  tracearrStreamsForProvider,
   streamSessionsForProvider,
   streamActivityProvider,
 ];

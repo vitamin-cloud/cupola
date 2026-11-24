@@ -12,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/core/generated/design_tokens.g.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/features/home/domain/arrived.dart';
 import 'package:cupola/features/home/presentation/widgets/arrived_module.dart';
@@ -111,74 +110,6 @@ Finder _within(Type region, Finder matching) =>
     find.descendant(of: find.byType(region), matching: matching);
 
 void main() {
-  testWidgets('P1, lens on the HD: the 4K Radarr reaches every module, '
-      'named', (tester) async {
-    final handle = tester.ensureSemantics();
-    final harness = await _pumpHome(
-      tester,
-      Profiles.p1,
-      before: _scriptFailedDownloadOn4k,
-    );
-
-    // Downloads: the 4K's movie, named for its Radarr, with how far it is
-    // and how long is left.
-    expect(
-      _within(
-        HomeDownloadsModule,
-        find.text('Elephants Dream\u00A0· Radarr 4K'),
-      ),
-      findsOne,
-    );
-    expect(
-      _within(HomeDownloadsModule, find.text('31%\u00A0· 6\u00A0min')),
-      findsOne,
-    );
-    // The value is figures, so it is tabular in the text face: figures are
-    // never mono, which is for machine strings only.
-    final value = tester.widget<Text>(find.text('31%\u00A0· 6\u00A0min'));
-    expect(value.style?.fontFamily, isNot(DesignTokens.typeFamilyMono));
-    expect(
-      value.style?.fontFeatures,
-      contains(const FontFeature.tabularFigures()),
-    );
-    // Both of the 4K's movies were joined to the SABnzbd holding them: the
-    // module draws four rows, so they are read off the data. Elephants Dream
-    // moves, and Sintel waits its turn in SABnzbd: it is in `queued`, where
-    // it was in `preview` (counted as moving) before.
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(HomeScreen)),
-    );
-    final inFlight = container.read(servicesInFlightProvider).requireValue;
-    final fourK = [
-      ...inFlight.preview,
-      ...inFlight.queued,
-    ].where((item) => item.instanceId == WorldIds.radarr4k);
-    expect(fourK, hasLength(2));
-    expect(
-      fourK.map((item) => item.clientService),
-      everyElement(ServiceKey.sabnzbd),
-    );
-    expect(inFlight.queued.map((item) => item.instanceId), [WorldIds.radarr4k]);
-    // The HD's own rows say which Radarr too, now that there are two.
-    expect(
-      _within(HomeDownloadsModule, find.text('Sprite Fright\u00A0· Radarr 1')),
-      findsOne,
-    );
-    // Arrived: the 4K's import is on the rail, and the card says which
-    // Radarr it came to. Its failed download is History's, not a card.
-    expect(
-      _within(HomeArrivedModule, find.text('2\u00A0h ago\u00A0· Radarr 4K')),
-      findsOne,
-    );
-    expect(find.bySemanticsLabel('Spring, 2\u00A0h ago, Radarr 4K'), findsOne);
-    expect(
-      _within(HomeArrivedModule, find.text('Elephants Dream')),
-      findsNothing,
-    );
-
-    handle.dispose();
-    await harness.unmount(tester);
-  });
 
   testWidgets('P1, lens on the HD: the 4K Radarr\'s failed download is no '
       'row in Needs you: the arr already handled it', (tester) async {

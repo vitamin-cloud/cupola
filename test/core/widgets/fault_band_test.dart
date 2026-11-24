@@ -6,8 +6,6 @@ import 'package:cupola/core/status/media_status.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/utils/sample_age.dart';
 import 'package:cupola/core/widgets/fault_band.dart';
-import 'package:cupola/features/services/domain/service_summary.dart';
-import 'package:cupola/features/settings/domain/service_key.dart';
 
 /// Every assertion here guards a **rule**, not a rendering.
 ///
@@ -38,76 +36,10 @@ Color _verbColour(WidgetTester tester, String label) {
 
 void main() {
   group('from a failed probe', () {
-    test('silence is the red unreachable band', () {
-      final band = FaultBand.fromSummary(
-        summary: const ServiceSummary(
-          service: ServiceKey.sabnzbd,
-          status: ServiceSummaryStatus.offline,
-          host: 'nas.local',
-          version: null,
-        ),
-        onRetry: () {},
-      );
-      expect(band.tone, StatusTone.error);
-      expect(band.message, contains('SABnzbd'));
-    });
 
-    test('an answer that refused is amber, in its own words', () {
-      final band = FaultBand.fromSummary(
-        summary: ServiceSummary.failed(
-          ServiceKey.sabnzbd,
-          host: 'nas.local',
-          error: const ClassifiedFailure(ServiceFailureReason.unauthorized),
-        ),
-        onRetry: () {},
-      );
-      expect(band.tone, StatusTone.warning);
-      expect(band.message, isNot(contains('did not answer')));
-    });
 
-    test('silence says how long, when the page knows', () {
-      final band = FaultBand.fromSummary(
-        summary: const ServiceSummary(
-          service: ServiceKey.sabnzbd,
-          status: ServiceSummaryStatus.offline,
-          host: 'nas.local',
-          version: null,
-        ),
-        since: const Duration(minutes: 6),
-        onRetry: () {},
-      );
-      expect(band.tone, StatusTone.error);
-      expect(
-        band.message,
-        startsWith('SABnzbd has not answered for 6 minutes'),
-      );
-    });
 
-    test('silence says nothing of how long when the page does not know', () {
-      final band = FaultBand.fromSummary(
-        summary: const ServiceSummary(
-          service: ServiceKey.sabnzbd,
-          status: ServiceSummaryStatus.offline,
-          host: 'nas.local',
-          version: null,
-        ),
-        onRetry: () {},
-      );
-      expect(band.message, startsWith('SABnzbd did not answer.'));
-    });
 
-    test('an answer that refused carries no span, whatever it is handed', () {
-      final band = FaultBand.fromSummary(
-        summary: ServiceSummary.failed(
-          ServiceKey.sabnzbd,
-          host: 'nas.local',
-          error: const ClassifiedFailure(ServiceFailureReason.unauthorized),
-        ),
-        since: const Duration(minutes: 6),
-        onRetry: () {},
-      );
-      expect(band.message, isNot(contains('for 6 minutes')));
-    });
   });
 
   group('rule 1: presence is the signal', () {

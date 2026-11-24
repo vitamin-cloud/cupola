@@ -12,12 +12,8 @@ library;
 
 import 'dart:math' as math;
 
-import 'package:cupola/core/utils/dot_separator.dart';
-import 'package:cupola/features/nzbget/domain/models/nzbget_models.dart';
 import 'package:cupola/features/qbittorrent/domain/models/torrent.dart';
-import 'package:cupola/features/sabnzbd/domain/models/sabnzbd_models.dart';
 import 'package:cupola/features/services/domain/in_flight.dart';
-import 'package:cupola/features/transmission/domain/models/transmission_models.dart';
 
 /// One client row, read: a transfer, a download waiting its turn, a download
 /// held on purpose, or a fault, with the client's own words for the fault
@@ -80,59 +76,6 @@ class InFlightReading {
   String toString() =>
       'InFlightReading(${fault?.name ?? (held ? 'held' : (queued ? 'queued' : 'moving'))}'
       '${reason == null ? '' : ', $reason'})';
-}
-
-/// A Transmission torrent (`torrent-get`), or null when it is not in flight.
-///
-/// Decided on `status`, `error`, `errorString` and `isStalled`:
-///
-/// * `error` 3, a local error, is the daemon unable to read or write the data
-///   (the disk is gone, full or read-only). It stops the torrent whatever it
-///   was doing, so it is a fault on any row, a seeding one included.
-/// * Otherwise only the incoming states are in flight: `download`,
-///   `downloadWait`, `check`, `checkWait`. `downloadWait` (status 3) is a
-///   download waiting its turn in the daemon's queue: queued, not moving.
-///   A stopped torrent with bytes still
-///   to come (`leftUntilDone`) was stopped on purpose and is held; a stopped
-///   or seeding one with nothing left to fetch is not in flight at all.
-/// * `error` 2, a tracker error, on an incoming torrent is a failure: the
-///   model's [TransmissionErrorKind.isBlocking] rule. A tracker *warning* is
-///   announce noise and stays a transfer.
-/// * `isStalled` on a downloading torrent is a stall once nothing has arrived
-///   for [stuckAfter], by `activityDate` (or `addedDate` for a torrent that
-///   never received a byte). Before that it is a transfer at no speed.
-InFlightReading? transmissionInFlight(
-  TransmissionTorrent torrent, {
-  required DateTime now,
-}) {
-  if (torrent.errorKind == TransmissionErrorKind.localError) {
-    return InFlightReading.fault(InFlightFault.failed, reason: torrent.warning);
-  }
-  // Unfinished: bytes still to come, or a magnet stopped before its
-  // metadata, which knows no size yet and so has none left either.
-  if (torrent.status == TransmissionStatus.stopped &&
-      (torrent.leftUntilDone > 0 || torrent.percentDone < 1)) {
-    return const InFlightReading.held();
-  }
-  if (!torrent.status.isIncoming) return null;
-  if (torrent.errorKind == TransmissionErrorKind.trackerError) {
-    return InFlightReading.fault(InFlightFault.failed, reason: torrent.warning);
-  }
-  if (torrent.isStalled && torrent.status == TransmissionStatus.download) {
-    return _stuckOnceIdle(
-      idleSince(
-        lastActivity: torrent.activityDate,
-        added: torrent.addedDate,
-        started: torrent.startDate,
-      ),
-      now,
-      unknownIsStuck: true,
-    );
-  }
-  if (torrent.status == TransmissionStatus.downloadWait) {
-    return const InFlightReading.queued();
-  }
-  return const InFlightReading.moving();
 }
 
 /// A qBittorrent torrent (`/api/v2/torrents/info`), or null when it is not in
@@ -273,48 +216,6 @@ bool usenetQueueStoppedByDisk({
   return smallest != null && freeBytes < smallest;
 }
 
-/// [usenetQueueStoppedByDisk] over a SABnzbd queue: its download folder's
-/// free space (`diskspace1`) against the jobs it still has to fetch. One
-/// reading for Home's downloads and the room's Status figure, so the two
-/// cannot call one queue full and paused.
-bool sabnzbdQueueStoppedByDisk(SabnzbdQueue queue) {
-  const megabyte = 1024 * 1024;
-  const gigabyte = 1024 * megabyte;
-  final free = queue.downloadDiskFreeGb;
-  return usenetQueueStoppedByDisk(
-    paused: queue.paused,
-    timedPause: queue.isTimedPause,
-    freeBytes: free == null ? null : (free * gigabyte).round(),
-    remainingBytes: [
-      for (final slot in queue.slots)
-        if (slot.status.toLowerCase() != 'paused')
-          (slot.mbLeft * megabyte).round(),
-    ],
-  );
-}
-
-/// [usenetQueueStoppedByDisk] over an NZBGet queue: the free space where it
-/// writes ([NzbgetStatus.writingDiskFreeMb]) against the groups it still has
-/// to fetch. See [sabnzbdQueueStoppedByDisk].
-bool nzbgetQueueStoppedByDisk(NzbgetStatus status, List<NzbgetGroup> groups) {
-  const megabyte = 1024 * 1024;
-  final free = status.writingDiskFreeMb;
-  return usenetQueueStoppedByDisk(
-    paused: status.paused,
-    timedPause: status.isDeliberateStop,
-    freeBytes: free == null ? null : free * megabyte,
-    remainingBytes: [
-      for (final group in groups)
-        if (group.status.toUpperCase() != 'PAUSED' &&
-            nzbgetIsFetching(group.status))
-          switch (group.remainingSizeMb) {
-            final int left => left * megabyte,
-            null => null,
-          },
-    ],
-  );
-}
-
 /// What one of SABnzbd's job `labels` says about a paused job, in the house
 /// words: the reason it was held, or null for a label that marks a wait.
 ///
@@ -351,47 +252,6 @@ String? sabnzbdLabelReason(String label) {
     'UNWANTED' => unwantedFileReason,
     _ => value.isEmpty ? null : value,
   };
-}
-
-/// A SABnzbd queue slot (`mode=queue`), read. Every slot is in flight: the
-/// queue holds only jobs still to fetch.
-///
-/// * A slot `status` of `Paused` carrying a label SABnzbd pauses for
-///   ([sabnzbdLabelReason]) is a job SABnzbd held itself, waiting on a
-///   person: a stall, in the house words. A paused slot with no such label is
-///   somebody's pause, and is held.
-/// * [stoppedByDisk] ([usenetQueueStoppedByDisk]) stalls every other job.
-/// * [pausedOnPurpose], a queue somebody paused, holds every other job.
-/// * A slot `status` of `Queued` (SABnzbd's `Status.QUEUED`, a job waiting
-///   for its turn to download) is queued, once the cases above have had
-///   their say.
-InFlightReading sabnzbdSlotInFlight(
-  SabnzbdQueueSlot slot, {
-  required bool stoppedByDisk,
-  bool pausedOnPurpose = false,
-}) {
-  if (slot.status.toLowerCase() == 'paused') {
-    final reasons = [
-      for (final label in slot.labels) ?sabnzbdLabelReason(label),
-    ];
-    return reasons.isEmpty
-        ? const InFlightReading.held()
-        : InFlightReading.fault(
-            InFlightFault.stalled,
-            reason: reasons.toSet().join(dotSeparator),
-          );
-  }
-  if (stoppedByDisk) {
-    return const InFlightReading.fault(
-      InFlightFault.stalled,
-      reason: diskFullReason,
-    );
-  }
-  if (pausedOnPurpose) return const InFlightReading.held();
-  if (slot.status.toLowerCase() == 'queued') {
-    return const InFlightReading.queued();
-  }
-  return const InFlightReading.moving();
 }
 
 /// When each job of a SABnzbd queue starts, in seconds, in queue order, from
@@ -453,68 +313,3 @@ const String incompleteReason = 'Incomplete';
 /// A job carrying a file type its client is set to refuse: SABnzbd's
 /// `UNWANTED`.
 const String unwantedFileReason = 'Unwanted file type';
-
-/// An NZBGet group (`listgroups`), read. Every group is in flight: the queue
-/// holds only jobs NZBGet has not moved to its history.
-///
-/// * `Health` below `CriticalHealth` is a download that cannot be repaired,
-///   whatever its `Status` (NZBGet's health check may also have paused it).
-/// * `ParStatus` `FAILURE`, and `UnpackStatus` `FAILURE`, `SPACE` or
-///   `PASSWORD`, are a post-processing run that failed.
-/// * A `PAUSED` group otherwise is somebody's pause, and is held.
-/// * [stoppedByDisk] ([usenetQueueStoppedByDisk]) stalls every other group
-///   still fetching, and [pausedOnPurpose], a download queue somebody
-///   paused, holds them. A pause of the download queue does not stop
-///   post-processing, so a group being unpacked stays in flight.
-/// * A `QUEUED` group, waiting for its turn to download, is queued, once the
-///   cases above have had their say.
-InFlightReading nzbgetGroupInFlight(
-  NzbgetGroup group, {
-  required bool stoppedByDisk,
-  bool pausedOnPurpose = false,
-}) {
-  final health = group.health;
-  final critical = group.criticalHealth;
-  if (health != null && critical != null && health < critical) {
-    return const InFlightReading.fault(
-      InFlightFault.failed,
-      reason: beyondRepairReason,
-    );
-  }
-  if (group.parStatus == 'FAILURE') {
-    return const InFlightReading.fault(
-      InFlightFault.failed,
-      reason: repairFailedReason,
-    );
-  }
-  switch (group.unpackStatus) {
-    case 'FAILURE':
-      return const InFlightReading.fault(
-        InFlightFault.failed,
-        reason: unpackFailedReason,
-      );
-    case 'SPACE':
-      return const InFlightReading.fault(
-        InFlightFault.failed,
-        reason: diskFullReason,
-      );
-    case 'PASSWORD':
-      return const InFlightReading.fault(
-        InFlightFault.failed,
-        reason: passwordNeededReason,
-      );
-  }
-  final status = group.status.toUpperCase();
-  if (status == 'PAUSED') return const InFlightReading.held();
-  if (stoppedByDisk && nzbgetIsFetching(status)) {
-    return const InFlightReading.fault(
-      InFlightFault.stalled,
-      reason: diskFullReason,
-    );
-  }
-  if (pausedOnPurpose && nzbgetIsFetching(status)) {
-    return const InFlightReading.held();
-  }
-  if (status == 'QUEUED') return const InFlightReading.queued();
-  return const InFlightReading.moving();
-}

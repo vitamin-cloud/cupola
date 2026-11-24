@@ -178,9 +178,6 @@ class ServiceKpiPeek extends StatelessWidget {
   ServiceKpi _leadOf(List<ServiceKpi> items) {
     const byService = {
       ServiceKey.qbittorrent: 'Download',
-      ServiceKey.transmission: 'Download',
-      ServiceKey.sabnzbd: 'Download',
-      ServiceKey.nzbget: 'Download',
     };
     final label = byService[service];
     return items.firstWhere(

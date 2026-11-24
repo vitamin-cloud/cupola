@@ -347,31 +347,6 @@ void main() {
       );
     });
 
-    test('a certificate says when it lapses, from its expiry', () {
-      DashboardDecision cert(DateTime? at) => decision(
-        DecisionKind.expiringCertificate,
-        'nas.home.arpa',
-        at: at,
-        service: ServiceKey.nginxProxyManager,
-      );
-      expect(
-        line(cert(now.add(const Duration(days: 6, hours: 2)))),
-        'The certificate for nas.home.arpa expires in 6 days',
-      );
-      expect(
-        line(cert(now.add(const Duration(days: 1, hours: 2)))),
-        'The certificate for nas.home.arpa expires tomorrow',
-      );
-      expect(
-        line(cert(now.add(const Duration(hours: 3)))),
-        'The certificate for nas.home.arpa expires today',
-      );
-      expect(
-        line(cert(now.subtract(const Duration(days: 2)))),
-        'The certificate for nas.home.arpa expired',
-      );
-      expect(line(cert(null)), 'The certificate for nas.home.arpa is expiring');
-    });
   });
 
   test('a screen reader hears one sentence, the way in at its end', () {

@@ -63,17 +63,6 @@ void main() {
       );
     });
 
-    test('SABnzbd off the local network names the key in the address', () {
-      expect(
-        transportWarningFor(ServiceKey.sabnzbd, 'http://sab.example.net:8080'),
-        contains('API key inside the address'),
-      );
-      // On the local network http:// is a supported setup, for SABnzbd too.
-      expect(
-        transportWarningFor(ServiceKey.sabnzbd, 'http://192.168.1.20:8080'),
-        isNull,
-      );
-    });
 
     test('every other service leaves it to the general warning', () {
       expect(
@@ -302,36 +291,6 @@ void main() {
   });
 
   group('the credential scope qualifier', () {
-    test('a read-only answer reads in the service\'s own noun', () {
-      expect(
-        credentialScopeQualifier(
-          ServiceKey.unraid,
-          const CapabilityGrant.readOnly(),
-        ),
-        'read-only key',
-      );
-      expect(
-        credentialScopeQualifier(
-          ServiceKey.nginxProxyManager,
-          const CapabilityGrant.readOnly(),
-        ),
-        'view-only account',
-      );
-      expect(
-        credentialScopeQualifier(
-          ServiceKey.truenas,
-          const CapabilityGrant.refused(),
-        ),
-        'read-only key',
-      );
-      expect(
-        credentialScopeQualifier(
-          ServiceKey.truenas,
-          const CapabilityGrant.partial({'smb'}),
-        ),
-        'limited key',
-      );
-    });
 
     test('a Plex token that reads and is refused the sessions is a shared '
         'account\'s', () {

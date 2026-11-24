@@ -11,7 +11,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:cupola/core/app_radius.dart';
 import 'package:cupola/core/app_spacing.dart';
-import 'package:cupola/core/capability/connection_capability.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/utils/arr_activity_display.dart';
 import 'package:cupola/core/utils/date_format.dart';
@@ -26,8 +25,6 @@ import 'package:cupola/features/discover/presentation/discover_provider.dart';
 import 'package:cupola/features/dockge/domain/models/dockge_agent.dart';
 import 'package:cupola/features/dockge/presentation/dockge_provider.dart';
 import 'package:cupola/features/import/presentation/manual_import_routes.dart';
-import 'package:cupola/features/npm/domain/models/npm_models.dart';
-import 'package:cupola/features/npm/presentation/npm_capability.dart';
 import 'package:cupola/features/prowlarr/presentation/prowlarr_indexer_actions.dart';
 import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/requests/presentation/widgets/request_answer_controls.dart';
@@ -278,35 +275,6 @@ class DecisionControl extends ConsumerWidget {
           remedy: decision.remedy,
         );
 
-    // Renewing is a write on the certificates of one NPM account, and a
-    // view-only account cannot make it: the same gate the Certificates tab
-    // draws its own Renew through, so Home never offers what the page beyond
-    // it would dim. Dimmed rather than hidden, like every write a credential
-    // may not make: the certificate still needs somebody, and the toast says
-    // which account can do it. An uploaded certificate has no Renew to gate:
-    // its control only opens the certificates, which any account may read.
-    if (decision.kind == DecisionKind.expiringCertificate &&
-        decision.renewable) {
-      return CapabilityGatedAction.builder(
-        service: ServiceKey.nginxProxyManager,
-        // Empty means the lens, which is the connection the certificates
-        // were read through.
-        connectionId: decision.instanceId.isNotEmpty
-            ? decision.instanceId
-            : capabilityConnectionId(ref, ServiceKey.nginxProxyManager),
-        resource: NpmResource.certificates.key,
-        hint: npmCapabilityHint,
-        blockedMessage: npmBlockedMessage(NpmResource.certificates),
-        onTap: () => runDecision(context, ref, decision),
-        builder: (context, onPressed, annotate) => _DecisionActionButton(
-          label: label,
-          onPressed: onPressed,
-          annotate: annotate,
-          fill: _fill,
-        ),
-      );
-    }
-
     if (required == null) {
       return _DecisionActionButton(
         label: label,
@@ -442,17 +410,8 @@ Future<void> runDecision(
         )),
       );
     case DecisionKind.expiringCertificate:
-      // The Certificates tab, where Renew and its confirmation are, and where
-      // an uploaded certificate is listed for replacing: the service's root
-      // is its Overview, which offers no writes at all. It reads the lens, so
-      // the certificate's own NPM is brought under it first.
-      await bringUnderLens(
-        ref,
-        ServiceKey.nginxProxyManager,
-        decision.instanceId,
-      );
-      if (!context.mounted) return;
-      context.go(ServiceRoutes.npmCertificates);
+      // No Nginx Proxy Manager in this fork: nothing reports one.
+      break;
   }
 }
 

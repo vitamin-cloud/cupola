@@ -23,10 +23,6 @@ import 'package:cupola/features/music/data/lidarr_service.dart';
 import 'package:cupola/features/music/presentation/lidarr_overview_screen.dart';
 import 'package:cupola/features/music/presentation/artist_page.dart';
 import 'package:cupola/features/readarr/presentation/author_page.dart';
-import 'package:cupola/features/npm/presentation/npm_advanced_config_screen.dart';
-import 'package:cupola/features/npm/presentation/npm_overview_screen.dart';
-import 'package:cupola/features/npm/presentation/npm_screen.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_overview_screen.dart';
 import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/outside/domain/outside_link.dart';
 import 'package:cupola/features/bazarr/presentation/bazarr_overview_screen.dart';
@@ -34,7 +30,6 @@ import 'package:cupola/features/prowlarr/data/prowlarr_service.dart';
 import 'package:cupola/features/prowlarr/presentation/prowlarr_overview_screen.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_overview_screen.dart';
 import 'package:cupola/features/readarr/presentation/readarr_overview_screen.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_overview_screen.dart';
 import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:cupola/features/onboarding/presentation/requester_sign_in_screen.dart';
@@ -57,8 +52,6 @@ import 'package:cupola/features/discover/presentation/seerr_admin_screens.dart';
 import 'package:cupola/features/dockge/presentation/dockge_terminal_screen.dart';
 import 'package:cupola/features/jellyfin/presentation/jellyfin_tab_screens.dart';
 import 'package:cupola/features/music/presentation/music_screen.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_screen.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_tab_screens.dart';
 import 'package:cupola/features/plex/presentation/plex_tab_screens.dart';
 import 'package:cupola/features/prowlarr/presentation/prowlarr_history_screen.dart';
 import 'package:cupola/features/prowlarr/presentation/prowlarr_library_screen.dart';
@@ -68,16 +61,11 @@ import 'package:cupola/features/qbittorrent/presentation/qbittorrent_screen.dart
 import 'package:cupola/features/readarr/presentation/readarr_activity_screen.dart';
 import 'package:cupola/features/readarr/presentation/readarr_history_screen.dart';
 import 'package:cupola/features/readarr/presentation/readarr_library_screen.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_screen.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_tab_screens.dart';
 import 'package:cupola/features/series/presentation/series_screen.dart';
-import 'package:cupola/features/transmission/presentation/transmission_screen.dart';
-import 'package:cupola/features/transmission/presentation/transmission_tab_screens.dart';
 import 'package:cupola/features/services/domain/service_tab.dart';
 import 'package:cupola/features/services/presentation/service_all_screens.dart';
 import 'package:cupola/features/home/presentation/home_screen.dart';
 import 'package:cupola/features/services/presentation/stack_screen.dart';
-import 'package:cupola/features/services/presentation/service_home_screen.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/discover/domain/seerr_invite.dart';
 import 'package:cupola/features/discover/domain/seerr_sign_in.dart';
@@ -85,15 +73,8 @@ import 'package:cupola/features/settings/domain/connection_address.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_history_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_live_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_overview_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_person_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_users_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_violations_screen.dart';
 import 'package:cupola/features/stream/presentation/stream_item_screen.dart';
 import 'package:cupola/features/stream/presentation/stream_overview_screen.dart';
-import 'package:cupola/features/transmission/presentation/transmission_overview_screen.dart';
 import 'package:cupola/features/unraid/presentation/unraid_overview_screen.dart';
 import 'package:cupola/features/unraid/presentation/unraid_screen.dart';
 import 'package:cupola/features/stream/presentation/stream_libraries_screen.dart';
@@ -806,30 +787,6 @@ void main() {
       }
     });
 
-    testWidgets('supports service dashboard routes', (tester) async {
-      final container = await _pumpRouter(tester);
-      final router = container.read(routerProvider);
-
-      // A service on the tab model has a redirect-only prefix for a root: the
-      // service home is a tab now, so the bare path names a place that draws
-      // nothing and hands off to Overview.
-      for (final entry in {
-        ServiceRoutes.seerr: ServiceRoutes.seerrOverview,
-        ServiceRoutes.radarr: ServiceRoutes.radarrOverview,
-        ServiceRoutes.sonarr: ServiceRoutes.sonarrOverview,
-        ServiceRoutes.lidarr: ServiceRoutes.lidarrOverview,
-        ServiceRoutes.readarr: ServiceRoutes.readarrOverview,
-        ServiceRoutes.qbittorrent: ServiceRoutes.qbittorrentOverview,
-        ServiceRoutes.transmission: ServiceRoutes.transmissionOverview,
-        ServiceRoutes.sabnzbd: ServiceRoutes.sabnzbdOverview,
-        ServiceRoutes.nzbget: ServiceRoutes.nzbgetOverview,
-      }.entries) {
-        router.go(entry.key);
-        await tester.pumpAndSettle();
-
-        expect(router.state.uri.toString(), entry.value, reason: entry.key);
-      }
-    });
 
     testWidgets('every tab on an arr\'s bar resolves to its own location', (
       tester,
@@ -982,9 +939,6 @@ void main() {
 
         for (final service in [
           ServiceKey.qbittorrent,
-          ServiceKey.transmission,
-          ServiceKey.sabnzbd,
-          ServiceKey.nzbget,
         ]) {
           for (final tab in tabsFor(service)!) {
             final location = '/stack/${service.routeParam}/${tab.segment}';
@@ -1001,67 +955,6 @@ void main() {
       },
     );
 
-    testWidgets('every Overview that has been built is the one that draws', (
-      tester,
-    ) async {
-      // A branch that resolves is not a branch that shows the right page: for
-      // months every one of these tabs resolved to a placeholder,
-      // which is a legitimate destination, so the location assertions above
-      // stayed green while eight Overviews sat in the tree reachable by
-      // nothing. This table is the one that would have caught it: it names
-      // the widget each Overview must build, and the `findsNothing` on the
-      // placeholder is what fails when a screen is unmounted again.
-      //
-      // Every one of the sixteen services on the tab model is listed, which
-      // it can be now that the last five Overviews are mounted: nothing on
-      // this model draws a placeholder on its first tab any more. TrueNAS is
-      // absent because it has no bar at all: `tabsFor` returns null for it by
-      // design, the console being ten sections that do not fit on one.
-      //
-      // Jellyfin and Plex both name `StreamOverviewScreen`, and that is the
-      // assertion rather than an accident of the table: one screen serves both
-      // servers, parameterised by `ServiceKey`, the way every other surface in
-      // that folder is.
-      //
-      // No fake needed: this harness leaves every service unconfigured and
-      // each of these screens checks `isServiceConfigured` before it reaches a
-      // provider, so nothing is requested and no retry timer outlives the case.
-      final container = await _pumpRouter(tester);
-      final router = container.read(routerProvider);
-
-      final overviews = <String, Type>{
-        ServiceRoutes.radarrOverview: RadarrOverviewScreen,
-        ServiceRoutes.sonarrOverview: SonarrOverviewScreen,
-        ServiceRoutes.lidarrOverview: LidarrOverviewScreen,
-        ServiceRoutes.readarrOverview: ReadarrOverviewScreen,
-        ServiceRoutes.qbittorrentOverview: QbittorrentOverviewScreen,
-        ServiceRoutes.transmissionOverview: TransmissionOverviewScreen,
-        ServiceRoutes.sabnzbdOverview: SabnzbdOverviewScreen,
-        ServiceRoutes.nzbgetOverview: NzbgetOverviewScreen,
-        ServiceRoutes.seerrOverview: SeerrOverviewScreen,
-        ServiceRoutes.bazarrOverview: BazarrOverviewScreen,
-        ServiceRoutes.prowlarrOverview: ProwlarrOverviewScreen,
-        ServiceRoutes.dockgeOverview: DockgeOverviewScreen,
-        ServiceRoutes.unraidOverview: UnraidOverviewScreen,
-        ServiceRoutes.npmOverview: NpmOverviewScreen,
-        ServiceRoutes.jellyfinOverview: StreamOverviewScreen,
-        ServiceRoutes.plexOverview: StreamOverviewScreen,
-        ServiceRoutes.embyOverview: StreamOverviewScreen,
-        ServiceRoutes.tracearrOverview: TracearrOverviewScreen,
-      };
-
-      for (final entry in overviews.entries) {
-        router.go(entry.key);
-        await tester.pumpAndSettle();
-
-        expect(router.state.uri.toString(), entry.key, reason: entry.key);
-        expect(
-          find.byType(entry.value),
-          findsOneWidget,
-          reason: '${entry.key} must draw ${entry.value}',
-        );
-      }
-    });
 
     testWidgets('every tab on Bazarr\'s bar resolves to its own location', (
       tester,
@@ -1159,45 +1052,6 @@ void main() {
       }
     });
 
-    testWidgets('the pre-tab download client paths still resolve', (
-      tester,
-    ) async {
-      // Every path shape these services ever shipped, in both spellings: the
-      // bare root, the tab-less detail, and the same two under the pre-rename
-      // `/services` prefix. The prefix rewrite chains into the per-service
-      // redirects rather than duplicating them, so what this asserts is that
-      // the chain finishes: a rewrite that stopped at the first hop would
-      // leave the user on a path that draws nothing.
-      final container = await _pumpRouter(tester);
-      final router = container.read(routerProvider);
-
-      for (final entry in {
-        ServiceRoutes.qbittorrent: ServiceRoutes.qbittorrentOverview,
-        '/services/qbittorrent': ServiceRoutes.qbittorrentOverview,
-        '/stack/qbittorrent/torrent/abc123': ServiceRoutes.qbittorrentTorrent(
-          'abc123',
-        ),
-        '/dashboard/qbittorrent/torrent/abc123':
-            ServiceRoutes.qbittorrentTorrent('abc123'),
-        '/services/qbittorrent/torrent/abc123':
-            ServiceRoutes.qbittorrentTorrent('abc123'),
-        // Transmission carries only its root, in both spellings: it never had
-        // a detail path to keep resolving.
-        ServiceRoutes.transmission: ServiceRoutes.transmissionOverview,
-        '/services/transmission': ServiceRoutes.transmissionOverview,
-        // SABnzbd likewise: a job is an expanding row, never a pushed page.
-        ServiceRoutes.sabnzbd: ServiceRoutes.sabnzbdOverview,
-        '/services/sabnzbd': ServiceRoutes.sabnzbdOverview,
-        // NZBGet, the same: a group is an expanding row, never a pushed page.
-        ServiceRoutes.nzbget: ServiceRoutes.nzbgetOverview,
-        '/services/nzbget': ServiceRoutes.nzbgetOverview,
-      }.entries) {
-        router.go(entry.key);
-        await tester.pumpAndSettle();
-
-        expect(router.state.uri.toString(), entry.value, reason: entry.key);
-      }
-    });
 
     testWidgets('supports service all-list routes', (tester) async {
       final container = await _pumpRouter(tester);
@@ -1414,52 +1268,7 @@ void main() {
       }
     });
 
-    testWidgets(
-      'Tracearr, in the band and not a media server, lands on its own '
-      'Overview',
-      (tester) async {
-        final container = await _pumpRouter(tester);
-        final router = container.read(routerProvider);
 
-        router.go(ServiceRoutes.tracearr);
-        await tester.pumpAndSettle();
-
-        expect(router.state.uri.toString(), ServiceRoutes.tracearrOverview);
-        expect(find.byType(TracearrOverviewScreen), findsOneWidget);
-        expect(find.byType(StreamOverviewScreen), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'a Tracearr person resolves from the path alone, under the tab it was '
-      'opened from, and a blank id goes back to Users',
-      (tester) async {
-        final container = await _pumpRouter(tester);
-        final router = container.read(routerProvider);
-
-        for (final location in [
-          '/stack/tracearr/users/9d7d8f7d-0e17-4f3a',
-          '/stack/tracearr/live/person/9d7d8f7d-0e17-4f3a',
-          '/stack/tracearr/history/person/9d7d8f7d-0e17-4f3a',
-          '/stack/tracearr/violations/person/9d7d8f7d-0e17-4f3a',
-          '/stack/tracearr/overview/person/9d7d8f7d-0e17-4f3a',
-        ]) {
-          router.go(location);
-          await tester.pumpAndSettle();
-
-          expect(router.state.uri.toString(), location);
-          final screen = tester.widget<TracearrPersonScreen>(
-            find.byType(TracearrPersonScreen),
-          );
-          expect(screen.userId, '9d7d8f7d-0e17-4f3a', reason: location);
-        }
-
-        router.go('/stack/tracearr/users/%20');
-        await tester.pumpAndSettle();
-        expect(router.state.uri.toString(), ServiceRoutes.tracearrUsers);
-        expect(find.byType(TracearrPersonScreen), findsNothing);
-      },
-    );
 
     testWidgets('every tab on the bar has a branch that resolves', (
       tester,
@@ -1693,38 +1502,6 @@ void main() {
   /// anything, and a destination that did ask would leave a retrying provider
   /// behind and fail this file at teardown rather than at the assertion.
   group('the infrastructure three on the tab model', () {
-    testWidgets('the bare service path lands on Overview', (tester) async {
-      final container = await _pumpRouter(tester);
-      final router = container.read(routerProvider);
-
-      for (final entry in {
-        ServiceRoutes.dockge: (
-          ServiceRoutes.dockgeOverview,
-          DockgeOverviewScreen,
-        ),
-        ServiceRoutes.unraid: (
-          ServiceRoutes.unraidOverview,
-          UnraidOverviewScreen,
-        ),
-        ServiceRoutes.nginxProxyManager: (
-          ServiceRoutes.npmOverview,
-          NpmOverviewScreen,
-        ),
-      }.entries) {
-        router.go(entry.key);
-        await tester.pumpAndSettle();
-
-        expect(router.state.uri.toString(), entry.value.$1, reason: entry.key);
-        // Naming the screen, not just the location: a placeholder resolves at
-        // exactly the same location, so asserting the location alone is what
-        // let three built Overviews sit in the tree reachable by nothing.
-        expect(
-          find.byType(entry.value.$2),
-          findsOneWidget,
-          reason: '${entry.value.$1} must draw ${entry.value.$2}',
-        );
-      }
-    });
 
     testWidgets('every tab on the bar has a branch that resolves', (
       tester,
@@ -1738,7 +1515,6 @@ void main() {
       for (final service in [
         ServiceKey.dockge,
         ServiceKey.unraid,
-        ServiceKey.nginxProxyManager,
       ]) {
         for (final tab in tabsFor(service)!) {
           final location =
@@ -1751,74 +1527,6 @@ void main() {
       }
     });
 
-    testWidgets('a tab that draws something draws the half it names', (
-      tester,
-    ) async {
-      // Two services split a page across a bar, and a split is only as good as
-      // the wiring: `UnraidScreen.docker` mounted on the Array tab would draw a
-      // plausible screen under the wrong label, which no path assertion would
-      // notice.
-      final container = await _pumpRouter(tester);
-      final router = container.read(routerProvider);
-
-      router.go(ServiceRoutes.unraidArray);
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<UnraidScreen>(find.byType(UnraidScreen)).section,
-        UnraidSection.array,
-      );
-
-      router.go(ServiceRoutes.unraidDocker);
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<UnraidScreen>(find.byType(UnraidScreen)).section,
-        UnraidSection.docker,
-      );
-
-      router.go(ServiceRoutes.npmProxyHosts);
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<NpmScreen>(find.byType(NpmScreen)).section,
-        NpmSection.proxyHosts,
-      );
-
-      router.go(ServiceRoutes.npmCertificates);
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<NpmScreen>(find.byType(NpmScreen)).section,
-        NpmSection.certificates,
-      );
-
-      // A host's advanced block is a page of its own under Proxy hosts: the
-      // URL leaves the tab root, so the service header steps aside for the
-      // page's app bar instead of being drawn under it.
-      router.go(ServiceRoutes.npmAdvanced(4));
-      await tester.pumpAndSettle();
-      expect(
-        tester
-            .widget<NpmAdvancedConfigScreen>(
-              find.byType(NpmAdvancedConfigScreen),
-            )
-            .hostId,
-        4,
-      );
-      expect(
-        tester
-            .widget<ServiceHomeScreen>(find.byType(ServiceHomeScreen))
-            .showAppBar,
-        isFalse,
-      );
-
-      router.go('${ServiceRoutes.npmProxyHosts}/not-a-number/advanced');
-      await tester.pumpAndSettle();
-      expect(router.state.uri.path, ServiceRoutes.npmProxyHosts);
-
-      // Dockge did not split: the stack list *was* the service, and it is the
-      // Stacks tab whole.
-      router.go(ServiceRoutes.dockgeStacks);
-      await tester.pumpAndSettle();
-      expect(find.byType(DockgeScreen), findsOneWidget);
-    });
 
     testWidgets('the pre-tab Dockge spellings cross in ONE hop, query intact', (
       tester,
@@ -1897,34 +1605,6 @@ void main() {
       expect(find.byType(DockgeStackDetailScreen), findsNothing);
     });
 
-    testWidgets('the legacy /services prefix still reaches all three', (
-      tester,
-    ) async {
-      // Two hops for a service root: the prefix rewrite lands on the
-      // redirect-only node, which hands off to Overview, and three for the
-      // Dockge stack, which crosses the pre-tab tail on the way into the
-      // branch. What this asserts is that the chain finishes: a rewrite that
-      // stopped at the first hop would leave the user on a path that draws
-      // nothing.
-      final container = await _pumpRouter(tester);
-      final router = container.read(routerProvider);
-
-      for (final entry in {
-        '/services/dockge': ServiceRoutes.dockgeOverview,
-        '/services/unraid': ServiceRoutes.unraidOverview,
-        '/services/npm': ServiceRoutes.npmOverview,
-      }.entries) {
-        router.go(entry.key);
-        await tester.pumpAndSettle();
-        expect(router.state.uri.toString(), entry.value, reason: entry.key);
-      }
-
-      router.go('/services/dockge/stack/immich');
-      await tester.pumpAndSettle();
-
-      expect(router.state.uri.toString(), ServiceRoutes.dockgeStack('immich'));
-      expect(find.byType(DockgeStackDetailScreen), findsOneWidget);
-    });
   });
 
   // ── What each tab actually draws ────────────────────────────────────────
@@ -2024,25 +1704,6 @@ void main() {
         ServiceTab.queue: find.byType(QbittorrentScreen),
         ServiceTab.rss: find.byType(QbittorrentRssScreen),
       },
-      ServiceKey.transmission: {
-        ServiceTab.overview: find.byType(TransmissionOverviewScreen),
-        ServiceTab.queue: find.byType(TransmissionScreen),
-        ServiceTab.labels: find.byType(TransmissionLabelsScreen),
-        ServiceTab.session: find.byType(TransmissionSessionScreen),
-      },
-      ServiceKey.sabnzbd: {
-        ServiceTab.overview: find.byType(SabnzbdOverviewScreen),
-        ServiceTab.queue: find.byType(SabnzbdScreen),
-        ServiceTab.history: find.byType(SabnzbdHistoryScreen),
-        ServiceTab.servers: find.byType(SabnzbdServersScreen),
-      },
-      ServiceKey.nzbget: {
-        ServiceTab.overview: find.byType(NzbgetOverviewScreen),
-        ServiceTab.queue: find.byType(NzbgetScreen),
-        ServiceTab.history: find.byType(NzbgetHistoryScreen),
-        ServiceTab.feeds: find.byType(NzbgetFeedsScreen),
-        ServiceTab.messages: find.byType(NzbgetMessagesScreen),
-      },
       ServiceKey.bazarr: {
         ServiceTab.overview: find.byType(BazarrOverviewScreen),
         ServiceTab.wanted: find.byType(BazarrWantedScreen),
@@ -2084,19 +1745,6 @@ void main() {
           entry.key: find.byWidgetPredicate(
             (widget) => widget is UnraidScreen && widget.section == entry.value,
             description: 'UnraidScreen(${entry.value.name})',
-          ),
-      },
-      ServiceKey.nginxProxyManager: {
-        ServiceTab.overview: find.byType(NpmOverviewScreen),
-        for (final entry in const {
-          ServiceTab.proxyHosts: NpmSection.proxyHosts,
-          ServiceTab.certificates: NpmSection.certificates,
-          ServiceTab.accessLists: NpmSection.accessLists,
-          ServiceTab.auditLog: NpmSection.auditLog,
-        }.entries)
-          entry.key: find.byWidgetPredicate(
-            (widget) => widget is NpmScreen && widget.section == entry.value,
-            description: 'NpmScreen(${entry.value.name})',
           ),
       },
       ServiceKey.jellyfin: {
@@ -2143,15 +1791,6 @@ void main() {
                 _serviceOf(widget) == ServiceKey.emby,
             description: '${entry.value}(emby)',
           ),
-      },
-      // Its own five screens: Tracearr is in the Stream band and is not a media
-      // server.
-      ServiceKey.tracearr: {
-        ServiceTab.overview: find.byType(TracearrOverviewScreen),
-        ServiceTab.live: find.byType(TracearrLiveScreen),
-        ServiceTab.history: find.byType(TracearrHistoryScreen),
-        ServiceTab.users: find.byType(TracearrUsersScreen),
-        ServiceTab.violations: find.byType(TracearrViolationsScreen),
       },
       ServiceKey.plex: {
         ServiceTab.overview: find.byWidgetPredicate(

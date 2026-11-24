@@ -15,8 +15,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/widgets/cross_service_action.dart';
-import 'package:cupola/features/npm/domain/models/npm_models.dart';
-import 'package:cupola/features/npm/presentation/npm_capability.dart';
 import 'package:cupola/features/services/presentation/dashboard_sections.dart';
 
 import '../../../test_helpers/decision_rows.dart';
@@ -76,69 +74,5 @@ bool _dimmed(WidgetTester tester, Finder label) => tester
     .any((o) => o.opacity == GatedAffordance.dimmedOpacity);
 
 void main() {
-  testWidgets('a view-only NPM account: Renew is dimmed, hinted, and answers '
-      'with the account it needs', (tester) async {
-    final handle = tester.ensureSemantics();
-    final harness = await _pumpRows(
-      tester,
-      Profiles.p3.withConnection(
-        WorldConnections.npm.withBehaviour(ConnectionBehaviour.readOnly),
-      ),
-    );
 
-    expect(_renew, findsOneWidget);
-    expect(_dimmed(tester, _renew), isTrue);
-    // Still a button a screen reader stops on, never a disabled one.
-    expect(
-      tester.getSemantics(
-        find.ancestor(of: _renew, matching: find.byType(TextButton)),
-      ),
-      isSemantics(
-        label: 'Renew',
-        hint: npmCapabilityHint,
-        isButton: true,
-        isEnabled: true,
-        hasTapAction: true,
-      ),
-    );
-
-    // The probe is what told it: NPM's own answer about this account.
-    expect(
-      harness.network.requestsTo(_npm).where((r) => r.path == '/api/users/me'),
-      isNotEmpty,
-    );
-
-    await tester.tap(_renew);
-    await tester.pump();
-    expect(
-      find.text(npmBlockedMessage(NpmResource.certificates)),
-      findsOneWidget,
-    );
-    expect(find.text('Change account'), findsOneWidget);
-
-    handle.dispose();
-    await harness.unmount(tester);
-  });
-
-  testWidgets('an admin NPM account: Renew is live', (tester) async {
-    final handle = tester.ensureSemantics();
-    final harness = await _pumpRows(
-      tester,
-      Profiles.p3.withConnection(WorldConnections.npm),
-    );
-
-    expect(_renew, findsOneWidget);
-    expect(_dimmed(tester, _renew), isFalse);
-    expect(
-      tester
-          .getSemantics(
-            find.ancestor(of: _renew, matching: find.byType(TextButton)),
-          )
-          .hint,
-      isEmpty,
-    );
-
-    handle.dispose();
-    await harness.unmount(tester);
-  });
 }

@@ -34,7 +34,6 @@ final _litByWhatTheyHold = {
   ...mediaServers,
   // Tracearr's, by the first stream it sees: the ids it holds name the title
   // without asking a media server for them.
-  ServiceKey.tracearr,
   ServiceKey.bazarr,
 };
 
@@ -52,20 +51,6 @@ final serviceRoomSourceProvider = Provider.autoDispose
       }
       String? public(String? url) =>
           url != null && url.startsWith('http') ? url : null;
-      if (service == ServiceKey.tracearr) {
-        final sessions = ref
-            .watch(
-              streamSessionsForProvider((service: service, instanceId: '')),
-            )
-            .value;
-        final key = [
-          for (final session in sessions ?? const <StreamSession>[])
-            ?session.titleKey,
-        ].firstOrNull;
-        return key == null
-            ? null
-            : ref.watch(arrPublicPosterProvider(key)).value;
-      }
       if (service.isMediaServer) {
         final sessions = ref
             .watch(

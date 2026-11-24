@@ -98,7 +98,6 @@ Future<(ProfileHarness, ValueGetter<String?>)> _pumpRows(
         path: '${ServiceRoutes.prowlarrIndexerBase}/:id',
         builder: landed,
       ),
-      GoRoute(path: ServiceRoutes.npmCertificates, builder: landed),
     ],
   );
   addTearDown(router.dispose);
@@ -210,34 +209,4 @@ void main() {
     });
   });
 
-  testWidgets('two Nginx Proxy Manager: Renew on the second one\'s '
-      'certificate opens the certificates with it under the lens', (
-    tester,
-  ) async {
-    final (harness, opened) = await _pumpRows(
-      tester,
-      _two(WorldConnections.npm, WorldConnections.npmNas),
-      before: (network) {
-        _expiringCertificate(network, WorldConnections.npm.id);
-        _expiringCertificate(network, WorldIds.npmNas);
-      },
-    );
-    expect(
-      _detail('Certificate expires in 9 days\u00A0· Nginx Proxy Manager Home'),
-      findsOne,
-    );
-
-    await tester.tap(_control('npm-cert-${WorldIds.npmNas}-7', 'Renew'));
-    await harness.settle(tester);
-
-    expect(opened(), ServiceRoutes.npmCertificates);
-    expect(
-      _container(
-        tester,
-      ).read(activeInstanceProvider(ServiceKey.nginxProxyManager))?.id,
-      WorldIds.npmNas,
-    );
-
-    await harness.unmount(tester);
-  });
 }

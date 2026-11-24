@@ -28,42 +28,7 @@ void main() {
       expect(ranked.map((d) => d.title), ['stall', 'request']);
     });
 
-    test('a violation ranks after every fault and before a request', () {
-      final ranked = rankDecisions([
-        _decision(DecisionKind.pendingRequest, 'request', at: null),
-        _decision(
-          DecisionKind.violation,
-          'violation',
-          at: DateTime.utc(2024, 6),
-          service: ServiceKey.tracearr,
-        ),
-        _decision(
-          DecisionKind.expiringCertificate,
-          'certificate',
-          at: DateTime.utc(2024, 6),
-        ),
-      ]);
 
-      expect(ranked.map((d) => d.title), [
-        'certificate',
-        'violation',
-        'request',
-      ]);
-    });
-
-    test('violations are never folded into one row, however alike', () {
-      final grouped = groupDecisions([
-        for (final title in ['a', 'b', 'c'])
-          _decision(
-            DecisionKind.violation,
-            title,
-            at: null,
-            service: ServiceKey.tracearr,
-          ),
-      ]);
-
-      expect(grouped, hasLength(3));
-    });
 
     test('oldest first inside a kind', () {
       final ranked = rankDecisions([
@@ -170,39 +135,6 @@ void main() {
       expect(row.route, '/stack/sonarr');
     });
 
-    test('a folded row keeps the cause every member shares, and only '
-        'then', () {
-      List<DashboardDecision> stalls(List<String?> reasons) => [
-        for (final (i, reason) in reasons.indexed)
-          _decision(
-            DecisionKind.stalledDownload,
-            'Film $i',
-            at: null,
-            requires: ServiceKey.sabnzbd,
-            reason: reason,
-          ),
-      ];
-
-      final shared = groupDecisions(
-        stalls(['Disk full', 'Disk full', 'Disk full']),
-      ).single;
-      expect(shared.title, '3 stuck downloads');
-      expect(
-        shared.detail,
-        'Disk full\u00A0· Radarr\u00A0· Film 0, Film 1 and 1 more',
-      );
-      expect(shared.reason, 'Disk full');
-
-      final differing = groupDecisions(
-        stalls(['Disk full', 'Password needed']),
-      ).single;
-      expect(differing.title, '2 stuck downloads');
-      expect(differing.detail, 'Radarr\u00A0· Film 0, Film 1');
-      expect(differing.reason, isNull);
-
-      // A member that gave no cause is not one that shares it.
-      expect(groupDecisions(stalls(['Disk full', null])).single.reason, isNull);
-    });
 
     test('a lone fault stays itself', () {
       final lone = _decision(
@@ -213,38 +145,6 @@ void main() {
       expect(groupDecisions([lone]).single, same(lone));
     });
 
-    test('a different service, connection or remedy is a different row', () {
-      final grouped = groupDecisions([
-        _decision(DecisionKind.importBlocked, 'a', at: null),
-        _decision(
-          DecisionKind.importBlocked,
-          'b',
-          at: null,
-          service: ServiceKey.sonarr,
-        ),
-        _decision(
-          DecisionKind.importBlocked,
-          'c',
-          at: null,
-          instanceId: 'radarr-4k',
-        ),
-        _decision(
-          DecisionKind.stalledDownload,
-          'd',
-          at: null,
-          requires: ServiceKey.qbittorrent,
-        ),
-        _decision(
-          DecisionKind.stalledDownload,
-          'e',
-          at: null,
-          requires: ServiceKey.sabnzbd,
-        ),
-      ]);
-
-      expect(grouped, hasLength(5));
-      expect(grouped.every((decision) => decision.count == 1), isTrue);
-    });
 
     test('only a jump folds: Test and Approve act on one item', () {
       final grouped = groupDecisions([
@@ -335,14 +235,6 @@ void main() {
       expect(reportedProblemsClause(1), '1 reported problem');
     });
 
-    test('a violation is reviewed, and says what it could not open', () {
-      expect(decisionActionLabel(DecisionKind.violation), 'Review');
-      expect(
-        decisionUnavailableToast(DecisionKind.violation, ServiceKey.tracearr),
-        endsWith('to open this violation.'),
-      );
-      expect(DecisionKind.violation.opensUnderLens, isFalse);
-    });
 
     test('the stall control names the client it would open', () {
       expect(

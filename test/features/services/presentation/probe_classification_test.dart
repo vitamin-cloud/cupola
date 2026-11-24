@@ -34,44 +34,6 @@ Future<ServiceSummary> _probe(
 }
 
 void main() {
-  group('a refused credential is a fault, never "did not answer"', () {
-    final cases = <(String, ConfigProfile, ServiceKey, String)>[
-      ('Radarr', Profiles.p1, ServiceKey.radarr, WorldIds.radarr),
-      ('Seerr', Profiles.p1, ServiceKey.seerr, WorldIds.seerr),
-      (
-        'qBittorrent',
-        Profiles.p1,
-        ServiceKey.qbittorrent,
-        WorldIds.qbittorrent,
-      ),
-      ('TrueNAS', Profiles.p1, ServiceKey.truenas, WorldIds.truenas),
-      // The four probes that could not see a refused key at all.
-      ('SABnzbd', Profiles.p1, ServiceKey.sabnzbd, WorldIds.sabnzbd),
-      ('Jellyfin', Profiles.p1, ServiceKey.jellyfin, WorldIds.jellyfin),
-      ('Plex', Profiles.p6, ServiceKey.plex, WorldIds.plex),
-      (
-        'Nginx Proxy Manager',
-        Profiles.p1.withConnection(WorldConnections.npm),
-        ServiceKey.nginxProxyManager,
-        WorldConnections.npm.id,
-      ),
-    ];
-
-    for (final (name, profile, service, id) in cases) {
-      test(name, () async {
-        final summary = await _probe(
-          profile.withBehaviour(id, ConnectionBehaviour.refusesKey),
-          service,
-          id,
-        );
-
-        expect(summary.status, ServiceSummaryStatus.fault);
-        expect(summary.isOnline, isFalse);
-        expect(summary.didNotAnswer, isFalse);
-        expect(summary.failureReason, ServiceFailureReason.unauthorized);
-      });
-    }
-  });
 
   group('nothing answering is the one red state', () {
     for (final behaviour in const [
@@ -119,31 +81,6 @@ void main() {
       },
     );
 
-    test(
-      'SABnzbd, Plex and Nginx Proxy Manager answer with a good key',
-      () async {
-        expect(
-          (await _probe(
-            Profiles.p1,
-            ServiceKey.sabnzbd,
-            WorldIds.sabnzbd,
-          )).isOnline,
-          isTrue,
-        );
-        expect(
-          (await _probe(Profiles.p6, ServiceKey.plex, WorldIds.plex)).isOnline,
-          isTrue,
-        );
-        expect(
-          (await _probe(
-            Profiles.p1.withConnection(WorldConnections.npm),
-            ServiceKey.nginxProxyManager,
-            WorldConnections.npm.id,
-          )).isOnline,
-          isTrue,
-        );
-      },
-    );
   });
 
   group('P7: the fleet counts a refusal apart from the dark', () {

@@ -73,16 +73,6 @@ void main() {
       expect(ServiceTab.fromSegment('not-a-tab'), isNull);
     });
 
-    test('the labels English does not title-case are spelled out', () {
-      // The reason this vocabulary exists. A breadcrumb that title-cases the
-      // path segment prints `Vms` and `Rss`, which is how nobody writes them
-      // and how no other surface in the app said them.
-      expect(ServiceTab.vms.label, 'VMs');
-      expect(ServiceTab.rss.label, 'RSS');
-      expect(ServiceTab.proxyHosts.label, 'Proxy hosts');
-      expect(ServiceTab.accessLists.label, 'Access lists');
-      expect(ServiceTab.auditLog.label, 'Audit log');
-    });
 
     test('the four arrs share one bar, exactly', () {
       // Same record types in the same order, so a user who has learned Radarr

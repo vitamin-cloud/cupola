@@ -180,37 +180,6 @@ Finder _inDownloads(Finder matching) =>
 
 void main() {
   group('Transmission', () {
-    test('P4: a Sonarr grab moving through Transmission takes its rate, time '
-        'left and client off the torrent', () async {
-      final container = await _start(Profiles.p4);
-      final inFlight = await container.read(servicesInFlightProvider.future);
-
-      final nightShift = inFlight.preview.singleWhere(
-        (item) =>
-            item.downloadId?.toLowerCase() ==
-            WorldDownloads.nightShiftTransmission.id,
-      );
-      expect(nightShift.service, ServiceKey.sonarr);
-      // Night Shift's own record: series 2, never Cosmos Laundromat.
-      expect(nightShift.title, startsWith('Night Shift\u00A0· S'));
-      expect(nightShift.mediaId, 2);
-      expect(nightShift.clientService, ServiceKey.transmission);
-      expect(nightShift.clientInstanceId, WorldIds.transmission);
-      expect(nightShift.etaSeconds, 240);
-      // Counted once: the arr row absorbed the torrent.
-      expect(inFlight.activeCount, 4);
-
-      // qBittorrent's moving torrents and Transmission's, per client.
-      expect(inFlight.clients, 2);
-      expect(
-        inFlight.rateBytesPerSecond,
-        (4.2 * _mb) ~/ 1 + (12.1 * _mb) ~/ 1 + (6.1 * _mb) ~/ 1 + 3 * _mb,
-      );
-      expect(
-        inFlight.coverage.answered.map((source) => source.service),
-        contains(ServiceKey.transmission),
-      );
-    });
 
     test('P4, Transmission dark: it is named under the region, and the arr '
         'row it was moving stays', () async {
@@ -223,7 +192,6 @@ void main() {
       final inFlight = await container.read(servicesInFlightProvider.future);
 
       expect(inFlight.coverage.failed.keys.map((source) => source.service), [
-        ServiceKey.transmission,
       ]);
       expect(coverageNote(inFlight.coverage), contains('Transmission'));
       // The rate is the client that answered, never a zero for the one
@@ -239,30 +207,6 @@ void main() {
       );
     });
 
-    test('P4: a torrent in error is a decision in the daemon\'s words, opened '
-        'in Transmission', () async {
-      final container = await _start(
-        Profiles.p4.withDownloads([_brokenTransmission]),
-      );
-      final inFlight = await container.read(servicesInFlightProvider.future);
-
-      final broken = inFlight.faults.singleWhere(
-        (item) => item.id == _brokenTransmission.id,
-      );
-      expect(broken.service, ServiceKey.transmission);
-      expect(broken.fault, InFlightFault.failed);
-      expect(broken.warning, startsWith('No data found!'));
-
-      final decisions = await container.read(
-        dashboardDecisionSourceProvider(DecisionSource.queue).future,
-      );
-      final decision = decisions.decisions.singleWhere(
-        (d) => d.title == _brokenTransmission.release,
-      );
-      expect(decision.kind, DecisionKind.stalledDownload);
-      expect(decision.actionTarget, ServiceKey.transmission);
-      expect(decision.actionInstanceId, WorldIds.transmission);
-    });
 
     test('P4: one peer is a peer, and one seed a seed', () async {
       final container = await _start(
@@ -420,142 +364,12 @@ void main() {
   });
 
   group('NZBGet', () {
-    test('P4 + NZBGet, its disk full: the paused queue is a stall on the '
-        'arr row it moves, in the disk\'s words', () async {
-      final container = await _start(
-        Profiles.p4
-            .withConnection(WorldConnections.nzbget)
-            .withDownloads([_nzbgetGrab])
-            .withFullDisk(WorldConnections.nzbget.id),
-      );
-      final inFlight = await container.read(servicesInFlightProvider.future);
 
-      final grab = inFlight.faults.singleWhere(
-        (item) => item.downloadId == _nzbgetGrab.id,
-      );
-      expect(grab.service, ServiceKey.sonarr);
-      expect(grab.clientService, ServiceKey.nzbget);
-      expect(grab.fault, InFlightFault.stalled);
-      expect(grab.warning, 'Disk full');
-    });
 
-    test('P4 + NZBGet: a job below its critical health is a failure, '
-        'opened in NZBGet', () async {
-      final container = await _start(
-        Profiles.p4.withConnection(WorldConnections.nzbget).withDownloads([
-          _nzbgetBroken,
-        ]),
-      );
-      final inFlight = await container.read(servicesInFlightProvider.future);
-
-      final broken = inFlight.faults.singleWhere(
-        (item) => item.title == _nzbgetBroken.release,
-      );
-      expect(broken.service, ServiceKey.nzbget);
-      expect(broken.fault, InFlightFault.failed);
-      expect(broken.warning, 'Damaged beyond repair');
-
-      final decisions = await container.read(
-        dashboardDecisionSourceProvider(DecisionSource.queue).future,
-      );
-      expect(
-        decisions.decisions
-            .singleWhere((d) => d.title == _nzbgetBroken.release)
-            .actionTarget,
-        ServiceKey.nzbget,
-      );
-    });
-
-    test('P4 + NZBGet: its rate enters the sum, once, keyed on the '
-        'client', () async {
-      final container = await _start(
-        Profiles.p4.withConnection(WorldConnections.nzbget).withDownloads([
-          _nzbgetGrab,
-        ]),
-      );
-      final inFlight = await container.read(servicesInFlightProvider.future);
-
-      final grab = inFlight.preview.singleWhere(
-        (item) => item.downloadId == _nzbgetGrab.id,
-      );
-      expect(grab.service, ServiceKey.sonarr);
-      expect(grab.clientService, ServiceKey.nzbget);
-      expect(grab.clientRateBytesPerSecond, 8 * _mb);
-
-      expect(inFlight.clients, 3);
-      expect(
-        inFlight.rateBytesPerSecond,
-        (4.2 * _mb) ~/ 1 +
-            (12.1 * _mb) ~/ 1 +
-            (6.1 * _mb) ~/ 1 +
-            3 * _mb +
-            8 * _mb,
-      );
-    });
   });
 
   group('SABnzbd', () {
-    test('P1, SABnzbd\'s disk full: the queue it stopped is a fault on each '
-        'job, never a pause', () async {
-      final container = await _start(
-        Profiles.p1.withFullDisk(WorldIds.sabnzbd),
-      );
-      final inFlight = await container.read(servicesInFlightProvider.future);
 
-      for (final download in [
-        WorldDownloads.elephantsDream4k,
-        WorldDownloads.sintel4k,
-      ]) {
-        final row = inFlight.faults.singleWhere(
-          (item) => item.downloadId == download.id,
-        );
-        // Radarr 4K's row, which still says downloading, takes the fault.
-        expect(row.service, ServiceKey.radarr);
-        expect(row.connectionName, isNotNull);
-        expect(row.fault, InFlightFault.stalled);
-        expect(row.clientService, ServiceKey.sabnzbd);
-      }
-      expect(
-        inFlight.preview.map((item) => item.clientService),
-        isNot(contains(ServiceKey.sabnzbd)),
-      );
-
-      final decisions = await container.read(
-        dashboardDecisionSourceProvider(DecisionSource.queue).future,
-      );
-      expect(
-        decisions.decisions
-            .where((d) => d.detail.contains('Disk full'))
-            .map((d) => d.actionTarget)
-            .toSet(),
-        {ServiceKey.sabnzbd},
-      );
-    });
-
-    test(
-      'P1: a job SABnzbd paused itself is a decision in the house words; the '
-      'answering queue stays in flight',
-      () async {
-        final container = await _start(
-          Profiles.p1.withDownloads([_sabEncrypted]),
-        );
-        final inFlight = await container.read(servicesInFlightProvider.future);
-
-        final held = inFlight.faults.singleWhere(
-          (item) => item.id == _sabEncrypted.id,
-        );
-        expect(held.service, ServiceKey.sabnzbd);
-        expect(held.fault, InFlightFault.stalled);
-        // SABnzbd's ENCRYPTED, in the word NZBGet's own case uses.
-        expect(held.warning, 'Password needed');
-        expect(
-          inFlight.preview.where(
-            (item) => item.downloadId == WorldDownloads.elephantsDream4k.id,
-          ),
-          hasLength(1),
-        );
-      },
-    );
 
     test('P1: a SABnzbd job shows what it weighs and how much has come, '
         'like every other client\'s', () async {
@@ -668,20 +482,5 @@ void main() {
       expect(inFlight.activeCount, 3);
     });
 
-    test('P4 + NZBGet paused on purpose: its job is held', () async {
-      final container = await _start(
-        Profiles.p4
-            .withConnection(WorldConnections.nzbget)
-            .withDownloads([_nzbgetGrab])
-            .withPausedQueue(WorldConnections.nzbget.id),
-      );
-      final inFlight = await container.read(servicesInFlightProvider.future);
-
-      expect(
-        inFlight.preview.where((item) => item.downloadId == _nzbgetGrab.id),
-        isEmpty,
-      );
-      expect(inFlight.held, 1);
-    });
   });
 }

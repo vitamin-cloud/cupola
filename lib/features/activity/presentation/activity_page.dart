@@ -72,9 +72,6 @@ final _activityServices = [
   ServiceKey.lidarr,
   ServiceKey.readarr,
   ServiceKey.qbittorrent,
-  ServiceKey.transmission,
-  ServiceKey.sabnzbd,
-  ServiceKey.nzbget,
   ServiceKey.seerr,
   ...sessionServices,
 ];

@@ -74,8 +74,8 @@ final _moving = [
     rate: 18874368,
     eta: 360,
     connectionName: '4K',
-    client: 'SABnzbd',
-    clientService: ServiceKey.sabnzbd,
+    client: 'qBittorrent',
+    clientService: ServiceKey.qbittorrent,
   ),
   _download(
     'Cosmos Laundromat · S2 E4',
@@ -101,8 +101,8 @@ final _queued = [
     queued: true,
     startsIn: 360,
     connectionName: '4K',
-    client: 'SABnzbd',
-    clientService: ServiceKey.sabnzbd,
+    client: 'qBittorrent',
+    clientService: ServiceKey.qbittorrent,
   ),
 ];
 

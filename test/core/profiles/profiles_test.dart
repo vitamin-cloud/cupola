@@ -46,10 +46,7 @@ void main() {
       for (final service in const [
         ServiceKey.plex,
         ServiceKey.readarr,
-        ServiceKey.transmission,
-        ServiceKey.nzbget,
         ServiceKey.unraid,
-        ServiceKey.nginxProxyManager,
       ]) {
         expect(p1.settings.isServiceConfigured(service), isFalse);
       }
@@ -124,12 +121,6 @@ void main() {
       });
     });
 
-    test('P4 has two download clients and no Seerr', () {
-      final p4 = Profiles.p4;
-      expect(p4.has(ServiceKey.seerr), isFalse);
-      expect(p4.has(ServiceKey.qbittorrent), isTrue);
-      expect(p4.has(ServiceKey.transmission), isTrue);
-    });
 
     test('P5 knows Radarr and Sonarr only through Seerr', () {
       final p5 = Profiles.p5;
@@ -310,15 +301,5 @@ void main() {
       );
     });
 
-    test('withConnection adds a World-B service', () {
-      final withNpm = Profiles.p1.withConnection(
-        WorldConnections.npm.withBehaviour(ConnectionBehaviour.readOnly),
-      );
-      expect(
-        withNpm.settings.isServiceConfigured(ServiceKey.nginxProxyManager),
-        isTrue,
-      );
-      expect(withNpm.behaviourOf('npm'), ConnectionBehaviour.readOnly);
-    });
   });
 }

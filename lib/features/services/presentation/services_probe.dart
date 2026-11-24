@@ -12,8 +12,6 @@ import 'package:cupola/features/emby/data/emby_client.dart';
 import 'package:cupola/features/jellyfin/data/jellyfin_client.dart';
 import 'package:cupola/features/plex/data/plex_client.dart';
 import 'package:cupola/features/dockge/data/dockge_service.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_provider.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_provider.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/discover/data/seerr_session.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client_provider.dart';
@@ -27,9 +25,6 @@ import 'package:cupola/features/settings/domain/connection_reach.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
-import 'package:cupola/features/npm/data/npm_client.dart';
-import 'package:cupola/features/tracearr/data/tracearr_client.dart';
-import 'package:cupola/features/transmission/presentation/transmission_provider.dart';
 import 'package:cupola/features/truenas/data/truenas_service.dart';
 import 'package:cupola/features/truenas/data/truenas_ws_client.dart';
 import 'package:cupola/features/unraid/data/unraid_client.dart';
@@ -546,21 +541,6 @@ Future<String?> _loadVersion(
     );
   }
 
-  if (service == ServiceKey.sabnzbd) {
-    // The connection's own client, as qBittorrent's probe reads: the Queue
-    // page asks this every three seconds, and a client built for each ask was
-    // a new `Dio` and a new TLS handshake each time. Its address, access and
-    // pin are the route's, from `watchTransport`, so a route that moves
-    // rebuilds the client and this probe with it. Not this probe's to close.
-    final client = ref.watch(sabnzbdClientForProvider(instance.id));
-    // Keyed, not `mode=version`: that one needs no key, and a probe that
-    // cannot see a wrong key paints it as answering. Two hops, hence the room.
-    return _versionOrNull(
-      client.checkKeyAndVersion,
-      timeout: const Duration(seconds: 6),
-      close: () {},
-    );
-  }
 
   // The media servers, through their own clients: each authenticates with
   // a header the shared `ApiClient` does not send, and each one's status route
@@ -586,25 +566,6 @@ Future<String?> _loadVersion(
     );
   }
 
-  // Tracearr's `/health` is anonymous too: its own authenticated read says the
-  // key is accepted, who answered, and whether the API v2 is there. A version
-  // below the minimum throws, which is the probe's "did not answer as usable".
-  if (service == ServiceKey.tracearr) {
-    final client = TracearrClient(
-      baseUrl: reach.url,
-      apiKey: instance.credential,
-      pinnedCertFingerprint: reach.pin,
-      accessHeaders: reach.access.headers(),
-    );
-    return _versionOrNull(
-      () async {
-        final health = await client.checkCredentialAndVersion();
-        return health.parsedVersion?.toString() ?? health.version ?? '';
-      },
-      timeout: const Duration(seconds: 6),
-      close: client.close,
-    );
-  }
 
   if (service == ServiceKey.plex) {
     final client = PlexClient(
@@ -625,50 +586,8 @@ Future<String?> _loadVersion(
   // branch below would be read as answering whatever key it is given.
   assert(!service.isMediaServer, '${service.name} has no credential probe');
 
-  if (service == ServiceKey.nzbget) {
-    // The connection's own client, for the reason SABnzbd's is.
-    final client = ref.watch(nzbgetClientForProvider(instance.id));
-    return _versionOrNull(
-      client.version,
-      timeout: const Duration(seconds: 5),
-      close: () {},
-    );
-  }
 
-  if (service == ServiceKey.transmission) {
-    // The connection's own client, for the reason SABnzbd's is, and for one
-    // more: it keeps the session id the 409 handshake taught it, and a 401
-    // it was refused with, so a wrong password is asked once and not on every
-    // tick of the page's poll (the daemon's anti-brute-force counts them).
-    final client = ref.watch(transmissionClientForProvider(instance.id));
-    // Two hops on a cold client: the 409 handshake, then the real call, so
-    // this gets the same headroom as qBittorrent's login-then-version pair.
-    return _versionOrNull(
-      client.version,
-      timeout: const Duration(seconds: 8),
-      close: () {},
-    );
-  }
 
-  if (service == ServiceKey.nginxProxyManager) {
-    final client = NpmClient(
-      url: reach.url,
-      identity: instance.username.isEmpty ? null : instance.username,
-      secret: instance.credential.isEmpty ? null : instance.credential,
-      certFingerprint: reach.pin,
-      accessHeaders: reach.access.headers(),
-    );
-    // `GET /api/` is unauthenticated, so on its own it read a wrong password
-    // as answering. The token exchange is what proves the account, and it is
-    // paid once per probe: this provider is keyed on the connection's own
-    // fields, so it re-runs when this connection changes or is re-checked, not
-    // on every settings write.
-    return _versionOrNull(
-      client.checkCredentialAndVersion,
-      timeout: const Duration(seconds: 8),
-      close: client.close,
-    );
-  }
 
   if (service == ServiceKey.unraid) {
     final client = UnraidClient(

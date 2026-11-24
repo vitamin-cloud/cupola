@@ -11,7 +11,6 @@ import 'package:cupola/core/utils/url_utils.dart';
 import 'package:cupola/features/settings/domain/connection_reach.dart';
 import 'package:cupola/features/settings/domain/probe_identity.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/transmission/data/transmission_client.dart';
 
 /// Whether [reach] answered as [service] within [timeout]: the route probe's
 /// question, asked of each of a connection's two addresses.
@@ -89,12 +88,6 @@ KnockPlan? knockPlanOf(ServiceKey service, String url) => switch (service) {
     '/emby/System/Info/Public',
     (answer) => _identifies(ServiceKey.emby, answer),
   ),
-  // Tracearr's keyless health route: it names no version, and its own parts
-  // (`db`, `redis`, `timescale`) are what tell it from a bare `status: ok`.
-  ServiceKey.tracearr => KnockPlan(
-    '/health',
-    (answer) => _identifies(ServiceKey.tracearr, answer),
-  ),
   ServiceKey.plex => KnockPlan(
     '/identity',
     (answer) =>
@@ -102,42 +95,12 @@ KnockPlan? knockPlanOf(ServiceKey service, String url) => switch (service) {
         (answer.status == 200 && answer.body.contains('<MediaContainer')),
     headers: const {'Accept': 'application/json'},
   ),
-  ServiceKey.sabnzbd => KnockPlan(
-    '/api',
-    (answer) => _identifies(ServiceKey.sabnzbd, answer),
-    query: const {'mode': 'version', 'output': 'json'},
-  ),
-  ServiceKey.nginxProxyManager => KnockPlan(
-    '/api/',
-    (answer) => _identifies(ServiceKey.nginxProxyManager, answer),
-  ),
   // qBittorrent answers its version, or `Forbidden` to a caller not signed
   // in: either is qBittorrent.
   ServiceKey.qbittorrent => KnockPlan('/api/v2/app/version', (answer) {
     final text = answer.body.trim();
     return (answer.status == 200 && RegExp(r'^v\d').hasMatch(text)) ||
         (answer.status == 403 && text == 'Forbidden');
-  }),
-  // Transmission asks for its session id (409), or for its password (401,
-  // in its own realm), at the endpoint its client resolves.
-  ServiceKey.transmission => KnockPlan(
-    _onOrigin(url, TransmissionClient.resolveRpcPath(url)),
-    (answer) =>
-        (answer.status == 409 &&
-            _header(answer, TransmissionClient.sessionIdHeader) != null) ||
-        (answer.status == 401 &&
-            (_header(answer, 'www-authenticate') ?? '').contains(
-              'Transmission',
-            )),
-  ),
-  // NZBGet asks for its password in its own realm, or answers JSON-RPC.
-  ServiceKey.nzbget => KnockPlan('/jsonrpc', (answer) {
-    final realm = _header(answer, 'www-authenticate') ?? '';
-    final server = (_header(answer, 'server') ?? '').toLowerCase();
-    final json = _json(answer);
-    return (answer.status == 401 && realm.contains('NZBGet')) ||
-        server.startsWith('nzbget') ||
-        (json is Map && json.containsKey('version'));
   }),
   // Dockge's own page names it in its title. Its Socket.IO handshake would
   // open without signing in too, but so does any Socket.IO server's
@@ -366,16 +329,4 @@ String? _header(KnockAnswer answer, String name) {
     if (key.toLowerCase() == lower && value.isNotEmpty) return value.join(',');
   }
   return null;
-}
-
-/// [path], an absolute path from [url]'s origin, as a whole URL.
-String _onOrigin(String url, String path) {
-  final uri = Uri.tryParse(url);
-  if (uri == null || uri.host.isEmpty) return path;
-  return Uri(
-    scheme: uri.scheme,
-    host: uri.host,
-    port: uri.hasPort ? uri.port : null,
-    path: path,
-  ).toString();
 }

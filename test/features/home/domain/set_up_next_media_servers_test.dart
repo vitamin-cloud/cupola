@@ -12,7 +12,6 @@ void main() {
 
   const rest = {
     ServiceKey.seerr,
-    ServiceKey.transmission,
     ServiceKey.radarr,
     ServiceKey.sonarr,
     ServiceKey.bazarr,

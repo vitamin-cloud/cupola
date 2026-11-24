@@ -102,15 +102,10 @@ class LabEndpoints {
     // the Host the app sends; read directly on another published port (see
     // docker-compose.testlab.yml), with the Host its WebUI expects.
     ServiceKey.qbittorrent: (proxy: 8080, direct: 18080),
-    ServiceKey.transmission: (proxy: 29091, direct: 9091),
-    ServiceKey.sabnzbd: (proxy: 28082, direct: 8082),
-    ServiceKey.nzbget: (proxy: 26789, direct: 6789),
     ServiceKey.jellyfin: (proxy: 28096, direct: 8096),
     ServiceKey.emby: (proxy: 28098, direct: 8097),
-    ServiceKey.tracearr: (proxy: 23000, direct: 3010),
     ServiceKey.plex: (proxy: 23240, direct: 32400),
     ServiceKey.dockge: (proxy: 25001, direct: 5001),
-    ServiceKey.nginxProxyManager: (proxy: 28181, direct: 8181),
     ServiceKey.truenas: (proxy: 28460, direct: 8460),
     ServiceKey.unraid: (proxy: 28480, direct: 8480),
   };
@@ -430,7 +425,6 @@ class Lab {
     ServiceKey.jellyfin: 'CUPOLA_TESTLAB_JELLYFIN_TOKEN',
     ServiceKey.emby: 'CUPOLA_TESTLAB_EMBY_TOKEN',
     ServiceKey.plex: 'CUPOLA_TESTLAB_PLEX_TOKEN',
-    ServiceKey.tracearr: 'CUPOLA_TESTLAB_TRACEARR_KEY',
   };
 
   /// The names the bootstrap gave the user a key-only server is read as. An
@@ -445,18 +439,6 @@ class Lab {
     ServiceKey.qbittorrent: (
       user: 'CUPOLA_TESTLAB_QBITTORRENT_USERNAME',
       password: 'CUPOLA_TESTLAB_QBITTORRENT_PASSWORD',
-    ),
-    ServiceKey.transmission: (
-      user: 'CUPOLA_TESTLAB_TRANSMISSION_USERNAME',
-      password: 'CUPOLA_TESTLAB_TRANSMISSION_PASSWORD',
-    ),
-    ServiceKey.nzbget: (
-      user: 'CUPOLA_TESTLAB_NZBGET_USERNAME',
-      password: 'CUPOLA_TESTLAB_NZBGET_PASSWORD',
-    ),
-    ServiceKey.nginxProxyManager: (
-      user: 'CUPOLA_TESTLAB_NPM_USERNAME',
-      password: 'CUPOLA_TESTLAB_NPM_PASSWORD',
     ),
     ServiceKey.dockge: (
       user: 'CUPOLA_TESTLAB_DOCKGE_USERNAME',

@@ -1,7 +1,10 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:cupola/core/widgets/glass_app_bar.dart';
+import 'package:cupola/core/app_spacing.dart';
+import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/widgets/library_selection.dart';
 import 'package:cupola/core/widgets/service_tab_bar.dart';
 import 'package:cupola/features/services/domain/service_tab.dart';
@@ -99,18 +102,24 @@ class ServiceTabScaffold extends StatelessWidget {
           // Steps aside with the band while a library selects: a tab cannot
           // be switched from under a selection.
           child: LibrarySelectionHide(
-            child: GlassSurface(
-              child: SafeArea(
-                bottom: false,
-                // The band above already consumed the top inset, and this widget
-                // has now been offset past it: consuming it a second time here
-                // would push the bar a status bar below where the content
-                // reserves it.
-                top: false,
-                child: ServiceTabBar(
-                  service: service,
-                  current: tab,
-                  onSelected: (next) => _go(context, next),
+            child: SafeArea(
+              bottom: false,
+              // The band above already consumed the top inset, and this widget
+              // has now been offset past it: consuming it a second time here
+              // would push the bar a status bar below where the content
+              // reserves it.
+              top: false,
+              // This fork: the tabs ride a frosted slab, like the Overview's
+              // cards, instead of a strip of the room painted over the page.
+              // The room (and the house photo) stays behind everything.
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: FrostedTabSlab(
+                  child: ServiceTabBar(
+                    service: service,
+                    current: tab,
+                    onSelected: (next) => _go(context, next),
+                  ),
                 ),
               ),
             ),
@@ -135,5 +144,38 @@ class ServiceTabScaffold extends StatelessWidget {
     // from inside one of a service's tabs it finds that *service's* shell and
     // not the app's four-branch one.
     StatefulNavigationShell.of(context).goBranch(index);
+  }
+}
+
+/// The frosted slab under a service's tabs: what passes beneath is blurred,
+/// then tinted with the room's slab colour, the surface the Overview's cards
+/// are drawn on, inside the same hairline.
+class FrostedTabSlab extends StatelessWidget {
+  const FrostedTabSlab({super.key, required this.child});
+
+  final Widget child;
+
+  /// How much of the slab colour covers the blur: enough that the labels read
+  /// as on a card, little enough that the room shows through as glass.
+  static const double tint = 0.72;
+
+  @override
+  Widget build(BuildContext context) {
+    final room = CupolaRoom.of(context);
+    final radius = BorderRadius.circular(ServiceTabBar.height / 2);
+    return ClipRRect(
+      borderRadius: radius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: room.slab.withValues(alpha: tint),
+            borderRadius: radius,
+            border: Border.all(color: room.hair),
+          ),
+          child: child,
+        ),
+      ),
+    );
   }
 }

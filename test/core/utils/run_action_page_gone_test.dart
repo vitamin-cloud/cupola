@@ -8,36 +8,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cupola/features/dockge/data/dockge_client.dart';
 import 'package:cupola/features/dockge/presentation/dockge_actions.dart';
 import 'package:cupola/features/dockge/presentation/dockge_provider.dart';
-import 'package:cupola/features/npm/data/npm_client.dart';
-import 'package:cupola/features/npm/domain/models/npm_models.dart';
-import 'package:cupola/features/npm/presentation/npm_actions.dart';
-import 'package:cupola/features/npm/presentation/npm_provider.dart';
-import 'package:cupola/features/nzbget/data/nzbget_client.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_actions.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_provider.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_service.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_actions.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_provider.dart';
-import 'package:cupola/features/sabnzbd/data/sabnzbd_client.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_actions.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
-import 'package:cupola/features/transmission/data/transmission_client.dart';
-import 'package:cupola/features/transmission/presentation/transmission_actions.dart';
-import 'package:cupola/features/transmission/presentation/transmission_provider.dart';
 
 class _FakeDockge extends Fake implements DockgeClient {}
 
-class _FakeNpm extends Fake implements NpmClient {}
-
-class _FakeNzbget extends Fake implements NzbgetClient {}
-
 class _FakeQbittorrent extends Fake implements QbittorrentService {}
-
-class _FakeSabnzbd extends Fake implements SabnzbdClient {}
-
-class _FakeTransmission extends Fake implements TransmissionClient {}
 
 typedef _Run =
     Future<bool> Function(
@@ -77,69 +56,11 @@ final _wrappers = <String, _Wrapper>{
     says: true,
     rereadsOnFailure: true,
   ),
-  'NPM': (
-    overrides: [npmClientProvider.overrideWith((ref) => _FakeNpm())],
-    run: (context, ref, body, stale) => runNpmAction(
-      context,
-      ref,
-      resource: NpmResource.certificates,
-      action: (_) => body(),
-      successMessage: 'Finished',
-      failureMessage: 'Could not finish',
-      invalidate: [stale],
-    ),
-    says: true,
-    rereadsOnFailure: true,
-  ),
   'qBittorrent': (
     overrides: [
       qbittorrentServiceProvider.overrideWith((ref) => _FakeQbittorrent()),
     ],
     run: (context, ref, body, stale) => runTorrentAction(
-      context,
-      ref,
-      action: (_) => body(),
-      successMessage: 'Finished',
-      failureMessage: 'Could not finish',
-      invalidate: [stale],
-    ),
-    says: true,
-    rereadsOnFailure: true,
-  ),
-  'SABnzbd': (
-    overrides: [sabnzbdClientProvider.overrideWith((ref) => _FakeSabnzbd())],
-    run: (context, ref, body, stale) => runSabnzbdAction(
-      context,
-      ref,
-      action: (_) => body(),
-      successMessage: 'Finished',
-      failureMessage: 'Could not finish',
-      invalidate: [stale],
-    ),
-    says: true,
-    rereadsOnFailure: true,
-  ),
-  'NZBGet': (
-    overrides: [nzbgetClientProvider.overrideWith((ref) => _FakeNzbget())],
-    run: (context, ref, body, stale) => runNzbgetAction(
-      context,
-      ref,
-      action: (_) async {
-        await body();
-        return null;
-      },
-      successMessage: 'Finished',
-      failureMessage: 'Could not finish',
-      invalidate: [stale],
-    ),
-    says: true,
-    rereadsOnFailure: true,
-  ),
-  'Transmission': (
-    overrides: [
-      transmissionClientProvider.overrideWith((ref) => _FakeTransmission()),
-    ],
-    run: (context, ref, body, stale) => runTransmissionAction(
       context,
       ref,
       action: (_) => body(),

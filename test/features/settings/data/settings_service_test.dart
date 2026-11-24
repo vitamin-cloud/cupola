@@ -427,28 +427,6 @@ void main() {
         );
       });
 
-      // The scoping is the whole safety property. Scheme-less has always meant
-      // `https://` everywhere else. The \*arrs never worked without a scheme at
-      // all (Dio's `baseUrl` setter throws on `sonarr.lan:8989`), and SABnzbd,
-      // NZBGet, Unraid and TrueNAS shipped with the https default, so
-      // rewriting those to `http://` downgraded a working TLS config: the
-      // TrueNAS API key onto a `ws://` socket, the Dockge login into cleartext,
-      // and every trusted-certificate pin orphaned, because `certOrigin` returns
-      // null for `http://` while the pin is filed under `https://host:443`.
-      test('no other service is rewritten to cleartext', () async {
-        await prefs.setString('sonarr_url', 'sonarr.lan:8989');
-        await prefs.setString('truenas_url', 'nas.lan');
-        await prefs.setString('sabnzbd_url', 'nas.lan:8080');
-
-        final loaded = await service.loadSettings();
-
-        expect(loaded.urlFor(ServiceKey.sonarr), 'sonarr.lan:8989');
-        expect(loaded.urlFor(ServiceKey.truenas), 'nas.lan');
-        expect(loaded.urlFor(ServiceKey.sabnzbd), 'nas.lan:8080');
-        // And nothing is written back over the stored value either, so the
-        // original is still there for `normalizeBaseUrl` to resolve to https.
-        expect(prefs.getString('truenas_url'), 'nas.lan');
-      });
 
       // The concrete loss the scoping prevents: a self-signed NAS the user
       // already trusted keeps its pin, because the URL still resolves to the

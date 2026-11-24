@@ -15,12 +15,8 @@ import 'package:cupola/core/lifecycle/poll_probe.dart';
 import 'package:cupola/core/status/read_clock.dart';
 import 'package:cupola/core/widgets/fault_band.dart';
 import 'package:cupola/core/widgets/service_offline_state.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_screen.dart';
-import 'package:cupola/features/npm/presentation/npm_screen.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_screen.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/transmission/presentation/transmission_screen.dart';
 import 'package:cupola/features/unraid/presentation/unraid_screen.dart';
 
 import '../../../test_helpers/profiles/profiles.dart';
@@ -36,44 +32,12 @@ typedef _Page = ({
 
 final _pages = <_Page>[
   (
-    name: 'SABnzbd',
-    service: ServiceKey.sabnzbd,
-    id: WorldIds.sabnzbd,
-    profile: Profiles.p1,
-    screen: () => const SabnzbdScreen(),
-    type: SabnzbdScreen,
-  ),
-  (
-    name: 'NZBGet',
-    service: ServiceKey.nzbget,
-    id: WorldConnections.nzbget.id,
-    profile: Profiles.p1.withConnection(WorldConnections.nzbget),
-    screen: () => const NzbgetScreen(),
-    type: NzbgetScreen,
-  ),
-  (
-    name: 'Transmission',
-    service: ServiceKey.transmission,
-    id: WorldIds.transmission,
-    profile: Profiles.p1.withConnection(WorldConnections.transmission),
-    screen: () => const TransmissionScreen(),
-    type: TransmissionScreen,
-  ),
-  (
     name: 'Unraid',
     service: ServiceKey.unraid,
     id: WorldConnections.unraid.id,
     profile: Profiles.p1.withConnection(WorldConnections.unraid),
     screen: () => const UnraidScreen.array(),
     type: UnraidScreen,
-  ),
-  (
-    name: 'Nginx Proxy Manager',
-    service: ServiceKey.nginxProxyManager,
-    id: WorldConnections.npm.id,
-    profile: Profiles.p1.withConnection(WorldConnections.npm),
-    screen: () => const NpmScreen.proxyHosts(),
-    type: NpmScreen,
   ),
 ];
 

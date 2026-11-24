@@ -46,10 +46,6 @@ import 'package:cupola/features/jellyfin/presentation/jellyfin_tab_screens.dart'
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/movies/presentation/movies_provider.dart';
 import 'package:cupola/features/movies/presentation/movies_screen.dart';
-import 'package:cupola/features/npm/presentation/npm_provider.dart';
-import 'package:cupola/features/npm/presentation/npm_screen.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_provider.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_tab_screens.dart';
 import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/plex/presentation/plex_tab_screens.dart';
 import 'package:cupola/features/prowlarr/domain/models/prowlarr_models.dart';
@@ -66,8 +62,6 @@ import 'package:cupola/features/readarr/presentation/readarr_activity_screen.dar
 import 'package:cupola/features/readarr/presentation/readarr_history_screen.dart';
 import 'package:cupola/features/readarr/presentation/readarr_library_screen.dart';
 import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_provider.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_tab_screens.dart';
 import 'package:cupola/features/services/domain/service_tab.dart';
 import 'package:cupola/features/services/presentation/service_all_screens.dart';
 import 'package:cupola/features/services/presentation/service_home_screen.dart';
@@ -77,25 +71,10 @@ import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/services/domain/service_summary.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/stream/presentation/stream_libraries_screen.dart';
-import 'package:cupola/features/tracearr/data/tracearr_client.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_history.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_page.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_stream.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_user.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_violation.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_history_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_live_provider.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_live_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_provider.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_users_screen.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_violations_screen.dart';
 import 'package:cupola/features/stream/presentation/widgets/stream_now_playing_section.dart';
-import 'package:cupola/features/transmission/presentation/transmission_provider.dart';
-import 'package:cupola/features/transmission/presentation/transmission_tab_screens.dart';
 import 'package:cupola/features/unraid/presentation/unraid_provider.dart';
 import 'package:cupola/features/unraid/presentation/unraid_screen.dart';
 
-import '../../../test_helpers/capability_overrides.dart';
 import '../../../test_helpers/fake_api_client.dart';
 import '../../../test_helpers/fake_services.dart';
 import '../../../test_helpers/settings_scope.dart';
@@ -633,101 +612,12 @@ void main() {
       expectClearsTheBar(tester, find.byType(SectionHeader));
     });
 
-    testWidgets('SABnzbd History draws its filter pills below the tab bar', (
-      tester,
-    ) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.sabnzbd,
-        tab: ServiceTab.history,
-        overrides: [sabnzbdHistoryProvider.overrideWith((ref) => _pending())],
-        child: const SabnzbdHistoryScreen(topPadding: _hostedTopPadding),
-      );
 
-      expectClearsTheBar(tester, _selectionPills);
-    });
 
-    testWidgets('SABnzbd Servers starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.sabnzbd,
-        tab: ServiceTab.servers,
-        overrides: [
-          sabnzbdServersProvider.overrideWith((ref) => _pending()),
-          sabnzbdServerStatsProvider.overrideWith((ref) => _pending()),
-        ],
-        child: const SabnzbdServersScreen(topPadding: _hostedTopPadding),
-      );
 
-      expectClearsTheBar(tester, find.byType(SectionHeader));
-    });
 
-    testWidgets('NZBGet History starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.nzbget,
-        tab: ServiceTab.history,
-        overrides: [nzbgetHistoryProvider.overrideWith((ref) => _pending())],
-        child: const NzbgetHistoryScreen(topPadding: _hostedTopPadding),
-      );
 
-      expectClearsTheBar(tester, find.byType(ListRowsShimmer));
-    });
 
-    testWidgets('NZBGet Feeds starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.nzbget,
-        tab: ServiceTab.feeds,
-        overrides: [nzbgetFeedsProvider.overrideWith((ref) => _pending())],
-        child: const NzbgetFeedsScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(ListRowsShimmer));
-    });
-
-    testWidgets('NZBGet Messages starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.nzbget,
-        tab: ServiceTab.messages,
-        overrides: [nzbgetMessagesProvider.overrideWith((ref) => _pending())],
-        child: const NzbgetMessagesScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(ListRowsShimmer));
-    });
-
-    testWidgets('Transmission Labels starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.transmission,
-        tab: ServiceTab.labels,
-        overrides: [
-          transmissionTorrentsProvider.overrideWith((ref) => _pending()),
-          transmissionSessionProvider.overrideWith((ref) => _pending()),
-        ],
-        child: const TransmissionLabelsScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(ListRowsShimmer));
-    });
-
-    testWidgets('Transmission Session starts below the tab bar', (
-      tester,
-    ) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.transmission,
-        tab: ServiceTab.session,
-        overrides: [
-          transmissionSessionProvider.overrideWith((ref) => _pending()),
-        ],
-        child: const TransmissionSessionScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(ListRowsShimmer));
-    });
   });
 
   // These five pages wrapped their body in a `SafeArea` that took the top inset
@@ -785,27 +675,6 @@ void main() {
       expectClearsTheBar(tester, find.byType(SectionHeader));
     });
 
-    testWidgets('Nginx Proxy Manager Proxy hosts starts below the tab bar', (
-      tester,
-    ) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.nginxProxyManager,
-        tab: ServiceTab.proxyHosts,
-        overrides: [
-          serviceSummaryProvider(
-            ServiceKey.nginxProxyManager,
-          ).overrideWith((ref) => _pending()),
-          npmProxyHostsProvider.overrideWith((ref) => _pending()),
-          // Answered, so the capability banner (which a probe that cannot
-          // reach a real server would draw first) is not what leads the page.
-          capabilityOverride(),
-        ],
-        child: const NpmScreen.proxyHosts(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(SectionHeader));
-    });
 
     testWidgets('Jellyfin Libraries starts below the tab bar', (tester) async {
       await pumpHosted(
@@ -1029,52 +898,6 @@ void main() {
     );
   });
 
-  group('Tracearr\'s tabs clear the glass bars', () {
-    // Every list tab of Tracearr is a `ServiceListPage` whose first read has
-    // not come back: the skeleton is the first content, and it starts below
-    // the tab bar on a notched phone.
-    final pending = _PendingTracearr();
-
-    for (final (name, tab, screen) in const <(String, ServiceTab, Widget)>[
-      (
-        'Live',
-        ServiceTab.live,
-        TracearrLiveScreen(topPadding: _hostedTopPadding),
-      ),
-      (
-        'History',
-        ServiceTab.history,
-        TracearrHistoryScreen(topPadding: _hostedTopPadding),
-      ),
-      (
-        'Users',
-        ServiceTab.users,
-        TracearrUsersScreen(topPadding: _hostedTopPadding),
-      ),
-      (
-        'Violations',
-        ServiceTab.violations,
-        TracearrViolationsScreen(topPadding: _hostedTopPadding),
-      ),
-    ]) {
-      testWidgets('Tracearr $name starts below the tab bar', (tester) async {
-        await pumpHosted(
-          tester,
-          service: ServiceKey.tracearr,
-          tab: tab,
-          overrides: [
-            tracearrClientProvider.overrideWithValue(pending),
-            tracearrLiveProvider.overrideWith(_PendingLive.new),
-            // The feed would open a stream on a client that never answers.
-            tracearrLiveFeedProvider.overrideWith((ref) {}),
-          ],
-          child: screen,
-        );
-
-        expectClearsTheBar(tester, find.byType(ListRowsShimmer));
-      });
-    }
-  });
 
   group('The media servers\' tabs clear the glass bars', () {
     testWidgets('Jellyfin Users starts below the tab bar', (tester) async {
@@ -1239,36 +1062,3 @@ class _EmptyReadarr extends ReadarrService {
 
 /// A read that never answers, so a screen stays on its loading state.
 Future<T> _pending<T>() => Completer<T>().future;
-
-/// A Tracearr whose every list read is still out.
-class _PendingTracearr extends TracearrClient {
-  _PendingTracearr()
-    : super(baseUrl: 'http://tracearr.test', apiKey: 'trr_pub_test');
-
-  @override
-  Future<TracearrPage<TracearrHistoryEntry>> getHistory({
-    String? cursor,
-    int pageSize = 25,
-    TracearrHistoryFilter filter = const TracearrHistoryFilter(),
-  }) => _pending();
-
-  @override
-  Future<TracearrPage<TracearrUser>> getUsers({
-    String? cursor,
-    int pageSize = 25,
-    bool includeRemoved = false,
-  }) => _pending();
-
-  @override
-  Future<TracearrPage<TracearrViolation>> getViolations({
-    String? cursor,
-    int pageSize = 25,
-    TracearrViolationFilter filter = const TracearrViolationFilter(),
-  }) => _pending();
-}
-
-/// Tracearr's live list that never answers, so Live shows its skeleton.
-class _PendingLive extends TracearrLiveNotifier {
-  @override
-  Future<TracearrStreams> build() => Completer<TracearrStreams>().future;
-}

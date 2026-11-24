@@ -150,15 +150,10 @@ ServiceFake serviceFakeFor(ServiceKey service) => switch (service) {
   ServiceKey.jellyfin => const JellyfinFake(),
   ServiceKey.plex => const PlexFake(),
   ServiceKey.emby => const EmbyFake(),
-  ServiceKey.tracearr => const TracearrFake(),
   ServiceKey.qbittorrent => const QbittorrentFake(),
-  ServiceKey.transmission => const TransmissionFake(),
-  ServiceKey.sabnzbd => const SabnzbdFake(),
-  ServiceKey.nzbget => const NzbgetFake(),
   ServiceKey.truenas => const TrueNasFake(),
   ServiceKey.dockge => const DockgeFake(),
   ServiceKey.unraid => const UnraidFake(),
-  ServiceKey.nginxProxyManager => const NpmFake(),
 };
 
 /// Whether [request] is [method] [path] exactly.

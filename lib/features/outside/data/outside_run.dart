@@ -30,25 +30,15 @@ import 'package:cupola/features/home/domain/home_module.dart';
 import 'package:cupola/features/media/domain/media_key.dart';
 import 'package:cupola/features/outside/data/outside_faces.dart';
 import 'package:cupola/features/outside/data/outside_shelf.dart';
-import 'package:cupola/features/outside/domain/outside_flagged.dart';
 import 'package:cupola/features/outside/domain/outside_notices.dart';
 import 'package:cupola/features/outside/domain/outside_snapshot.dart';
 import 'package:cupola/features/requests/domain/my_requests.dart';
 import 'package:cupola/features/services/domain/dashboard_decision.dart';
-import 'package:cupola/features/services/presentation/services_probe.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/route_probe.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/shell/domain/shell_audience.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_provider.dart';
-
-/// Every configured connection of Tracearr, for the Flagged read: the ones
-/// the Home reads (`watchMergeConnections`), with the name each carries once
-/// the service has two.
-final tracearrConnectionsProvider = Provider<List<MergeConnection>>(
-  (ref) => watchMergeConnections(ref, ServiceKey.tracearr),
-);
 
 /// How long a run waits for all its reads together. iOS gives a background
 /// refresh about thirty seconds, and the writing comes after: a read that has
@@ -247,19 +237,6 @@ Future<OutsideReading> readOutside(
                     (instanceId: id, request: request),
               ]);
             }(),
-          if (enabled.contains(OutsideNoticeKind.flagged) &&
-              settings.isServiceConfigured(ServiceKey.tracearr))
-            () async {
-              final read = await _readFlagged(
-                container,
-                settle,
-                now: now,
-                speak: speak,
-                since: flaggedSince,
-              );
-              notices[OutsideNoticeKind.flagged] = read.notices;
-              flaggedCursors = read.since;
-            }(),
         ]);
     }
     return (
@@ -281,87 +258,6 @@ Future<OutsideReading> readOutside(
       subscription.close();
     }
   }
-}
-
-/// What Tracearr flagged since each connection was last read, on every
-/// configured connection of it.
-///
-/// Per connection, through its own client (`tracearrClientForProvider`, so its
-/// route, access and pin), and each answering for itself: one that does not
-/// answer keeps its cursor and says nothing, and the others are read and said.
-///
-/// * A connection with **no cursor** is on its first run (Flagged just
-///   switched on, or the connection just added): it reads its newest violation
-///   to find where "now" is in Tracearr's clock, says nothing, and keeps that.
-///   Nothing that was there before is ever news.
-/// * With a cursor, and not [speak]: the app is on the screen, nothing is read.
-/// * With a cursor, and [speak]: one read `since` it, newest first, one page;
-///   what is strictly newer (and not acknowledged yet) is grouped into one
-///   notice, and the cursor moves to the newest read.
-///
-/// `notices` is null when nothing was asked or nothing answered: a read that
-/// did not come is not a violation going away. `since` is null when there was
-/// no connection to read, which keeps the stored cursors as they are.
-Future<({List<OutsideNotice>? notices, Map<String, DateTime>? since})>
-_readFlagged(
-  ProviderContainer container,
-  Future<T?> Function<T>(ProviderListenable<Future<T>> future) settle, {
-  required DateTime now,
-  required bool speak,
-  required Map<String, DateTime> since,
-}) async {
-  final connections = container.read(tracearrConnectionsProvider);
-  // Configured but with no connection to read (settings that look empty for a
-  // run, a keychain still locked): nothing was read, so there are no cursors
-  // to hand back. An empty map would be taken as "every connection is gone"
-  // and wipe the stored ones, turning the next real run into a first one that
-  // skips what came in between.
-  if (connections.isEmpty) return (notices: null, since: null);
-  final cursors = <String, DateTime>{};
-  final notices = <OutsideNotice>[];
-  var asked = 0;
-  var answered = 0;
-  await Future.wait([
-    for (final connection in connections)
-      () async {
-        final id = connection.instanceId;
-        final from = since[id];
-        if (from != null) cursors[id] = from;
-        if (from != null && !speak) return;
-        asked++;
-        if (from == null) {
-          final newest = await settle(
-            tracearrNewestViolationProvider(id).future,
-          );
-          if (newest == null) return;
-          answered++;
-          final start = flaggedStartOf(newest.items);
-          // Violations with no time to place: no cursor, so the next run is
-          // a first run again and not a read from the start of time.
-          if (start != null) cursors[id] = start;
-          return;
-        }
-        final page = await settle(
-          tracearrViolationsSinceProvider((instanceId: id, since: from)).future,
-        );
-        if (page == null) return;
-        answered++;
-        final news = flaggedFreshOf(page.items, from);
-        cursors[id] = news.cursor;
-        final notice = flaggedNotice(
-          news.fresh,
-          instanceId: id,
-          name: connection.name,
-          now: now,
-          more: page.hasMore,
-        );
-        if (notice != null) notices.add(notice);
-      }(),
-  ]);
-  return (
-    notices: asked == 0 || answered == 0 ? null : notices,
-    since: cursors,
-  );
 }
 
 ImageSource? _tmdb(String? path) {

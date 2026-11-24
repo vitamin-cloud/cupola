@@ -46,24 +46,7 @@ void main() {
     expect(row.warning, isNull);
   });
 
-  test('a stall the client confirms keeps the arr\'s message and the '
-      'swarm', () {
-    final row = join(
-      arr(fault: InFlightFault.stalled, warning: stallMessage),
-      client(ServiceKey.transmission, fault: InFlightFault.stalled),
-    );
-    expect(row.fault, InFlightFault.stalled);
-    expect(row.warning, stallMessage);
-    expect(row.swarmSeeds, 3);
-  });
 
-  test('a usenet client dates nothing, so the arr\'s stall stands', () {
-    final row = join(
-      arr(fault: InFlightFault.stalled, warning: stallMessage),
-      client(ServiceKey.sabnzbd),
-    );
-    expect(row.fault, InFlightFault.stalled);
-  });
 
   test('an import the arr refuses is never overruled', () {
     final row = join(

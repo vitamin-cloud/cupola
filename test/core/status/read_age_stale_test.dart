@@ -30,7 +30,7 @@ class _Page extends ConsumerWidget {
     onBuild();
     final age = ref.watchQueueStaleAge(
       context,
-      ServiceKey.sabnzbd,
+      ServiceKey.qbittorrent,
       underBand: underBand,
       hasQueue: hasQueue,
     );
@@ -75,11 +75,11 @@ class _HostState extends State<_Host> {
 
 void main() {
   final settings = settingsWith(
-    sabnzbdUrl: 'http://sab.test',
-    sabnzbdApiKey: 'key',
+    qbittorrentUrl: 'http://qb.test',
+    qbittorrentUsername: 'admin',
   );
-  final connection = settings.primaryOf(ServiceKey.sabnzbd)!.id;
-  final key = queueReadKey(ServiceKey.sabnzbd, connection);
+  final connection = settings.primaryOf(ServiceKey.qbittorrent)!.id;
+  final key = queueReadKey(ServiceKey.qbittorrent, connection);
   final checkId = 'read_age.stale.$key';
   final start = DateTime(2026, 10, 18, 9);
 

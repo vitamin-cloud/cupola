@@ -48,8 +48,6 @@ void main() {
   Future<(ProfileHarness, WidgetRef)> pump(WidgetTester tester) async {
     final harness = await ProfileHarness.start(
       Profiles.p1
-          .withConnection(WorldConnections.transmission)
-          .withConnection(WorldConnections.nzbget)
           .withDownloads(const [_torrent, _usenet, _drone]),
     );
     late WidgetRef captured;
@@ -98,109 +96,9 @@ void main() {
       .where((request) => request.method == 'POST')
       .toList();
 
-  testWidgets('Transmission stops and starts the torrent by its hash', (
-    tester,
-  ) async {
-    final (harness, ref) = await pump(tester);
-    final handle = (
-      client: ServiceKey.transmission,
-      instanceId: WorldIds.transmission,
-      id: _torrent.id,
-    );
 
-    expect(await write(tester, harness, ref, handle, stopped: true), isNull);
-    expect(await write(tester, harness, ref, handle, stopped: false), isNull);
 
-    // A request without the session id is the 409 handshake, which the
-    // client replays once it holds one: not a second write.
-    final calls = [
-      for (final request in writesTo(harness, WorldIds.transmission))
-        if (request.headers.containsKey('x-transmission-session-id'))
-          if (request.json case {
-            'method': String method,
-            'arguments': Map args,
-          } when method.startsWith('torrent-st'))
-            '$method ${args['ids']}',
-    ];
-    expect(calls, [
-      'torrent-stop [${_torrent.id}]',
-      'torrent-start [${_torrent.id}]',
-    ]);
-    await harness.unmount(tester);
-  });
 
-  testWidgets('SABnzbd pauses and resumes the one job, never the queue', (
-    tester,
-  ) async {
-    final (harness, ref) = await pump(tester);
-    final handle = (
-      client: ServiceKey.sabnzbd,
-      instanceId: WorldIds.sabnzbd,
-      id: _usenet.id,
-    );
-
-    expect(await write(tester, harness, ref, handle, stopped: true), isNull);
-    expect(await write(tester, harness, ref, handle, stopped: false), isNull);
-
-    final jobs = [
-      for (final request in harness.network.requestsTo(WorldIds.sabnzbd))
-        if (request.query['mode'] == 'queue' &&
-            request.query['value'] == _usenet.id)
-          request.query['name'],
-    ];
-    expect(jobs, ['pause', 'resume']);
-    final queueWide = harness.network
-        .requestsTo(WorldIds.sabnzbd)
-        .where(
-          (request) =>
-              const {'pause', 'resume'}.contains(request.query['mode']),
-        );
-    expect(queueWide, isEmpty);
-    await harness.unmount(tester);
-  });
-
-  testWidgets('NZBGet finds the job its drone id names and edits it by NZBID', (
-    tester,
-  ) async {
-    final (harness, ref) = await pump(tester);
-    final handle = (
-      client: ServiceKey.nzbget,
-      instanceId: 'nzbget',
-      id: _drone.id,
-    );
-
-    expect(await write(tester, harness, ref, handle, stopped: true), isNull);
-    expect(await write(tester, harness, ref, handle, stopped: false), isNull);
-
-    final edits = [
-      for (final request in writesTo(harness, 'nzbget'))
-        if (request.json case {'method': 'editqueue', 'params': List params})
-          '${params[0]} ${params[3]}',
-    ];
-    // The world numbers its groups by their place in `listgroups`.
-    expect(edits, ['GroupPause [1]', 'GroupResume [1]']);
-    await harness.unmount(tester);
-  });
-
-  testWidgets('NZBGet no longer listing the job is a failure, and nothing '
-      'is edited', (tester) async {
-    final (harness, ref) = await pump(tester);
-    final handle = (
-      client: ServiceKey.nzbget,
-      instanceId: 'nzbget',
-      id: 'gone0000',
-    );
-
-    final failure = await write(tester, harness, ref, handle, stopped: true);
-
-    expect(failure, isA<StateError>());
-    final edits = writesTo(
-      harness,
-      'nzbget',
-    ).where((request) => (request.json as Map)['method'] == 'editqueue');
-    expect(edits, isEmpty);
-    await harness.unmount(tester);
-  });
 
   testWidgets('a service that moves no bytes is refused before any write', (
     tester,

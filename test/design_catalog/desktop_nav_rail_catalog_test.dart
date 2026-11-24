@@ -61,7 +61,6 @@ const _services = <DesktopRailService>[
     count: null,
   ),
   (service: ServiceKey.prowlarr, tone: null, state: null, count: null),
-  (service: ServiceKey.sabnzbd, tone: null, state: null, count: null),
   (service: ServiceKey.jellyfin, tone: null, state: null, count: null),
   (
     service: ServiceKey.truenas,

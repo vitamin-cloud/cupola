@@ -21,8 +21,6 @@ import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_provider.dart';
-import 'package:cupola/features/sabnzbd/data/sabnzbd_client.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_provider.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -249,27 +247,6 @@ void main() {
       },
     );
 
-    test(
-      'SABnzbd refuses in its 200 body, and its keyless version still answers',
-      () async {
-        final harness = await ProfileHarness.start(
-          Profiles.p1.withBehaviour(
-            WorldIds.sabnzbd,
-            ConnectionBehaviour.refusesKey,
-          ),
-        );
-        final container = harness.container();
-        final client = container.read(sabnzbdClientProvider);
-
-        expect(await client.getVersion(), isNotEmpty);
-        try {
-          await client.getQueue();
-          fail('expected a refusal');
-        } on SabnzbdException catch (error) {
-          expect(error.reason, ServiceFailureReason.unauthorized);
-        }
-      },
-    );
 
     test('Jellyfin answers its public probe and refuses the rest', () async {
       final harness = await ProfileHarness.start(
@@ -371,17 +348,6 @@ void main() {
       },
     );
 
-    test("NPM's capability probe reads view-only", () async {
-      final harness = await ProfileHarness.start(
-        Profiles.p1.withConnection(
-          WorldConnections.npm.withBehaviour(ConnectionBehaviour.readOnly),
-        ),
-      );
-      final grant = await harness.container().read(
-        connectionCapabilityProvider('npm').future,
-      );
-      expect(grant.scope, CapabilityScope.readOnly);
-    });
 
     test("Unraid's capability probe reads read-only", () async {
       final harness = await ProfileHarness.start(
@@ -416,23 +382,6 @@ void main() {
   });
 
   group('homeOnly', () {
-    test('does not answer away, and answers at home', () async {
-      final away = await ProfileHarness.start(Profiles.p7);
-      expect(
-        await _failureOf(
-          () => away.container().read(sabnzbdClientProvider).getQueue(),
-        ),
-        ServiceFailureReason.unreachable,
-      );
-
-      final home = await ProfileHarness.start(
-        Profiles.p7.at(NetworkPlace.home),
-      );
-      expect(
-        (await home.container().read(sabnzbdClientProvider).getQueue()).slots,
-        isNotEmpty,
-      );
-    });
   });
 
   group('knownThroughAnother (P5)', () {

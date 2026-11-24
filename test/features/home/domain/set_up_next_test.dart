@@ -36,7 +36,6 @@ void main() {
     final names = titles({
       ServiceKey.seerr,
       ServiceKey.plex,
-      ServiceKey.sabnzbd,
       ServiceKey.radarr,
       ServiceKey.sonarr,
     });
@@ -49,7 +48,6 @@ void main() {
         {
           ServiceKey.seerr,
           ServiceKey.jellyfin,
-          ServiceKey.transmission,
           ServiceKey.radarr,
           ServiceKey.sonarr,
           ServiceKey.bazarr,

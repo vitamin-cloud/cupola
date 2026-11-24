@@ -32,11 +32,9 @@ final _settled = {
     ServiceKey.bazarr,
     ServiceKey.qbittorrent,
     ServiceKey.prowlarr,
-    ServiceKey.sabnzbd,
     ServiceKey.jellyfin,
     ServiceKey.plex,
     ServiceKey.truenas,
-    ServiceKey.nginxProxyManager,
   ])
     key: ServiceRingState.connected,
   ServiceKey.dockge: ServiceRingState.silent,

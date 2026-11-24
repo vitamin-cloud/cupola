@@ -9,7 +9,6 @@ import 'package:cupola/features/qbittorrent/presentation/qbittorrent_actions.dar
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_provider.dart';
 import 'package:cupola/features/services/domain/source_coverage.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
-import 'package:cupola/features/transmission/presentation/transmission_provider.dart';
 
 class _Qb extends Fake implements QbittorrentService {}
 
@@ -64,22 +63,6 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('a write that drops a client list reads the queue again', (
-    tester,
-  ) async {
-    await pump(
-      tester,
-      (context, ref) => runServiceAction(
-        context,
-        ref,
-        action: () async {},
-        failureMessage: 'Could not pause',
-        invalidate: [transmissionTorrentsProvider],
-      ),
-    );
-
-    expect(queueReads, 2);
-  });
 
   testWidgets('a write that drops nothing of a client leaves it alone', (
     tester,
@@ -98,20 +81,6 @@ void main() {
     expect(queueReads, 1);
   });
 
-  testWidgets('a write that failed reads nothing again', (tester) async {
-    await pump(
-      tester,
-      (context, ref) => runServiceAction(
-        context,
-        ref,
-        action: () async => throw Exception('refused'),
-        failureMessage: 'Could not pause',
-        invalidate: [transmissionTorrentsProvider],
-      ),
-    );
-
-    expect(queueReads, 1);
-  });
 
   testWidgets('a qBittorrent pause from its page reads the queue again', (
     tester,

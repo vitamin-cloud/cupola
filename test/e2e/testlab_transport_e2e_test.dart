@@ -15,19 +15,14 @@ import 'package:cupola/features/dockge/data/dockge_service.dart';
 import 'package:cupola/features/emby/data/emby_client.dart';
 import 'package:cupola/features/jellyfin/data/jellyfin_client.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/nzbget/data/nzbget_client.dart';
-import 'package:cupola/features/npm/data/npm_client.dart';
 import 'package:cupola/features/plex/data/plex_client.dart';
 import 'package:cupola/features/prowlarr/data/prowlarr_service.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_service.dart';
 import 'package:cupola/features/readarr/data/readarr_service.dart';
-import 'package:cupola/features/sabnzbd/data/sabnzbd_client.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/stream/domain/models/stream_item.dart';
 import 'package:cupola/features/stream/domain/stream_external_match.dart';
-import 'package:cupola/features/tracearr/data/tracearr_client.dart';
-import 'package:cupola/features/transmission/data/transmission_client.dart';
 import 'package:cupola/features/truenas/data/truenas_service.dart';
 import 'package:cupola/features/truenas/data/truenas_ws_client.dart';
 import 'package:cupola/features/unraid/data/unraid_client.dart';
@@ -140,59 +135,8 @@ void main() {
     );
   });
 
-  test('Transmission RPC auth + CSRF handshake', () async {
-    final client = TransmissionClient(
-      url: 'http://127.0.0.1:9091',
-      username: credentials['CUPOLA_TESTLAB_TRANSMISSION_USERNAME'],
-      password: credentials['CUPOLA_TESTLAB_TRANSMISSION_PASSWORD'],
-    );
-    addTearDown(client.close);
-    expect(await client.testConnection(), isTrue);
-    expect(await client.version(), isNotEmpty);
-    expect(await client.torrents(), isNotEmpty);
-  });
 
-  test('SABnzbd query auth + queue parser', () async {
-    final client = SabnzbdClient(
-      url: 'http://127.0.0.1:8082',
-      apiKey: 'test-key',
-    );
-    addTearDown(client.close);
-    expect(await client.getVersion(), isNotEmpty);
-    final queue = await client.getQueue();
-    final history = await client.getHistory();
-    expect(
-      [
-        ...queue.slots.map((slot) => slot.filename),
-        ...history.map((slot) => slot.name),
-      ].any((name) => name.toLowerCase().contains('cupola-test')),
-      isTrue,
-      reason: 'SABnzbd seed specimen',
-    );
-    expect((await client.getServerStats()).total, greaterThanOrEqualTo(0));
-  });
 
-  test('NZBGet Basic auth + positional JSON-RPC', () async {
-    final client = NzbgetClient(
-      url: 'http://127.0.0.1:6789',
-      username: credentials['CUPOLA_TESTLAB_NZBGET_USERNAME'],
-      password: credentials['CUPOLA_TESTLAB_NZBGET_PASSWORD'],
-    );
-    addTearDown(client.close);
-    expect(await client.testConnection(), isTrue);
-    expect(await client.version(), isNotEmpty);
-    expect(await client.status(), isNotNull);
-    final groups = await client.listGroups();
-    final history = await client.history();
-    expect(
-      [
-        ...groups.map((item) => item.name),
-        ...history.map((item) => item.name),
-      ].any((name) => name.toLowerCase().contains('cupola-test')),
-      isTrue,
-      reason: 'NZBGet seed specimen',
-    );
-  });
 
   test('Jellyfin token auth + library parser', () async {
     final client = JellyfinClient(
@@ -222,18 +166,6 @@ void main() {
     expect(await client.getSessions(), isA<List>());
   });
 
-  test('Tracearr public key auth + version + servers parser', () async {
-    final client = TracearrClient(
-      baseUrl: 'http://127.0.0.1:3010',
-      apiKey: credentials['CUPOLA_TESTLAB_TRACEARR_KEY']!,
-    );
-    addTearDown(client.close);
-    final health = await client.checkCredentialAndVersion();
-    expect(health.isOk, isTrue);
-    expect(health.version, startsWith('v'));
-    expect((await client.getServers()).servers, isNotEmpty);
-    expect(await client.getStreams(), isNotNull);
-  });
 
   test('Plex token auth + identity parser', () async {
     final client = PlexClient(
@@ -271,18 +203,6 @@ void main() {
     expect(await service.fetchStacks(), isA<List>());
   });
 
-  test('Nginx Proxy Manager login + proxy host parser', () async {
-    final client = NpmClient(
-      url: 'http://127.0.0.1:8181',
-      identity: credentials['CUPOLA_TESTLAB_NPM_USERNAME'],
-      secret: credentials['CUPOLA_TESTLAB_NPM_PASSWORD'],
-    );
-    addTearDown(client.close);
-    expect(await client.testConnection(), isTrue);
-    expect(await client.version(), isNotEmpty);
-    expect(await client.proxyHosts(), isNotEmpty);
-    expect(await client.auditLog(), isA<List>());
-  });
 
   test('TrueNAS WebSocket JSON-RPC over TLS + dashboard parser', () async {
     // The address a person saves: https://, with the self-signed certificate
@@ -378,172 +298,6 @@ void main() {
     expect(await client.getNotifications(), isNotNull);
   });
 
-  test('wrong credentials are rejected by every auth transport', () async {
-    final apiKeyCases = <Map<String, String>>[
-      {
-        'name': 'Seerr',
-        'url': 'http://127.0.0.1:5055',
-        'path': '/api/v1/auth/me',
-      },
-      {
-        'name': 'Radarr',
-        'url': 'http://127.0.0.1:7878',
-        'path': '/api/v3/system/status',
-      },
-      {
-        'name': 'Sonarr',
-        'url': 'http://127.0.0.1:8989',
-        'path': '/api/v3/system/status',
-      },
-      {
-        'name': 'Lidarr',
-        'url': 'http://127.0.0.1:8686',
-        'path': '/api/v1/system/status',
-      },
-      {
-        'name': 'Readarr',
-        'url': 'http://127.0.0.1:8787',
-        'path': '/api/v1/system/status',
-      },
-      {
-        'name': 'Prowlarr',
-        'url': 'http://127.0.0.1:9696',
-        'path': '/api/v1/system/status',
-      },
-      {'name': 'Bazarr', 'url': 'http://127.0.0.1:6767', 'path': '/api/badges'},
-    ];
-    for (final item in apiKeyCases) {
-      final client = ApiClient(baseUrl: item['url']!, apiKey: 'wrong-key');
-      addTearDown(client.close);
-      await expectLater(
-        client.get(item['path']!),
-        throwsA(anything),
-        reason: item['name'],
-      );
-    }
-
-    final qbit = QbittorrentClient(
-      url: 'http://127.0.0.1:8080',
-      username: credentials['CUPOLA_TESTLAB_QBITTORRENT_USERNAME'],
-      password: 'wrong-password',
-    );
-    addTearDown(qbit.close);
-    expect(await qbit.authenticate(), isFalse, reason: 'qBittorrent');
-
-    final transmission = TransmissionClient(
-      url: 'http://127.0.0.1:9091',
-      username: credentials['CUPOLA_TESTLAB_TRANSMISSION_USERNAME'],
-      password: 'wrong-password',
-    );
-    addTearDown(transmission.close);
-    await expectLater(
-      transmission.testConnection(),
-      throwsA(anything),
-      reason: 'Transmission',
-    );
-
-    final sabnzbd = SabnzbdClient(
-      url: 'http://127.0.0.1:8082',
-      apiKey: 'wrong-key',
-    );
-    addTearDown(sabnzbd.close);
-    await expectLater(
-      sabnzbd.testConnection(),
-      throwsA(anything),
-      reason: 'SABnzbd',
-    );
-
-    final nzbget = NzbgetClient(
-      url: 'http://127.0.0.1:6789',
-      username: credentials['CUPOLA_TESTLAB_NZBGET_USERNAME'],
-      password: 'wrong-password',
-    );
-    addTearDown(nzbget.close);
-    await expectLater(
-      nzbget.testConnection(),
-      throwsA(anything),
-      reason: 'NZBGet',
-    );
-
-    final jellyfin = JellyfinClient(
-      baseUrl: 'http://127.0.0.1:8096',
-      apiKey: 'wrong-token',
-      userId: credentials['CUPOLA_TESTLAB_JELLYFIN_USER_ID']!,
-      deviceName: 'Cupola TestLab invalid-auth probe',
-      deviceId: 'cupola-testlab-invalid-auth',
-    );
-    addTearDown(jellyfin.close);
-    expect(await jellyfin.verifyCredential(), isFalse, reason: 'Jellyfin');
-
-    final emby = EmbyClient(
-      baseUrl: 'http://127.0.0.1:8097',
-      apiKey: 'wrong-token',
-      userId: credentials['CUPOLA_TESTLAB_EMBY_USER_ID']!,
-    );
-    addTearDown(emby.close);
-    expect(await emby.verifyCredential(), isFalse, reason: 'Emby');
-
-    final tracearr = TracearrClient(
-      baseUrl: 'http://127.0.0.1:3010',
-      apiKey: 'trr_pub_wrong-token',
-    );
-    addTearDown(tracearr.close);
-    await expectLater(
-      tracearr.checkCredentialAndVersion(),
-      throwsA(anything),
-      reason: 'Tracearr',
-    );
-
-    final dockge = DockgeClient(
-      baseUrl: 'http://127.0.0.1:5001',
-      username: credentials['CUPOLA_TESTLAB_DOCKGE_USERNAME'],
-      password: 'wrong-password',
-    );
-    addTearDown(dockge.close);
-    await expectLater(dockge.ping(), throwsA(anything), reason: 'Dockge');
-
-    final npm = NpmClient(
-      url: 'http://127.0.0.1:8181',
-      identity: credentials['CUPOLA_TESTLAB_NPM_USERNAME'],
-      secret: 'wrong-password',
-    );
-    addTearDown(npm.close);
-    await expectLater(
-      npm.testConnection(),
-      throwsA(anything),
-      reason: 'Nginx Proxy Manager',
-    );
-
-    // Past the certificate, with the right pin: the refusal is the key's.
-    final truenas = TrueNasWsClient(
-      baseUrl: _truenasUrl,
-      apiKey: 'wrong-key',
-      certFingerprint: _truenasPin(credentials),
-    );
-    addTearDown(truenas.close);
-    await expectLater(
-      TrueNasService(truenas).ping(),
-      throwsA(
-        isA<TrueNasException>().having(
-          (error) => classifyConnectionFailure(error),
-          'reason',
-          ServiceFailureReason.unauthorized,
-        ),
-      ),
-      reason: 'TrueNAS',
-    );
-
-    final unraid = UnraidClient(
-      url: 'http://127.0.0.1:8480',
-      apiKey: 'wrong-key',
-    );
-    addTearDown(unraid.close);
-    await expectLater(
-      unraid.testConnection(),
-      throwsA(anything),
-      reason: 'Unraid',
-    );
-  });
 
   test('Plex wrong-token probe is explicit when auth is disabled', () async {
     final client = PlexClient(

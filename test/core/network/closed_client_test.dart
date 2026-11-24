@@ -26,19 +26,15 @@ import 'package:cupola/features/dockge/presentation/dockge_provider.dart';
 import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/music/data/lidarr_service.dart';
-import 'package:cupola/features/npm/presentation/npm_provider.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_provider.dart';
 import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client_provider.dart';
 import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_provider.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/connection_access.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/service_not_configured.dart';
-import 'package:cupola/features/transmission/presentation/transmission_provider.dart';
 import 'package:cupola/features/truenas/presentation/truenas_provider.dart';
 import 'package:cupola/features/unraid/presentation/unraid_provider.dart';
 
@@ -48,10 +44,7 @@ import '../../test_helpers/profiles/profiles.dart';
 final _everyService = Profiles.p1
     .withConnection(WorldConnections.plex)
     .withConnection(WorldConnections.readarr)
-    .withConnection(WorldConnections.transmission)
-    .withConnection(WorldConnections.nzbget)
-    .withConnection(WorldConnections.unraid)
-    .withConnection(WorldConnections.npm);
+    .withConnection(WorldConnections.unraid);
 
 /// A gateway header added on the connection's form: a change of transport
 /// that rebuilds the client, and that the world's servers ignore.
@@ -147,24 +140,6 @@ final _dioClients = <_Holder<Object>>[
     (c) => (c as dynamic).getVersion() as Future<Object?>,
   ),
   _Holder(
-    'Transmission',
-    WorldIds.transmission,
-    transmissionClientProvider,
-    (c) => (c as dynamic).version() as Future<Object?>,
-  ),
-  _Holder(
-    'SABnzbd',
-    WorldIds.sabnzbd,
-    sabnzbdClientProvider,
-    (c) => (c as dynamic).getVersion() as Future<Object?>,
-  ),
-  _Holder(
-    'NZBGet',
-    WorldConnections.nzbget.id,
-    nzbgetClientProvider,
-    (c) => (c as dynamic).version() as Future<Object?>,
-  ),
-  _Holder(
     'Jellyfin',
     WorldIds.jellyfin,
     jellyfinClientProvider,
@@ -175,12 +150,6 @@ final _dioClients = <_Holder<Object>>[
     WorldIds.plex,
     plexClientProvider,
     (c) => (c as dynamic).getLibrariesOrThrow() as Future<Object?>,
-  ),
-  _Holder(
-    'Nginx Proxy Manager',
-    WorldConnections.npm.id,
-    npmClientProvider,
-    (c) => (c as dynamic).version() as Future<Object?>,
   ),
   _Holder(
     'Unraid',

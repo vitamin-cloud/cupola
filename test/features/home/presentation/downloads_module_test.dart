@@ -179,36 +179,6 @@ void main() {
     expect(find.text('Keep waiting'), findsNothing);
   });
 
-  testWidgets('a torrent no arr asked for: qBittorrent asks for peers again, '
-      'another client opens', (tester) async {
-    await pump(
-      tester,
-      _inFlight(
-        faults: [
-          _item(
-            'ubuntu-24.04.iso',
-            service: ServiceKey.qbittorrent,
-            id: 'abc',
-            fault: InFlightFault.stalled,
-            client: ServiceKey.qbittorrent,
-          ),
-          ServiceQueueItem(
-            service: ServiceKey.transmission,
-            id: 'def',
-            title: 'debian-13.iso',
-            progress: 0.2,
-            clientLabel: 'Transmission',
-            fault: InFlightFault.stalled,
-            clientService: ServiceKey.transmission,
-          ),
-        ],
-      ),
-      configured: const [ServiceKey.qbittorrent, ServiceKey.transmission],
-    );
-    expect(find.text('Look for peers again'), findsOne);
-    expect(find.text('Open in Transmission'), findsOne);
-    expect(find.text('Try another download'), findsNothing);
-  });
 
   testWidgets('without a download client the speed is not guessed, and the '
       'module says where it comes from', (tester) async {

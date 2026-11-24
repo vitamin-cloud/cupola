@@ -190,7 +190,6 @@ SettingsModel settingsWith({
   settings = _api(settings, ServiceKey.truenas, truenasUrl, truenasApiKey);
   settings = _api(settings, ServiceKey.prowlarr, prowlarrUrl, prowlarrApiKey);
   settings = _api(settings, ServiceKey.readarr, readarrUrl, readarrApiKey);
-  settings = _api(settings, ServiceKey.sabnzbd, sabnzbdUrl, sabnzbdApiKey);
   settings = _api(settings, ServiceKey.unraid, unraidUrl, unraidApiKey);
   settings = _api(settings, ServiceKey.jellyfin, jellyfinUrl, jellyfinApiKey);
   settings = _api(settings, ServiceKey.emby, embyUrl, embyApiKey);
@@ -203,31 +202,10 @@ SettingsModel settingsWith({
   );
   settings = _cred(
     settings,
-    ServiceKey.transmission,
-    transmissionUrl,
-    transmissionUsername,
-    transmissionPassword,
-  );
-  settings = _cred(
-    settings,
-    ServiceKey.nginxProxyManager,
-    npmUrl,
-    npmUsername,
-    npmPassword,
-  );
-  settings = _cred(
-    settings,
     ServiceKey.dockge,
     dockgeUrl,
     dockgeUsername,
     dockgePassword,
-  );
-  settings = _cred(
-    settings,
-    ServiceKey.nzbget,
-    nzbgetUrl,
-    nzbgetUsername,
-    nzbgetPassword,
   );
   settings = _api(settings, ServiceKey.plex, plexUrl, plexToken);
   if (jellyfinUserId.isNotEmpty) {

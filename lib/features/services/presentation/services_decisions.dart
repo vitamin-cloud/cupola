@@ -22,8 +22,6 @@ import 'package:cupola/features/music/data/lidarr_service.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/features/discover/domain/models/seerr_request.dart';
-import 'package:cupola/features/npm/domain/models/npm_models.dart';
-import 'package:cupola/features/npm/presentation/npm_provider.dart';
 import 'package:cupola/features/prowlarr/domain/models/prowlarr_models.dart';
 import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/services/presentation/kept_waiting_provider.dart';
@@ -49,9 +47,6 @@ import 'package:cupola/features/truenas/presentation/truenas_provider.dart';
 import 'package:cupola/features/services/presentation/services_history.dart';
 import 'package:cupola/features/services/presentation/services_probe.dart';
 import 'package:cupola/features/services/presentation/services_queue.dart';
-import 'package:cupola/features/tracearr/domain/models/tracearr_enums.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_present.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_provider.dart';
 
 /// Decisions, and which sources answered for them.
 typedef DashboardDecisions = ({
@@ -89,12 +84,6 @@ final dashboardDecisionSourceProvider =
             ref,
             ServiceKey.prowlarr,
             (source) => _failingIndexerDecisions(ref, source),
-          );
-        case DecisionSource.certificates:
-          return _decisionsOnEveryConnection(
-            ref,
-            ServiceKey.nginxProxyManager,
-            (source) => _expiringCertificateDecisions(ref, source),
           );
         case DecisionSource.queue:
           // Not gated on one service: the faults come from whichever of eight
@@ -161,15 +150,6 @@ final dashboardDecisionSourceProvider =
           // problems reported on the second one are the operator's as much
           // as the first's.
           return _reportedProblemDecisions(ref);
-        case DecisionSource.violations:
-          // Every Tracearr, each answering for itself: a violation on the
-          // second one is as much the owner's as one on the first, and the
-          // card must open the Tracearr it came off.
-          return _decisionsOnEveryConnection(
-            ref,
-            ServiceKey.tracearr,
-            (source) => _violationDecisions(ref, source),
-          );
       }
     }, retry: noProviderRetry);
 
@@ -858,114 +838,6 @@ DashboardDecision _connectionFaultDecision(
   );
 }
 
-Future<List<DashboardDecision>> _expiringCertificateDecisions(
-  Ref ref,
-  MergeConnection source,
-) async {
-  final certificates = await ref.watch(
-    npmCertificatesForProvider(source.instanceId).future,
-  );
-  final now = DateTime.now();
-  return [
-    for (final certificate in certificates)
-      if (certificate.isExpiringSoon(now))
-        DashboardDecision(
-          kind: DecisionKind.expiringCertificate,
-          id: 'npm-cert-${source.instanceId}-${certificate.id}',
-          service: ServiceKey.nginxProxyManager,
-          title: certificate.domainNames.isEmpty
-              ? certificate.niceName
-              : certificate.domainNames.first,
-          // An uploaded certificate does not renew: the row names it as one,
-          // so a control without Renew reads as the truth rather than a gap.
-          // It drops the service's name: beside "Open certificates", which is
-          // wider than Renew, any longer line lost its last words to the
-          // ellipsis on a 390pt phone, and the glyph already names the service.
-          // Which of two it is on stays, by the connection's own name alone.
-          detail: joinDisplayParts([
-            _certificateExpiry(certificate, now),
-            if (certificate.isLetsEncrypt)
-              serviceWithConnection(
-                ServiceKey.nginxProxyManager,
-                source.name,
-                joiner: ' ',
-              )
-            else
-              source.name,
-          ]),
-          renewable: certificate.isLetsEncrypt,
-          instanceId: source.instanceId,
-          connectionName: source.name,
-          actionInstanceId: source.instanceId,
-          // The expiry date, standing in for "when did this start needing me".
-          // Ordering by it puts the certificate closest to lapsing first, which
-          // is what "oldest first" means for a deadline.
-          occurredAt: certificate.expiresOn,
-          route: ServiceRoutes.forService(ServiceKey.nginxProxyManager),
-        ),
-  ];
-}
-
-/// Tracearr's unseen violations of severity high, as the decisions Needs you
-/// draws: the rule, the person and when, never a place or an address.
-///
-/// Blue and not a fault (`DecisionKind.violation`), and read one past the cap
-/// so the count can say it is a floor. The route carries the connection it
-/// came off, so the card opens that Tracearr's own page for it.
-Future<List<DashboardDecision>> _violationDecisions(
-  Ref ref,
-  MergeConnection source,
-) async {
-  final page = await ref.watch(
-    tracearrFlaggedProvider(source.instanceId).future,
-  );
-  return [
-    for (final violation in page.items)
-      // Belt and braces over the server's filter: only what is still unseen
-      // and as bad as it gets is a decision.
-      if (!violation.isAcknowledged &&
-          violation.severity == TracearrSeverity.high)
-        DashboardDecision(
-          kind: DecisionKind.violation,
-          id: 'tracearr-violation-${source.instanceId}-${violation.id}',
-          service: ServiceKey.tracearr,
-          title: violation.rule.name.trim().isEmpty
-              ? 'Violation'
-              : violation.rule.name.trim(),
-          detail: joinDisplayParts([
-            tracearrPersonOf(violation.person),
-            // Which Tracearr, once there are two to tell apart.
-            if (source.name != null)
-              serviceWithConnection(
-                ServiceKey.tracearr,
-                source.name,
-                joiner: ' ',
-              ),
-          ]),
-          occurredAt: violation.createdAt,
-          instanceId: source.instanceId,
-          connectionName: source.name,
-          route: ServiceRoutes.tracearrViolation(
-            violation.id,
-            instanceId: source.instanceId,
-          ),
-        ),
-  ];
-}
-
-String _certificateExpiry(NpmCertificate certificate, DateTime now) {
-  final noun = certificate.isLetsEncrypt
-      ? 'Certificate'
-      : 'Uploaded certificate';
-  final expiresOn = certificate.expiresOn;
-  if (expiresOn == null) return '$noun expiring';
-  final days = expiresOn.difference(now).inDays;
-  if (days < 0) return '$noun expired';
-  if (days == 0) return '$noun expires today';
-  if (days == 1) return '$noun expires tomorrow';
-  return '$noun expires in $days days';
-}
-
 /// The decision a faulted transfer becomes, by what its fault is.
 ///
 /// A blocked import is a manual import, filed under the library item and seeded
@@ -1050,9 +922,6 @@ ServiceKey? _clientServiceFor(ServiceQueueItem item) {
   if (item.service == ServiceKey.qbittorrent) return null;
   return switch (item.clientLabel.toLowerCase()) {
     final label when label.contains('qbittorrent') => ServiceKey.qbittorrent,
-    final label when label.contains('sab') => ServiceKey.sabnzbd,
-    final label when label.contains('nzbget') => ServiceKey.nzbget,
-    final label when label.contains('transmission') => ServiceKey.transmission,
     _ => null,
   };
 }

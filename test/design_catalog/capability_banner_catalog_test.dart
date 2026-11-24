@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/capability/capability_scope.dart';
 import 'package:cupola/core/widgets/capability_banner.dart';
-import 'package:cupola/features/npm/presentation/npm_capability.dart';
 import 'package:cupola/features/truenas/presentation/truenas_capability.dart';
 import 'package:cupola/features/unraid/presentation/unraid_capability.dart';
 
@@ -44,25 +43,6 @@ void main() {
         width: 640,
       ),
       CatalogScene(
-        'CapabilityBannerSlot · NPM view-only account · "Change account", '
-        'not "Update the key"',
-        (context) => CapabilityBannerSlot(
-          connectionId: 'npm-view-only',
-          copy: npmCapabilityCopy(),
-        ),
-        width: 640,
-      ),
-      CatalogScene(
-        'CapabilityBannerSlot · NPM account manages some of what this page '
-        'writes · names only what it cannot change here',
-        (_) => CapabilityBannerSlot(
-          connectionId: 'npm-partial',
-          copy: npmCapabilityCopy(),
-          resources: const {'proxy_hosts', 'certificates'},
-        ),
-        width: 640,
-      ),
-      CatalogScene(
         'CapabilityBannerSlot · Cupola could not ask (TrueNAS) · "Check '
         'again", not a new key',
         (_) => const CapabilityBannerSlot(
@@ -76,17 +56,6 @@ void main() {
         'the verb drops to its own line',
         (_) => CapabilityBanner(message: unraidVmsCopy.answered, onFix: () {}),
         width: 420,
-        textScale: catalogTextScale,
-      ),
-      CatalogScene(
-        'Text at 200% · CapabilityBannerSlot, NPM account that manages some of '
-        'the page: the sentence and the verb on a 390pt phone',
-        (_) => CapabilityBannerSlot(
-          connectionId: 'npm-partial',
-          copy: npmCapabilityCopy(),
-          resources: const {'proxy_hosts', 'certificates'},
-        ),
-        width: 390,
         textScale: catalogTextScale,
       ),
       CatalogScene(

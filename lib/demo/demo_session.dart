@@ -18,7 +18,6 @@ import 'package:cupola/core/startup/startup_overrides.dart';
 import 'package:cupola/demo/world/artwork.dart';
 import 'package:cupola/demo/world/fixtures.dart';
 import 'package:cupola/demo/world/profiles.dart';
-import 'package:cupola/features/npm/presentation/npm_provider.dart';
 import 'package:cupola/features/outside/data/outside_background.dart';
 import 'package:cupola/features/outside/data/outside_keeper.dart';
 import 'package:cupola/features/release_search/data/release_search_notifications.dart';
@@ -27,17 +26,13 @@ import 'package:cupola/features/release_search/presentation/release_search_entry
 import 'package:cupola/features/settings/data/settings_service.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 
-/// The household the demo opens on: World A with all nineteen services, P1
+/// The household the demo opens on: World A with every service, P1
 /// and every service P1 leaves out.
 final demoProfile = Profiles.p1
     .withConnection(WorldConnections.plex)
     .withConnection(WorldConnections.readarr)
-    .withConnection(WorldConnections.transmission)
-    .withConnection(WorldConnections.nzbget)
     .withConnection(WorldConnections.unraid)
-    .withConnection(WorldConnections.npm)
-    .withConnection(WorldConnections.emby)
-    .withConnection(WorldConnections.tracearr);
+    .withConnection(WorldConnections.emby);
 
 /// The demo home, live: the world's servers answering inside the process,
 /// and every store the app writes to held in memory.
@@ -140,10 +135,6 @@ class DemoSession {
         lastKnown: LastKnownStore.memory(),
       ),
       hostReachProvider.overrideWithValue(network.reach),
-      npmUpstreamConnectorProvider.overrideWithValue(
-        (host, port, timeout) =>
-            network.reach(Uri(scheme: 'http', host: host, port: port)),
-      ),
       outsideKeeperProvider.overrideWith((ref) {}),
       outsideSchedulerProvider.overrideWithValue(null),
       releaseSearchNotificationsProvider.overrideWithValue(

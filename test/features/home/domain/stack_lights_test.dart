@@ -229,23 +229,5 @@ void main() {
   });
 
   group('away from home', () {
-    test('a service only at home is lit neutral and out of the count', () {
-      expect(stackLightOf([StackProbe.onlyAtHome]), StackLight.onlyAtHome);
-      expect(
-        stackLightOf([StackProbe.onlyAtHome, StackProbe.answered]),
-        StackLight.answering,
-      );
-      final lights = stackLightsOf(
-        services: [
-          (service: ServiceKey.radarr, probes: [StackProbe.answered]),
-          (service: ServiceKey.sabnzbd, probes: [StackProbe.onlyAtHome]),
-        ],
-        faults: const [],
-      );
-      expect(lights.configured, 1);
-      expect(lights.onlyAtHome, [ServiceKey.sabnzbd]);
-      expect(lights.line, '1 of 1 answering\u00A0· 1 only at home');
-      expect(lights.spoken, 'Answering: Radarr. Only at home: SABnzbd.');
-    });
   });
 }

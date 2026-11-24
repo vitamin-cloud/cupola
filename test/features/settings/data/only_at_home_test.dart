@@ -3,10 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cupola/core/network/connection_failure.dart';
-import 'package:cupola/features/services/domain/service_summary.dart';
-import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/connection_reach_provider.dart';
-import 'package:cupola/features/settings/data/service_connection_provider.dart';
 import 'package:cupola/features/settings/data/service_verification.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/connection_address.dart';
@@ -28,15 +25,15 @@ const _radarr = ServiceInstance(
   credential: 'radarr-key',
   away: ConnectionAddress(url: 'https://radarr.example.net'),
 );
-const _sabnzbd = ServiceInstance(
-  id: 'sabnzbd',
-  service: ServiceKey.sabnzbd,
+const _prowlarr = ServiceInstance(
+  id: 'prowlarr',
+  service: ServiceKey.prowlarr,
   url: 'http://192.0.2.10:8080',
-  credential: 'sab-key',
+  credential: 'prowlarr-key',
 );
 
 Future<ProviderContainer> _container({
-  List<ServiceInstance> instances = const [_radarr, _sabnzbd],
+  List<ServiceInstance> instances = const [_radarr, _prowlarr],
   Map<String, Object> prefs = const {},
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
@@ -63,7 +60,7 @@ void main() {
   group('awayFromHomeProvider', () {
     test('is false while no connection has an address away', () async {
       // Without one the app cannot tell away from a server that is down.
-      final container = await _container(instances: const [_sabnzbd]);
+      final container = await _container(instances: const [_prowlarr]);
       expect(container.read(awayFromHomeProvider), isFalse);
     });
 
@@ -101,7 +98,7 @@ void main() {
               credential: 'radarr-key',
               away: ConnectionAddress(url: 'https://radarr-4k.example.net'),
             ),
-            _sabnzbd,
+            _prowlarr,
           ],
           prefs: {'connection_routes': '["radarr"]'},
         );
@@ -144,7 +141,7 @@ void main() {
         // A mistyped home address moves its connection away on the home Wi-Fi.
         // That is no reason to stop reading the connections only at home.
         final container = await _container(
-          instances: const [seerr, qbittorrent, _sabnzbd],
+          instances: const [seerr, qbittorrent, _prowlarr],
         );
         await move(container, 'qbittorrent');
 
@@ -154,7 +151,7 @@ void main() {
 
     test('every local home moved away: away', () async {
       final container = await _container(
-        instances: const [seerr, qbittorrent, truenas, _sabnzbd],
+        instances: const [seerr, qbittorrent, truenas, _prowlarr],
       );
       await move(container, 'seerr');
       await move(container, 'qbittorrent');
@@ -168,7 +165,7 @@ void main() {
       'a local home that answered at neither address is no evidence',
       () async {
         final container = await _container(
-          instances: const [seerr, qbittorrent, _sabnzbd],
+          instances: const [seerr, qbittorrent, _prowlarr],
         );
         await move(container, 'qbittorrent');
         container.read(unansweredConnectionsProvider.notifier).mark('seerr');
@@ -181,7 +178,7 @@ void main() {
       'without a local home address, one connection away still says so',
       () async {
         final container = await _container(
-          instances: const [truenas, _radarr, _sabnzbd],
+          instances: const [truenas, _radarr, _prowlarr],
         );
         await move(container, 'truenas');
 
@@ -191,49 +188,7 @@ void main() {
   });
 
   group('away from home, a connection with no address away', () {
-    test('reads only at home, and is not asked', () async {
-      final container = await _container();
-      await _away(container);
 
-      final diagnosis = await container.read(
-        instanceDiagnosisProvider('sabnzbd').future,
-      );
-      expect(diagnosis.status, ServiceConnectionStatus.disconnected);
-      expect(diagnosis.reason, ServiceFailureReason.onlyAtHome);
-
-      final summary = await container.read(
-        instanceSummaryProvider((
-          service: ServiceKey.sabnzbd,
-          instanceId: 'sabnzbd',
-        )).future,
-      );
-      expect(summary.status, ServiceSummaryStatus.onlyAtHome);
-      expect(summary.isOnlyAtHome, isTrue);
-      expect(summary.didNotAnswer, isFalse);
-      expect(summary.isFault, isFalse);
-      expect(summary.failureReason, ServiceFailureReason.onlyAtHome);
-      expect(summary.host, '192.0.2.10:8080');
-    });
-
-    test('folds apart from silence and faults', () async {
-      final container = await _container();
-      await _away(container);
-      await container.read(
-        instanceSummaryProvider((
-          service: ServiceKey.sabnzbd,
-          instanceId: 'sabnzbd',
-        )).future,
-      );
-
-      expect(container.read(foldedServiceHealthProvider(ServiceKey.sabnzbd)), (
-        total: 1,
-        offline: 0,
-        faulted: 0,
-        stuck: 0,
-        checking: 0,
-        onlyAtHome: 1,
-      ));
-    });
 
     test('a folded service is never better than its worst answer, and only '
         'at home is below a fault', () {

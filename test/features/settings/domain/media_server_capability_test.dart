@@ -21,7 +21,6 @@ void main() {
         ServiceKey.jellyfin,
         ServiceKey.plex,
         ServiceKey.emby,
-        ServiceKey.tracearr,
       ]);
       expect(ServiceKey.values.where((s) => s.speaksMediaBrowser), [
         ServiceKey.jellyfin,
@@ -35,23 +34,9 @@ void main() {
         ServiceKey.jellyfin,
         ServiceKey.plex,
         ServiceKey.emby,
-        ServiceKey.tracearr,
       ]);
     });
 
-    test('Tracearr is in the band and is not a media server, and gives '
-        'sessions', () {
-      const service = ServiceKey.tracearr;
-      expect(service.domain, ServiceDomain.stream);
-      expect(service.isMediaServer, isFalse);
-      expect(service.speaksMediaBrowser, isFalse);
-      expect(service.needsViewerSelection, isFalse);
-      // Its streams are merged into Now playing by their own arm; it must
-      // never be handed a media server's backend (`streamBackendOf` throws).
-      expect(service.givesSessions, isTrue);
-      expect(sessionServices, contains(service));
-      expect(mediaServers, isNot(contains(service)));
-    });
 
     test('the media servers are the services that answer isMediaServer', () {
       expect(mediaServers, ServiceKey.values.where((s) => s.isMediaServer));
@@ -69,7 +54,6 @@ void main() {
       expect(sessionServices, ServiceKey.values.where((s) => s.givesSessions));
       expect(sessionServices, containsAll(mediaServers));
       expect(sessionServices.where((s) => !s.isMediaServer), [
-        ServiceKey.tracearr,
       ]);
     });
 

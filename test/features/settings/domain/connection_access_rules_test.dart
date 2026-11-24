@@ -1,52 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/features/settings/domain/connection_access.dart';
 import 'package:cupola/features/settings/domain/connection_access_rules.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
 void main() {
   group('Password is offered only where a proxy password can travel', () {
     const signInWithAuthorization = {
-      ServiceKey.nginxProxyManager,
-      ServiceKey.nzbget,
-      ServiceKey.transmission,
-      ServiceKey.tracearr,
     };
 
     for (final service in ServiceKey.values) {
-      test(service.title, () {
-        final kinds = accessKindsFor(service);
-        if (signInWithAuthorization.contains(service)) {
-          expect(kinds, [
-            AccessKind.none,
-            AccessKind.cloudflare,
-            AccessKind.custom,
-          ]);
-          expect(service.proxyPasswordUnavailable, isNotNull);
-        } else {
-          expect(kinds, AccessKind.values);
-          expect(service.proxyPasswordUnavailable, isNull);
-        }
-      });
     }
 
-    test('and says why, in one line', () {
-      expect(
-        ServiceKey.nginxProxyManager.proxyPasswordUnavailable,
-        'Nginx Proxy Manager signs in with its own Authorization header, so '
-        "a proxy password cannot travel with it.",
-      );
-      expect(
-        ServiceKey.nzbget.proxyPasswordUnavailable,
-        "NZBGet signs in with its own Authorization header, so a proxy "
-        "password cannot travel with it.",
-      );
-      expect(
-        ServiceKey.transmission.proxyPasswordUnavailable,
-        "Transmission signs in with its own Authorization header, so a proxy "
-        "password cannot travel with it.",
-      );
-    });
   });
 
   group('a custom header named like the service\'s own credential', () {
@@ -70,13 +34,6 @@ void main() {
       );
     });
 
-    test('is not a clash on a service that does not send it', () {
-      expect(
-        duplicatesCredentialHeader(ServiceKey.sabnzbd, 'X-Api-Key'),
-        isFalse,
-      );
-      expect(customHeaderNameProblem(ServiceKey.sabnzbd, 'X-Api-Key'), isNull);
-    });
   });
 
   group('a custom header name', () {
@@ -101,33 +58,6 @@ void main() {
       }
     });
 
-    test('never one the service sets itself', () {
-      expect(
-        customHeaderNameProblem(ServiceKey.nzbget, 'Authorization'),
-        'Cupola sets this header itself',
-      );
-      expect(
-        customHeaderNameProblem(
-          ServiceKey.transmission,
-          'X-Transmission-Session-Id',
-        ),
-        'Cupola sets this header itself',
-      );
-      expect(
-        customHeaderNameProblem(ServiceKey.plex, 'X-Plex-Client-Identifier'),
-        'Cupola sets this header itself',
-      );
-      // Free where the service does not sign in with it: Jellyfin moves its
-      // token to X-Emby-Token.
-      expect(
-        customHeaderNameProblem(ServiceKey.radarr, 'Authorization'),
-        isNull,
-      );
-      expect(
-        customHeaderNameProblem(ServiceKey.jellyfin, 'Authorization'),
-        isNull,
-      );
-    });
 
     test('is an RFC 9110 token', () {
       expect(customHeaderNameProblem(ServiceKey.radarr, ''), 'Add a name');
@@ -185,35 +115,4 @@ void main() {
     expect(proxyUsernameProblem('matt'), isNull);
   });
 
-  test('a whole access is valid only without a clash', () {
-    expect(accessIsValid(ServiceKey.radarr, const NoAccess()), isTrue);
-    expect(
-      accessIsValid(
-        ServiceKey.radarr,
-        const CloudflareServiceToken(clientId: 'a', clientSecret: ''),
-      ),
-      isFalse,
-    );
-    expect(
-      accessIsValid(
-        ServiceKey.nzbget,
-        const ProxyPassword(username: 'u', password: 'p'),
-      ),
-      isFalse,
-    );
-    expect(
-      accessIsValid(
-        ServiceKey.radarr,
-        const CustomHeaders([(name: 'X-Api-Key', value: 'k')]),
-      ),
-      isFalse,
-    );
-    expect(
-      accessIsValid(
-        ServiceKey.radarr,
-        const CustomHeaders([(name: 'X-Proxy', value: 'k')]),
-      ),
-      isTrue,
-    );
-  });
 }

@@ -24,20 +24,15 @@ import 'package:cupola/features/discover/presentation/library_calendar_provider.
 import 'package:cupola/features/dockge/presentation/dockge_provider.dart';
 import 'package:cupola/features/home/data/resume.dart';
 import 'package:cupola/features/home/data/storage.dart';
-import 'package:cupola/features/npm/presentation/npm_provider.dart';
-import 'package:cupola/features/nzbget/presentation/nzbget_provider.dart';
 import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client_provider.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_provider.dart';
-import 'package:cupola/features/sabnzbd/presentation/sabnzbd_provider.dart';
 import 'package:cupola/features/services/domain/dashboard_decision.dart';
 import 'package:cupola/features/services/presentation/service_kpi_provider.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/connection_reach_provider.dart';
 import 'package:cupola/features/settings/data/route_probe.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/tracearr/presentation/tracearr_provider.dart';
-import 'package:cupola/features/transmission/presentation/transmission_provider.dart';
 
 /// The providers the Dashboard's merged regions read from [service] and that
 /// keep an answer of their own: what has to be dropped for that service's
@@ -49,9 +44,6 @@ import 'package:cupola/features/transmission/presentation/transmission_provider.
 List<ProviderOrFamily> dashboardSourcesOf(ServiceKey service) =>
     switch (service) {
       ServiceKey.qbittorrent => [allTorrentsProvider],
-      ServiceKey.transmission => [transmissionTorrentsProvider],
-      ServiceKey.sabnzbd => [sabnzbdQueueProvider],
-      ServiceKey.nzbget => [nzbgetQueueProvider, nzbgetStatusProvider],
       // The lens's list, every other Seerr's, which the region reads too, the
       // waiting page Requests on the Home counts from, and the count and the
       // newest page of the problems reported on it.
@@ -68,11 +60,6 @@ List<ProviderOrFamily> dashboardSourcesOf(ServiceKey service) =>
         prowlarrIndexersProvider,
       ],
       ServiceKey.dockge => [dockgeStackListProvider],
-      ServiceKey.nginxProxyManager => [npmCertificatesProvider],
-      // The violations Needs you reads, one cached page per connection: left
-      // out, a failed read was served again by every Retry and pull, and an
-      // acknowledged violation stayed listed until the app restarted.
-      ServiceKey.tracearr => [tracearrFlaggedProvider],
       ServiceKey.radarr ||
       ServiceKey.sonarr ||
       ServiceKey.lidarr ||

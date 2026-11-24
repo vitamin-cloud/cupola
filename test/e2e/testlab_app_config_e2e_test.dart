@@ -154,41 +154,6 @@ void main() {
     );
   });
 
-  test('the app reads Emby and Tracearr beside Jellyfin in P10', () async {
-    final document = await _writeConfiguration('P10');
-    final app = await _readWithTheApp(document);
-    final settings = app.settings;
-
-    expect(settings.instances.map((instance) => instance.id), [
-      'seerr',
-      'jellyfin',
-      'emby',
-      'tracearr',
-    ]);
-    final emby = settings.instanceById('emby')!;
-    expect(emby.service, ServiceKey.emby);
-    expect(emby.url, 'http://127.0.0.1:28098');
-    // The API key, which no user owns, and the administrator the app reads
-    // the server as: the same two facts the connection form saves.
-    expect(emby.credential, credentials['CUPOLA_TESTLAB_EMBY_TOKEN']);
-    expect(emby.viewerId, credentials['CUPOLA_TESTLAB_EMBY_USER_ID']);
-    expect(settings.isServiceConfigured(ServiceKey.emby), isTrue);
-    expect(
-      settings.instanceById('jellyfin')!.viewerId,
-      credentials['CUPOLA_TESTLAB_JELLYFIN_USER_ID'],
-      reason: 'each media server keeps the viewer of its own',
-    );
-
-    // Tracearr watches both: its public key is the one credential, and it has
-    // no viewer (the owner's session is something the person signs in to).
-    final tracearr = settings.instanceById('tracearr')!;
-    expect(tracearr.service, ServiceKey.tracearr);
-    expect(tracearr.url, 'http://127.0.0.1:23000');
-    expect(tracearr.credential, credentials['CUPOLA_TESTLAB_TRACEARR_KEY']);
-    expect(tracearr.credential, startsWith('trr_pub_'));
-    expect(tracearr.owner, isNull);
-    expect(settings.isServiceConfigured(ServiceKey.tracearr), isTrue);
-  });
 
   test('a service the profile does not have reads as not set up', () async {
     final document = await _writeConfiguration('P2');
@@ -219,38 +184,6 @@ void main() {
     }
   });
 
-  test('a connection whose key is missing reads as not set up', () async {
-    final document = await _writeConfiguration('P1');
-    final secure = Map<String, dynamic>.from(document['secure'] as Map)
-      ..remove('secure_sabnzbd_api_key');
-    final missing = Map<String, dynamic>.from(document)..['secure'] = secure;
-
-    final file = File(_statePath('app/P1-no-key.json'))
-      ..writeAsStringSync(jsonEncode(missing));
-    await Process.run('chmod', ['600', file.path]);
-    addTearDown(() {
-      if (file.existsSync()) file.deleteSync();
-    });
-
-    final app = await _readWithTheApp(
-      jsonDecode(file.readAsStringSync()) as Map<String, dynamic>,
-    );
-
-    expect(app.settings.instanceById('sabnzbd')!.url, isNotEmpty);
-    expect(app.settings.isServiceConfigured(ServiceKey.sabnzbd), isFalse);
-    expect(
-      () => _transport(
-        app.settings,
-        ServiceKey.sabnzbd,
-      ).ensureConfigured(ServiceKey.sabnzbd),
-      throwsA(isA<ServiceNotConfigured>()),
-    );
-    expect(
-      app.settings.isServiceConfigured(ServiceKey.radarr),
-      isTrue,
-      reason: 'the other connections are untouched',
-    );
-  });
 
   test('P7 reaches its servers at the address away from home', () async {
     final document = await _writeConfiguration('P7');
