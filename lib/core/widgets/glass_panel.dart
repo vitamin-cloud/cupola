@@ -1,15 +1,12 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 
 /// This fork's ("Stack") glass: the Living Room Remote's, one recipe for every
 /// card in the app.
 ///
-/// What passes behind is blurred (22) and its colour lifted a little, then
-/// tinted the way the remote tints it: a cool navy and a dark veil, a white
-/// sheen from the top, a 1.5px white rim with a brighter top edge, and a soft
-/// drop shadow.
+/// A dense navy frost (no live blur, so it reads the same in every frame of a
+/// scroll or a fade), a white sheen from the top, a 1.5px white rim with a
+/// brighter top edge, and a soft drop shadow.
 ///
 /// [glow] lights it the way the remote lights the app it last opened: the
 /// colour washes the glass, the rim takes it, and it blooms around the edge.
@@ -40,25 +37,13 @@ class GlassPanel extends StatelessWidget {
   /// Whether [child] is clipped to the rounded shape.
   final bool clip;
 
-  /// The blur behind every panel.
-  static final ImageFilter blur = ImageFilter.compose(
-    outer: const ColorFilter.matrix(_saturate115),
-    inner: ImageFilter.blur(sigmaX: 22, sigmaY: 22, tileMode: TileMode.clamp),
-  );
-
-  /// The remote's tint, flattened: rgba(14,18,40,.30) over rgba(4,6,16,.25).
-  static const Color tint = Color(0x7A0B0E22);
+  /// The remote's glass as it reads over the photo, flattened: dense enough
+  /// to stand in for its blur.
+  static const Color tint = Color(0xD0141A2E);
 
   /// The rim and its brighter top edge.
   static const Color rim = Color(0x38FFFFFF);
   static const Color rimTop = Color(0x2EFFFFFF);
-
-  static const List<double> _saturate115 = [
-    1.1075, -0.0915, -0.0160, 0, 0, //
-    -0.0322, 1.0638, -0.0316, 0, 0, //
-    -0.0322, -0.0915, 1.1237, 0, 0, //
-    0, 0, 0, 1, 0, //
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -88,43 +73,44 @@ class GlassPanel extends StatelessWidget {
       ),
     );
 
-    Widget body = BackdropFilter.grouped(
-      filter: blur,
+    // No live blur: a backdrop blur reads nothing inside a fade or the
+    // overscroll stretch, so the glass went clear while a page moved and
+    // flashed on every switch. The frost is a dense tint instead, the same
+    // in every frame.
+    Widget body = DecoratedBox(
+      decoration: BoxDecoration(color: tint, borderRadius: shape),
       child: DecoratedBox(
-        decoration: BoxDecoration(color: tint, borderRadius: shape),
-        child: DecoratedBox(
-          decoration: sheen,
-          child: Stack(
-            fit: StackFit.passthrough,
-            children: [
-              if (g != null)
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: shape,
-                        gradient: RadialGradient(
-                          radius: 1.1,
-                          colors: [
-                            g.withValues(alpha: 0),
-                            g.withValues(alpha: 0.30 * k),
-                          ],
-                        ),
+        decoration: sheen,
+        child: Stack(
+          fit: StackFit.passthrough,
+          children: [
+            if (g != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: shape,
+                      gradient: RadialGradient(
+                        radius: 1.1,
+                        colors: [
+                          g.withValues(alpha: 0),
+                          g.withValues(alpha: 0.30 * k),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              // The brighter top edge of the rim.
-              Positioned(
-                left: radius * 0.6,
-                right: radius * 0.6,
-                top: 0,
-                height: 1.5,
-                child: const IgnorePointer(child: ColoredBox(color: rimTop)),
               ),
-              child,
-            ],
-          ),
+            // The brighter top edge of the rim.
+            Positioned(
+              left: radius * 0.6,
+              right: radius * 0.6,
+              top: 0,
+              height: 1.5,
+              child: const IgnorePointer(child: ColoredBox(color: rimTop)),
+            ),
+            child,
+          ],
         ),
       ),
     );

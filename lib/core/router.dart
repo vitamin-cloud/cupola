@@ -19,7 +19,6 @@ import 'package:cupola/features/media/domain/media_key.dart';
 import 'package:cupola/features/media/presentation/media_page.dart';
 import 'package:cupola/features/media/presentation/media_split.dart';
 import 'package:cupola/features/media/presentation/arr_title_opener.dart';
-import 'package:cupola/features/movies/presentation/radarr_overview_screen.dart';
 import 'package:cupola/features/series/domain/models/sonarr_series.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/connection_access.dart';
@@ -42,7 +41,6 @@ import 'package:cupola/features/activity/presentation/arr_tab_screen.dart';
 import 'package:cupola/features/activity/presentation/arr_calendar_screen.dart';
 import 'package:cupola/features/movies/presentation/movies_screen.dart';
 import 'package:cupola/features/series/presentation/series_screen.dart';
-import 'package:cupola/features/series/presentation/sonarr_overview_screen.dart';
 import 'package:cupola/features/music/presentation/music_screen.dart';
 import 'package:cupola/features/music/presentation/artist_page.dart';
 import 'package:cupola/features/readarr/domain/models/readarr_models.dart';
@@ -173,7 +171,7 @@ const double _serviceHomeTopPadding = kToolbarHeight;
 /// its first content below the tab bar), or an excuse with a reason the guard
 /// can check.
 const double _serviceTabTopPadding =
-    _serviceHomeTopPadding + ServiceTabBar.height;
+    _serviceHomeTopPadding + ServiceTabBar.height + kServiceTabGap;
 
 /// The page for a top-level tab: a short fade instead of the platform default.
 ///
@@ -634,8 +632,9 @@ RouteBase _serviceRoutes(
 
   return GoRoute(
     path: service.routeParam,
+    // The service's first tab: Overview, or Library where there is none.
     redirect: (context, state) => state.uri.path == home
-        ? _preserveQuery(state.uri, '$home/${ServiceTab.overview.segment}')
+        ? _preserveQuery(state.uri, '$home/${tabs.first.segment}')
         : null,
     routes: [
       ...tails,
@@ -747,6 +746,10 @@ GoRoute _issueRoute(String path, {required String redirectTo}) => _page(
 RouteBase _radarrRoutes() => _serviceRoutes(
   ServiceKey.radarr,
   tails: [
+    // This fork has no Overview or Queue here: old links land on the
+    // Library and on Activity's downloads.
+    _tail('overview', (_) => ServiceRoutes.radarrLibrary),
+    _tail('queue', (_) => ServiceRoutes.activityDownloads),
     _tail('media', (_) => ServiceRoutes.radarrLibrary),
     _tail(
       'movie/:id',
@@ -754,19 +757,12 @@ RouteBase _radarrRoutes() => _serviceRoutes(
     ),
   ],
   roots: {
-    ServiceTab.overview: (state) =>
-        const RadarrOverviewScreen(topPadding: _serviceTabTopPadding),
     ServiceTab.library: (state) => const MoviesScreen(
       showAppBar: false,
       topPadding: _serviceTabTopPadding,
     ),
     ServiceTab.calendar: (state) => const ArrCalendarScreen(
       service: ServiceKey.radarr,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.queue: (state) => const ArrTabScreen(
-      serviceType: ServiceType.movies,
-      mode: ArrTabMode.queue,
       topPadding: _serviceTabTopPadding,
     ),
     ServiceTab.wanted: (state) => const ArrTabScreen(
@@ -807,6 +803,10 @@ RouteBase _radarrRoutes() => _serviceRoutes(
 RouteBase _sonarrRoutes() => _serviceRoutes(
   ServiceKey.sonarr,
   tails: [
+    // This fork has no Overview or Queue here: old links land on the
+    // Library and on Activity's downloads.
+    _tail('overview', (_) => ServiceRoutes.sonarrLibrary),
+    _tail('queue', (_) => ServiceRoutes.activityDownloads),
     _tail('media', (_) => ServiceRoutes.sonarrLibrary),
     _tail(
       'series/:id',
@@ -814,19 +814,12 @@ RouteBase _sonarrRoutes() => _serviceRoutes(
     ),
   ],
   roots: {
-    ServiceTab.overview: (state) =>
-        const SonarrOverviewScreen(topPadding: _serviceTabTopPadding),
     ServiceTab.library: (state) => const SeriesScreen(
       showAppBar: false,
       topPadding: _serviceTabTopPadding,
     ),
     ServiceTab.calendar: (state) => const ArrCalendarScreen(
       service: ServiceKey.sonarr,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.queue: (state) => const ArrTabScreen(
-      serviceType: ServiceType.series,
-      mode: ArrTabMode.queue,
       topPadding: _serviceTabTopPadding,
     ),
     ServiceTab.wanted: (state) => const ArrTabScreen(

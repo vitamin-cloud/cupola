@@ -380,7 +380,7 @@ class CupolaRoom extends ThemeExtension<CupolaRoom> {
     ground: DesignTokensDark.colorRoomGround,
     // This fork: every card is the remote's glass tint, the room showing
     // through it (`GlassPanel` adds the blur where a card draws one).
-    slab: Color(0x9E0D1124),
+    slab: Color(0xD0141A2E),
     raised: DesignTokensDark.colorRoomRaised,
     door: DesignTokensDark.colorRoomDoor,
     enamel: DesignTokensDark.colorRoomEnamel,

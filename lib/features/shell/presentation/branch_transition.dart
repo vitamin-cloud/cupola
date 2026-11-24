@@ -126,7 +126,14 @@ class _BranchTransitionState extends State<BranchTransition>
             branchIndex: index,
             isCurrent: index == _current,
             isOutgoing: index == _outgoingIndex,
-            opacity: index == _current ? _incoming : null,
+            // This fork: a true cross-fade. The pages are see-through over
+            // the room, so an outgoing page left at full opacity showed
+            // through the incoming one: two pages at once, a flash.
+            opacity: index == _current
+                ? _incoming
+                : index == _outgoingIndex
+                ? ReverseAnimation(_incoming)
+                : null,
             child: widget.children[index],
           ),
       ],
@@ -219,13 +226,7 @@ class _BranchLayer extends StatelessWidget {
                     ? RepaintBoundary(child: child)
                     : FadeTransition(
                         opacity: opacity!,
-                        child: ScaleTransition(
-                          scale: Tween<double>(
-                            begin: 0.96,
-                            end: 1,
-                          ).animate(opacity!),
-                          child: RepaintBoundary(child: child),
-                        ),
+                        child: RepaintBoundary(child: child),
                       ),
               ),
             ),

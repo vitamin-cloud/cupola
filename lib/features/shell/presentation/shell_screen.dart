@@ -229,7 +229,11 @@ class _ShellScreenState extends ConsumerState<ShellScreen>
     // The Portal is the floor of the services, and the requester's app has
     // none: her bar has no Stack, and every room sends her Home. No drag, no
     // coach mark, no demo bounce.
-    final portalOn = !accessibleNav && audience == Audience.operator;
+    // This fork: never (`_portalDrawn`).
+    final portalOn =
+        _portalDrawn(context) &&
+        !accessibleNav &&
+        audience == Audience.operator;
 
     // A window that grows past the rail while the Portal is up (a foldable
     // opened, a split view widened) takes the bar and the stage off the screen,

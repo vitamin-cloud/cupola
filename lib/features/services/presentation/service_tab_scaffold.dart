@@ -85,12 +85,14 @@ class ServiceTabScaffold extends StatelessWidget {
       );
     }
 
-    // This fork: the page ends a hair (2pt) below the tabs' slab, so nothing
+    // This fork: the page ends [kServiceTabGap] below the tabs' slab, so nothing
     // scrolls under it or the band: it is gone before it reaches them. Not
     // while a library selects: its selection header stands in their place.
     final selecting = LibrarySelectionScope.selectingOf(context);
     final top =
-        ServiceHomeScreen.bandHeightOf(context) + ServiceTabBar.height + 2;
+        ServiceHomeScreen.bandHeightOf(context) +
+        ServiceTabBar.height +
+        kServiceTabGap;
     return Stack(
       children: [
         if (selecting) child else ClipRect(clipper: _Below(top), child: child),
@@ -150,6 +152,10 @@ class ServiceTabScaffold extends StatelessWidget {
     StatefulNavigationShell.of(context).goBranch(index);
   }
 }
+
+/// The clear space between a service's tabs and its page: the page is cut
+/// off here, and starts this far below the tabs.
+const double kServiceTabGap = 6;
 
 /// Clips a page to what lies [top] points below its top.
 class _Below extends CustomClipper<Rect> {

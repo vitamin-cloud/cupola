@@ -6,6 +6,7 @@ import 'package:cupola/core/app_breakpoints.dart';
 import 'package:cupola/core/app_radius.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/app_spacing.dart';
+import 'package:cupola/core/widgets/glass_panel.dart';
 import 'package:cupola/features/shell/domain/screen_search.dart';
 
 /// A reusable, always-visible search bar widget for the top of screens.
@@ -211,9 +212,8 @@ class _SearchBarHeaderState extends State<SearchBarHeader> {
                 ),
             ],
             elevation: WidgetStateProperty.all(0),
-            backgroundColor: WidgetStateProperty.all(
-              colorScheme.surfaceContainer,
-            ),
+            // This fork: the remote's glass, as every card.
+            backgroundColor: WidgetStateProperty.all(GlassPanel.tint),
             // A focused field's edge is `line.focus`, as every focused field's
             // is (`inputDecorationTheme`): the keyboard's place is never only a
             // caret.
@@ -225,7 +225,7 @@ class _SearchBarHeaderState extends State<SearchBarHeader> {
                         color: CupolaRoom.of(context).focus,
                         width: 1.5,
                       )
-                    : BorderSide(color: colorScheme.outlineVariant),
+                    : const BorderSide(color: GlassPanel.rim, width: 1.5),
               ),
             ),
             constraints: const BoxConstraints(minHeight: 52),

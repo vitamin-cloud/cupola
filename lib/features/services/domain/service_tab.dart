@@ -94,8 +94,10 @@ const Map<ServiceKey, List<ServiceTab>> serviceTabs = {
     ServiceTab.issues,
     ServiceTab.users,
   ],
-  ServiceKey.radarr: _arrTabs,
-  ServiceKey.sonarr: _arrTabs,
+  // This fork: Radarr and Sonarr open on their Library, with no Overview and
+  // no Queue (downloads live on Activity).
+  ServiceKey.radarr: _arrLibraryTabs,
+  ServiceKey.sonarr: _arrLibraryTabs,
   // Artists and Albums merged into one segmented Library, which is what freed
   // the sixth slot for History (decision 24).
   ServiceKey.lidarr: _arrTabs,
@@ -175,6 +177,13 @@ const List<ServiceTab> _arrTabs = [
   ServiceTab.library,
   ServiceTab.calendar,
   ServiceTab.queue,
+  ServiceTab.wanted,
+  ServiceTab.history,
+];
+
+const List<ServiceTab> _arrLibraryTabs = [
+  ServiceTab.library,
+  ServiceTab.calendar,
   ServiceTab.wanted,
   ServiceTab.history,
 ];
