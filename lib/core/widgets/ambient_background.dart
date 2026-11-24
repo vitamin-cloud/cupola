@@ -228,9 +228,32 @@ void paintRoom(
   ui.Image? leaving,
   double presence = 0,
 }) {
-  if (ground) canvas.drawRect(room, Paint()..color = scheme.surface);
-  // The house photo, still behind every room (`house_backdrop.dart`).
+  _paintRoomLight(
+    canvas,
+    room,
+    ground: ground,
+    scheme: scheme,
+    accent: accent,
+    picture: picture,
+    leaving: leaving,
+    presence: presence,
+  );
+  // The house photo, still behind every room and over its light, so a room
+  // lit by a title shows the house too (`house_backdrop.dart`).
   paintHouse(canvas, room, scheme);
+}
+
+void _paintRoomLight(
+  Canvas canvas,
+  Rect room, {
+  required bool ground,
+  required ColorScheme scheme,
+  required Color accent,
+  ui.Image? picture,
+  ui.Image? leaving,
+  required double presence,
+}) {
+  if (ground) canvas.drawRect(room, Paint()..color = scheme.surface);
   final dark = scheme.brightness == Brightness.dark;
 
   // How much of the room the pictures light, and so how much the lamp gives
