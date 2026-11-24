@@ -216,6 +216,9 @@ flutter:
     # hexagon's edge midpoints, around the central circular window. Rendered from
     # `assets/brand/cupola_mark.svg`, which is the vector source of record.
     - assets/brand/cupola_mark.png
+    # The house at night behind every room: the owner's own photo, from the
+    # Living Room Remote (`lib/core/house_backdrop.dart`).
+    - assets/backdrop/house.jpg
     # The three families ship under the SIL OFL 1.1, whose clause 2 requires the
     # licence to travel with the font. Bundled so `main.dart` can hand each one
     # to `LicenseRegistry`, which is what puts them in the app's own licence

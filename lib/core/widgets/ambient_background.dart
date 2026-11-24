@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:cupola/core/app_animation.dart';
 import 'package:cupola/core/generated/design_tokens.g.dart';
+import 'package:cupola/core/house_backdrop.dart';
 import 'package:cupola/core/room_art.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/widgets/front_room.dart';
@@ -228,6 +229,8 @@ void paintRoom(
   double presence = 0,
 }) {
   if (ground) canvas.drawRect(room, Paint()..color = scheme.surface);
+  // The house photo, still behind every room (`house_backdrop.dart`).
+  paintHouse(canvas, room, scheme);
   final dark = scheme.brightness == Brightness.dark;
 
   // How much of the room the pictures light, and so how much the lamp gives

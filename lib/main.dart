@@ -13,6 +13,7 @@ import 'package:path_provider/path_provider.dart'
     show getApplicationCacheDirectory, getTemporaryDirectory;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:cupola/core/house_backdrop.dart';
 import 'package:cupola/core/fold.dart';
 import 'package:cupola/core/app_identity.dart';
 import 'package:cupola/core/last_known/last_known_store.dart';
@@ -61,6 +62,8 @@ void main() async {
   await DesktopWindow.ensureReady();
   _registerBundledFontLicense();
   WorldArtwork.registerLicense();
+  // The house photo behind every room, decoded before the first frame.
+  await HouseBackdrop.load();
   await _start();
 }
 
