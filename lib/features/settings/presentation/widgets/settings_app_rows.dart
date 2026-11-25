@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:cupola/core/house_backdrop.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -139,6 +141,49 @@ class SettingsEditHomeRow extends StatelessWidget {
       subtitle: 'Choose and order what Home shows',
       semanticHint: 'opens Edit Home',
       onTap: () => context.push(ServiceRoutes.homeEdit),
+    );
+  }
+}
+
+/// This fork: the picture behind every page. The house, or one the owner
+/// picks from the phone; "Use house" puts the house back.
+class SettingsBackgroundRow extends StatelessWidget {
+  const SettingsBackgroundRow({super.key});
+
+  Future<void> _choose(BuildContext context) async {
+    try {
+      final chosen = await HouseBackdrop.choose();
+      if (chosen && context.mounted) {
+        SnackBarHelper.success(context, 'Background changed');
+      }
+    } catch (error) {
+      if (context.mounted) {
+        SnackBarHelper.error(
+          context,
+          'Could not use that picture',
+          detail: error,
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: HouseBackdrop.changes,
+      builder: (context, _, _) => SettingsCard.grouped(
+        leading: const Icon(Icons.wallpaper_rounded),
+        title: 'Select background',
+        subtitle: HouseBackdrop.custom ? 'Your photo' : 'The house',
+        semanticHint: 'picks a photo for the background of every page',
+        trailing: HouseBackdrop.custom
+            ? TextButton(
+                onPressed: () => HouseBackdrop.reset(),
+                child: const Text('Use house'),
+              )
+            : null,
+        onTap: () => _choose(context),
+      ),
     );
   }
 }

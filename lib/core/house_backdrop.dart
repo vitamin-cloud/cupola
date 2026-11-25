@@ -1,7 +1,12 @@
+import 'dart:io';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// The house at night: the photo from the owner's Living Room Remote, standing
 /// still behind every room while the page scrolls over it.
@@ -29,19 +34,92 @@ abstract final class HouseBackdrop {
   /// the room is then drawn as it always was.
   static ui.Image? image;
 
-  /// Reads and decodes the photo once, before the first frame.
+  /// Whether [image] is the owner's own picture (Settings › Background)
+  /// rather than the house.
+  static bool custom = false;
+
+  /// Ticks whenever the picture changes, for every painter of the room.
+  static final ValueNotifier<int> changes = ValueNotifier(0);
+
+  static const String _prefsKey = 'stack_background_path';
+
+  /// Reads and decodes the picture once, before the first frame: the one the
+  /// owner chose, when there is one and it still reads, else the house.
   static Future<void> load() async {
     if (image != null) return;
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final path = prefs.getString(_prefsKey);
+      if (path != null && File(path).existsSync()) {
+        image = await _decode(await File(path).readAsBytes(), 1440);
+        custom = true;
+        return;
+      }
+    } catch (_) {
+      custom = false;
+    }
+    await _loadHouse();
+  }
+
+  static Future<void> _loadHouse() async {
+    try {
       final data = await rootBundle.load(asset);
-      final codec = await ui.instantiateImageCodec(
-        data.buffer.asUint8List(),
-        targetWidth: 1100,
-      );
-      image = (await codec.getNextFrame()).image;
+      image = await _decode(data.buffer.asUint8List(), 1100);
     } catch (_) {
       image = null;
     }
+    custom = false;
+  }
+
+  static Future<ui.Image> _decode(Uint8List bytes, int width) async {
+    final codec = await ui.instantiateImageCodec(bytes, targetWidth: width);
+    return (await codec.getNextFrame()).image;
+  }
+
+  /// Asks for a picture and makes it the background, app-wide. False when
+  /// nothing was chosen; throws when the picture could not be read.
+  static Future<bool> choose() async {
+    final picked = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      withData: false,
+    );
+    final source = picked?.files.singleOrNull?.path;
+    if (source == null) return false;
+    final bytes = await File(source).readAsBytes();
+    final decoded = await _decode(bytes, 1440);
+    // Kept in the app's own storage: the picked file may be a cache copy the
+    // system clears.
+    final dir = await getApplicationDocumentsDirectory();
+    final dot = source.lastIndexOf('.');
+    final ext = dot < 0 ? 'jpg' : source.substring(dot + 1).toLowerCase();
+    final kept = File('${dir.path}/background.$ext');
+    await kept.writeAsBytes(bytes, flush: true);
+    final prefs = await SharedPreferences.getInstance();
+    final old = prefs.getString(_prefsKey);
+    if (old != null && old != kept.path) {
+      try {
+        await File(old).delete();
+      } catch (_) {}
+    }
+    await prefs.setString(_prefsKey, kept.path);
+    image = decoded;
+    custom = true;
+    changes.value++;
+    return true;
+  }
+
+  /// Puts the house back.
+  static Future<void> reset() async {
+    final prefs = await SharedPreferences.getInstance();
+    final old = prefs.getString(_prefsKey);
+    await prefs.remove(_prefsKey);
+    if (old != null) {
+      try {
+        await File(old).delete();
+      } catch (_) {}
+    }
+    await _loadHouse();
+    changes.value++;
   }
 }
 
@@ -51,13 +129,30 @@ void paintHouse(Canvas canvas, Rect room, ColorScheme scheme) {
   if (image == null) return;
 
   final width = room.width;
-  final height = width * image.height / image.width;
-  final photo = Rect.fromLTWH(
-    room.left,
-    room.top + HouseBackdrop.topInset - width * HouseBackdrop.lift,
-    width,
-    height,
-  );
+  final Rect photo;
+  if (HouseBackdrop.custom) {
+    // The owner's own picture covers the whole room, centred.
+    final scale = math.max(
+      room.width / image.width,
+      room.height / image.height,
+    );
+    final w = image.width * scale;
+    final h = image.height * scale;
+    photo = Rect.fromLTWH(
+      room.left + (room.width - w) / 2,
+      room.top + (room.height - h) / 2,
+      w,
+      h,
+    );
+  } else {
+    photo = Rect.fromLTWH(
+      room.left,
+      room.top + HouseBackdrop.topInset - width * HouseBackdrop.lift,
+      width,
+      width * image.height / image.width,
+    );
+  }
+  final height = photo.height;
 
   canvas.save();
   canvas.clipRect(room);
@@ -69,7 +164,7 @@ void paintHouse(Canvas canvas, Rect room, ColorScheme scheme) {
   );
 
   // The sky, darkened so the date and the title read over it.
-  final sky = Rect.fromLTWH(photo.left, photo.top, width, height * 0.34);
+  final sky = Rect.fromLTWH(photo.left, photo.top, photo.width, height * 0.34);
   canvas.drawRect(
     sky,
     Paint()
@@ -84,7 +179,7 @@ void paintHouse(Canvas canvas, Rect room, ColorScheme scheme) {
   final fade = Rect.fromLTWH(
     photo.left,
     photo.top + height * 0.58,
-    width,
+    photo.width,
     height * 0.42 + 1,
   );
   canvas.drawRect(

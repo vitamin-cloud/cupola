@@ -607,7 +607,6 @@ class OnboardingWelcome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return LayoutBuilder(
       builder: (context, constraints) => OnboardingBeat(
         alignment: MainAxisAlignment.end,
@@ -620,11 +619,7 @@ class OnboardingWelcome extends StatelessWidget {
               onCopy: onCopy,
               onSignIn: onSignIn,
               onDemo: onDemo,
-              showLines: roomForDoorLines(
-                context,
-                constraints.maxHeight,
-                demo: onDemo != null,
-              ),
+              showLines: false,
             ),
             if (onBack case final back?) ...[
               const SizedBox(height: AppSpacing.sm),
@@ -632,17 +627,8 @@ class OnboardingWelcome extends StatelessWidget {
             ],
           ],
         ),
-        children: [
-          const OnePunchline(),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            'Stack talks straight to the services you run at home. No Stack '
-            'account, no cloud in between.',
-            style: theme.textTheme.bodyLarge!.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
+        // This fork: no words over the welcome, only its doors.
+        children: const [],
       ),
     );
   }

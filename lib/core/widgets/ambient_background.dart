@@ -538,13 +538,14 @@ class _RoomState extends State<_Room> with SingleTickerProviderStateMixin {
 }
 
 class _RoomPainter extends CustomPainter {
-  const _RoomPainter({
+  // Repaints when the background picture changes (Settings › Background).
+  _RoomPainter({
     required this.scheme,
     required this.accent,
     required this.picture,
     required this.leaving,
     required this.presence,
-  });
+  }) : super(repaint: HouseBackdrop.changes);
 
   final ColorScheme scheme;
   final Color accent;

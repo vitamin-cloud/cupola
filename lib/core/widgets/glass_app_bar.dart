@@ -1,6 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:flutter/rendering.dart' show PipelineOwner;
+
+import 'package:cupola/core/house_backdrop.dart';
+
 import 'package:cupola/core/app_animation.dart';
 import 'package:cupola/core/app_spacing.dart';
 import 'package:cupola/core/theme.dart';
@@ -155,6 +159,19 @@ class _RenderScrim extends RenderBox {
     this._roomBox,
     this._ground,
   );
+
+  // This fork: the room's picture can change (Settings › Background).
+  @override
+  void attach(PipelineOwner owner) {
+    super.attach(owner);
+    HouseBackdrop.changes.addListener(markNeedsPaint);
+  }
+
+  @override
+  void detach() {
+    HouseBackdrop.changes.removeListener(markNeedsPaint);
+    super.detach();
+  }
 
   List<double> _alphas;
   set alphas(List<double> value) {

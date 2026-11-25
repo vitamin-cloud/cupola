@@ -7,6 +7,7 @@ import 'package:cupola/core/app_breakpoints.dart';
 import 'package:cupola/core/app_spacing.dart';
 import 'package:cupola/core/capability/audience.dart';
 import 'package:cupola/core/theme.dart';
+import 'package:cupola/features/settings/presentation/widgets/test_all_connections_button.dart';
 import 'package:cupola/core/utils/dot_separator.dart';
 import 'package:cupola/core/widgets/ambient_scaffold.dart';
 import 'package:cupola/core/widgets/app_card.dart';
@@ -73,9 +74,18 @@ class SettingsHomeScreen extends ConsumerWidget {
 
     final requester = ref.watch(shellAudienceProvider) == Audience.requester;
     // The page's name in the page, and under it how the stack stands.
+    // This fork: no Connections card; its Test all sits at the end of the
+    // summary line.
     final heading = PageTitle.flush(
       'Settings',
-      summary: requester ? null : const _SettingsSummary(),
+      summary: requester
+          ? null
+          : const Row(
+              children: [
+                Expanded(child: _SettingsSummary()),
+                TestAllConnectionsButton(),
+              ],
+            ),
     );
     final page = AmbientScaffold(
       // No accent: a settings pane has no artwork, so its room is lit by the
@@ -106,16 +116,8 @@ class SettingsHomeScreen extends ConsumerWidget {
                     : [
                         heading,
                         const DemoSettingsCard(),
-                        const ConnectionsSummaryCard(),
-                        const SizedBox(height: AppSpacing.xl),
+                        const SizedBox(height: AppSpacing.md),
                         ..._buildGeneralSection(context, settings),
-                        const SizedBox(height: AppSpacing.xl),
-                        ..._buildSecuritySection(context, settings),
-                        const SizedBox(height: AppSpacing.xl),
-                        ..._buildAboutSection(context),
-                        const SizedBox(height: AppSpacing.xl),
-                        ..._buildDangerZoneSection(),
-                        const SettingsSignature(),
                       ],
               ),
       ),
@@ -205,7 +207,7 @@ class SettingsHomeScreen extends ConsumerWidget {
           // no state to report.
           _regionRow(context, settings),
           _appearanceRow(context, settings),
-          const SettingsHomeRow(),
+          const SettingsBackgroundRow(),
           const SettingsNotificationsRow(),
           SettingsCard.grouped(
             leading: const Icon(Icons.travel_explore_rounded),
@@ -216,38 +218,9 @@ class SettingsHomeScreen extends ConsumerWidget {
           ),
           // Shared with the window's summary pane: see settings_app_rows.dart.
           const SettingsRevisitOnboardingRow(),
-        ],
-      ),
-    ];
-  }
-
-  /// Trusted certificates, always, not only when something is pinned.
-  ///
-  /// It used to be reachable from exactly one place: a row on the Connections
-  /// screen that appears only when the map is non-empty. The rail carries it on
-  /// a window, and the phone has no rail, so on a phone with nothing pinned yet
-  /// the pane did not exist at all. Trust is per origin and outlives the
-  /// services that created it (ADR-6), which is precisely why the door has to
-  /// stand even when the room is empty.
-  List<Widget> _buildSecuritySection(
-    BuildContext context,
-    SettingsModel settings,
-  ) {
-    return [
-      const SettingsSectionLabel('Security'),
-      const SizedBox(height: AppSpacing.sm),
-      SettingsGroupCard(
-        children: [
-          SettingsCard.grouped(
-            leading: const Icon(Icons.verified_user_outlined),
-            title: 'Trusted certificates',
-            subtitle: 'Pinned by address, not by service',
-            semanticHint: 'opens the trusted certificates list',
-            onTap: () => context.push('/settings/certificates'),
-          ),
-          // Keys and certificates are what it moves: the group before About.
           if (SettingsAnotherDeviceRow.offeredFor(settings))
             const SettingsAnotherDeviceRow(),
+          const SettingsResetAppDataRow(),
         ],
       ),
     ];
@@ -257,21 +230,6 @@ class SettingsHomeScreen extends ConsumerWidget {
   // (settings_app_rows.dart): they are not pages, so the rail cannot carry
   // them, and while only this index built them a wide window had no door to
   // the licence page, feedback, the donation sheet or Reset.
-  List<Widget> _buildAboutSection(BuildContext context) {
-    return [
-      const SettingsSectionLabel('About'),
-      const SizedBox(height: AppSpacing.sm),
-      SettingsGroupCard(children: settingsAboutRows(context)),
-    ];
-  }
-
-  List<Widget> _buildDangerZoneSection() {
-    return const [
-      SettingsSectionLabel('Danger zone'),
-      SizedBox(height: AppSpacing.sm),
-      SettingsGroupCard(children: [SettingsResetAppDataRow()]),
-    ];
-  }
 
   String _formatRegionLabel(String region) {
     final normalizedRegion = SettingsModel.normalizeRegion(region);

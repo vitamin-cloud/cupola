@@ -94,6 +94,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   /// known and not added, and the services the ring lights for them.
   List<String> _answering = const [];
   List<String> _notJoined = const [];
+  // ignore: unused_field
   Set<ServiceKey> _lit = const {};
 
   /// The ring's entrance. One authored moment on the door, then stillness.
@@ -324,20 +325,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     if (!k.usesApiKey) return true;
     return _apiKeyCtrl[k]!.text.trim().isNotEmpty;
   }
-
-  /// The ring's state, derived rather than stored: one map, every beat. On
-  /// the close it is what answered, lit.
-  Map<ServiceKey, ServiceRingState> get _ringStates => _page == _closePage
-      ? {for (final k in _lit) k: ServiceRingState.connected}
-      : {
-          for (final k in _picked)
-            k: switch (_verdictOf(k)) {
-              ServiceConnectionStatus.connected => ServiceRingState.connected,
-              null => ServiceRingState.picked,
-              _ =>
-                _isReady(k) ? ServiceRingState.silent : ServiceRingState.picked,
-            },
-        };
 
   /// The fingerprint [k]'s *currently typed* address is trusted under, or null.
   ///
@@ -1109,7 +1096,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final ringStates = _ringStates;
     final activeWalk = _page == _connectPage ? _target : null;
     final step = _targetKnowsOthers ? 'Step 1 of 2' : null;
 
@@ -1204,20 +1190,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                               ? _compactMarkFraction
                               : ServiceRing.defaultMarkFraction;
                           final still = MediaQuery.disableAnimationsOf(context);
+                          // This fork: no ring and no mark over the welcome;
+                          // the picture behind it carries the page.
                           Widget ringAt(double d, double mark) =>
-                              AnimatedBuilder(
-                                animation: _entrance,
-                                builder: (context, _) => ServiceRing(
-                                  states: ringStates,
-                                  diameter: d,
-                                  markFraction: mark,
-                                  entrance: AppAnimation.emphasizedCurve
-                                      .transform(_entrance.value),
-                                  activeService: activeWalk,
-                                  progress: 0,
-                                  spin: true,
-                                ),
-                              );
+                              const SizedBox.shrink();
 
                           // The step itself: its subject and the pager. One list, two
                           // arrangements: stacked under the ring on a phone, beside it in a
