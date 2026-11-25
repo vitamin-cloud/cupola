@@ -242,10 +242,11 @@ class MainActivity : FlutterActivity() {
      * day `targetSdk` reaches 37, which is exactly when a silent timeout would
      * otherwise start looking like a broken server.
      */
-    private fun localNetworkIsGated(): Boolean {
-        if (Build.VERSION.SDK_INT < LOCAL_NETWORK_ENFORCED_SDK) return false
-        return applicationInfo.targetSdkVersion >= LOCAL_NETWORK_ENFORCED_SDK
-    }
+    // This fork: asked on every Android 17+ phone, whatever the target. The
+    // owner's Pixel blocked the LAN for this app while the browser reached
+    // it, and asking for a permission the OS does not enforce costs nothing.
+    private fun localNetworkIsGated(): Boolean =
+        Build.VERSION.SDK_INT >= LOCAL_NETWORK_ENFORCED_SDK
 
     /** Cupola's own page in Settings, where the permission toggle lives. */
     private fun openAppSettings(): Boolean {

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:cupola/core/platform/local_network_access.dart';
+
 import 'package:flutter/widgets.dart' show AppLifecycleListener;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -111,7 +113,33 @@ class RouteProbe {
     ) {
       if (previous != next) unawaited(probeAll());
     });
-    scheduleMicrotask(() => unawaited(probeAll()));
+    scheduleMicrotask(() async {
+      await _askLocalNetwork();
+      unawaited(probeAll());
+    });
+  }
+
+  var _askedLocalNetwork = false;
+
+  /// This fork: asks once, at start, for the phone's local-network permission
+  /// when an address at home is on it. Without it Android blocks the LAN for
+  /// this app silently (the browser still reaches the server), and the knock
+  /// at home fails as though the server were down. A phone that does not
+  /// gate the LAN answers at once and shows nothing.
+  Future<void> _askLocalNetwork() async {
+    if (_askedLocalNetwork || _disposed) return;
+    _askedLocalNetwork = true;
+    final settings = _ref.read(currentSettingsProvider);
+    for (final instance in settings.instances) {
+      if (instance.url.trim().isEmpty) continue;
+      try {
+        final verdict = await probeLocalNetworkAccess(instance.url);
+        // One answer covers every address: the permission is the app's.
+        if (verdict != LocalNetworkAccess.unrestricted) return;
+      } catch (_) {
+        return;
+      }
+    }
   }
 
   /// Knocks on every connection that has an address away.
