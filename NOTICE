@@ -25,18 +25,15 @@ forward and does not revoke any rights previously granted.
 
 Third-party components
 
-The three typefaces bundled in assets/fonts/ are licensed under the SIL Open
-Font License, Version 1.1:
+Geist Mono, bundled in assets/fonts/, is licensed under the SIL Open Font
+License, Version 1.1:
 
-- Bricolage Grotesque (assets/fonts/BricolageGrotesque.ttf), Copyright 2022 The
-  Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage);
-  licence text in assets/fonts/BricolageGrotesque-OFL.txt.
-- Onest (assets/fonts/Onest.ttf), Copyright 2021 The Onest Project Authors
-  (https://github.com/googlefonts/onest); licence text in
-  assets/fonts/Onest-OFL.txt.
 - Geist Mono (assets/fonts/GeistMono.ttf), Copyright 2024 The Geist Project
   Authors (https://github.com/vercel/geist-font); licence text in
   assets/fonts/GeistMono-OFL.txt.
+
+Roboto (assets/fonts/roboto/), Copyright Google LLC, is licensed under the
+Apache License, Version 2.0; licence text in assets/fonts/roboto/LICENSE.txt.
 
 Each licence text accompanies its font, and the app registers each one with
 Flutter's licence registry so it also reaches the shipped binaries.

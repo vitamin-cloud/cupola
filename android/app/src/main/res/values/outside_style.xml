@@ -40,51 +40,45 @@
         <item name="android:includeFontPadding">false</item>
     </style>
     <style name="OutsideText.Label" tools:targetApi="28">
-        <item name="android:fontFamily">@font/onest</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
         <item name="android:textSize">12sp</item>
         <item name="android:letterSpacing">0</item>
-        <item name="android:fontVariationSettings">"'wght' 500"</item>
         <item name="android:textFontWeight">500</item>
         <item name="android:lineHeight">16sp</item>
     </style>
     <style name="OutsideText.Title" tools:targetApi="28">
-        <item name="android:fontFamily">@font/onest</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
         <item name="android:textSize">14sp</item>
         <item name="android:letterSpacing">0</item>
-        <item name="android:fontVariationSettings">"'wght' 600"</item>
         <item name="android:textFontWeight">600</item>
         <item name="android:lineHeight">18sp</item>
     </style>
     <style name="OutsideText.Line" tools:targetApi="28">
-        <item name="android:fontFamily">@font/onest</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
         <item name="android:textSize">13sp</item>
         <item name="android:letterSpacing">0</item>
-        <item name="android:fontVariationSettings">"'wght' 500"</item>
         <item name="android:textFontWeight">500</item>
         <item name="android:lineHeight">18sp</item>
     </style>
     <style name="OutsideText.Data" tools:targetApi="28">
-        <item name="android:fontFamily">@font/onest</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
         <item name="android:textSize">13sp</item>
         <item name="android:letterSpacing">0</item>
-        <item name="android:fontVariationSettings">"'wght' 500"</item>
         <item name="android:textFontWeight">500</item>
         <item name="android:lineHeight">18sp</item>
     </style>
     <style name="OutsideText.FigureHero" tools:targetApi="28">
-        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:fontFamily">@font/roboto_bold</item>
         <item name="android:textSize">44sp</item>
         <item name="android:letterSpacing">-0.02</item>
-        <item name="android:fontVariationSettings">"'wght' 600, 'wdth' 90, 'opsz' 44"</item>
         <item name="android:textFontWeight">600</item>
         <item name="android:fontFeatureSettings">"tnum"</item>
         <item name="android:lineHeight">44sp</item>
     </style>
     <style name="OutsideText.FigureSmall" tools:targetApi="28">
-        <item name="android:fontFamily">@font/bricolage_grotesque</item>
+        <item name="android:fontFamily">@font/roboto_bold</item>
         <item name="android:textSize">20sp</item>
         <item name="android:letterSpacing">-0.01</item>
-        <item name="android:fontVariationSettings">"'wght' 600, 'wdth' 92, 'opsz' 20"</item>
         <item name="android:textFontWeight">600</item>
         <item name="android:fontFeatureSettings">"tnum"</item>
         <item name="android:lineHeight">20sp</item>

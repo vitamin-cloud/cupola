@@ -83,7 +83,8 @@ if (wantsRelease) {
 }
 
 /**
- * Puts the app's three variable font files where a widget can draw with them.
+ * Puts the app's font files where a widget can draw with them (Roboto, the
+ * app's face, and Geist Mono).
  *
  * A widget is a `RemoteViews`, inflated by the launcher from this app's
  * resources, so its faces must be `res/font/`: a Flutter asset is out of its
@@ -121,8 +122,8 @@ abstract class OutsideFonts : DefaultTask() {
     private companion object {
         /** `assets/fonts/` file to `res/font/` file. */
         val FACES = mapOf(
-            "BricolageGrotesque.ttf" to "bricolage_grotesque.ttf",
-            "Onest.ttf" to "onest.ttf",
+            "roboto/Roboto-Medium.ttf" to "roboto_medium.ttf",
+            "roboto/Roboto-Bold.ttf" to "roboto_bold.ttf",
             "GeistMono.ttf" to "geist_mono.ttf",
         )
     }
