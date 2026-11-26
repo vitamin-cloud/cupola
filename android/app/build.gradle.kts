@@ -158,9 +158,10 @@ android {
     }
 
     defaultConfig {
-        // This fork ("Stack") installs beside Cupola: an app ID of its own. The
-        // code's package (namespace) is unchanged.
-        applicationId = "com.matthwlabs.cupola.stack"
+        // This fork installs beside Cupola, and Stack 2 beside Stack 1.0
+        // (com.matthwlabs.cupola.stack, tag stack-1.0): an app ID of its own.
+        // The code's package (namespace) is unchanged.
+        applicationId = "com.matthwlabs.cupola.stack2"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         // flutter_secure_storage 10.x requires Android 23+;
