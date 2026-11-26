@@ -186,34 +186,6 @@ Finder _moreOf(String title) => find.descendant(
 
 void main() {
   testWidgets(
-    'Downloads is a table: Title, Progress, Speed and Left, the figures '
-    'in their columns',
-    (tester) async {
-      final (harness, _, container) = await _app(tester);
-
-      for (final column in ['Title', 'Progress', 'Speed', 'Left']) {
-        expect(_inTable(find.text(column)), findsOneWidget, reason: column);
-      }
-      expect(_inTable(find.text('62%')), findsOneWidget);
-      expect(_inTable(find.text('4.2\u00A0MB/\u2060s')), findsOneWidget);
-      expect(_inTable(find.text('11\u00A0min')), findsOneWidget);
-      expect(_inTable(find.text('around 21:04')), findsOneWidget);
-      expect(_inTable(find.text('Stuck at 47%')), findsOneWidget);
-      // Up next is a table of its own, under no header.
-      expect(
-        find.descendant(
-          of: find.byType(DownloadTable).last,
-          matching: find.textContaining('Queued'),
-        ),
-        findsOneWidget,
-      );
-
-      await _close(tester, harness, container);
-    },
-    variant: _macOS,
-  );
-
-  testWidgets(
     'a header sorts the table: Progress the furthest first, again the '
     'other way, a third time back to the queue',
     (tester) async {
@@ -375,61 +347,6 @@ void main() {
       await _close(tester, harness, container);
     },
     variant: _macOS,
-  );
-
-  testWidgets(
-    'on All, Needs you is a line a fault with its remedy beside it, and '
-    'one for the requests, with Review',
-    (tester) async {
-      final (harness, router, container) = await _app(
-        tester,
-        to: ServiceRoutes.activity,
-      );
-
-      expect(find.text('Big Buck Bunny is stuck at 47%'), findsOneWidget);
-      expect(find.text('Try another download'), findsOneWidget);
-      // The card's sentence is on the Needs you page, not on the line.
-      expect(
-        find.textContaining('nobody sharing it has the whole file'),
-        findsNothing,
-      );
-      expect(find.text('Review 18'), findsOneWidget);
-      expect(find.text('3 requests wait for your approval'), findsOneWidget);
-
-      // The quieter ways out wait behind the ⋯.
-      await _tap(
-        tester,
-        find.bySemanticsLabel('More ways out, Big Buck Bunny is stuck at 47%'),
-      );
-      expect(find.text('Remove'), findsWidgets);
-      expect(find.text('Keep waiting'), findsOneWidget);
-      await tester.sendKeyEvent(LogicalKeyboardKey.escape);
-      await _answer(tester);
-
-      await _tap(tester, find.text('Review').last);
-      expect(router.state.uri.path, ServiceRoutes.activityRequests);
-
-      await _close(tester, harness, container);
-    },
-    variant: _macOS,
-  );
-
-  testWidgets(
-    'a tablet draws Needs you a line a fault too, and its downloads as rows',
-    (tester) async {
-      final (harness, _, container) = await _app(
-        tester,
-        size: const Size(1180, 820),
-        to: ServiceRoutes.activity,
-      );
-
-      expect(find.text('Try another download'), findsOneWidget);
-      expect(find.text('3 requests wait for your approval'), findsOneWidget);
-      expect(find.byType(DownloadTable), findsNothing);
-
-      await _close(tester, harness, container);
-    },
-    variant: TargetPlatformVariant.only(TargetPlatform.iOS),
   );
 
   testWidgets(

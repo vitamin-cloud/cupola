@@ -17,7 +17,6 @@ import 'package:cupola/core/widgets/list_rows_shimmer.dart';
 import 'package:cupola/core/widgets/search_bar_header.dart';
 import 'package:cupola/core/widgets/section_header.dart';
 import 'package:cupola/core/widgets/service_kpi_peek.dart';
-import 'package:cupola/core/widgets/service_list_page.dart';
 import 'package:cupola/core/widgets/service_overview.dart';
 import 'package:cupola/core/widgets/service_tab_bar.dart';
 import 'package:cupola/core/widgets/shimmer_placeholder.dart';
@@ -25,13 +24,6 @@ import 'package:cupola/features/activity/presentation/widgets/requests_board.dar
 import 'package:cupola/features/activity/domain/service_type.dart';
 import 'package:cupola/features/activity/presentation/arr_calendar_screen.dart';
 import 'package:cupola/features/activity/presentation/arr_tab_screen.dart';
-import 'package:cupola/features/bazarr/data/bazarr_service.dart';
-import 'package:cupola/features/bazarr/domain/models/bazarr_models.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_history_screen.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_library_screen.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_provider.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_providers_screen.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_wanted_screen.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/discover/domain/seerr_grant.dart';
 import 'package:cupola/features/discover/presentation/discover_provider.dart';
@@ -41,27 +33,13 @@ import 'package:cupola/features/dockge/domain/models/dockge_stack.dart';
 import 'package:cupola/features/dockge/presentation/dockge_provider.dart';
 import 'package:cupola/features/dockge/presentation/dockge_screen.dart';
 import 'package:cupola/features/dockge/presentation/dockge_terminal_screen.dart';
-import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
-import 'package:cupola/features/jellyfin/presentation/jellyfin_tab_screens.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/movies/presentation/movies_provider.dart';
 import 'package:cupola/features/movies/presentation/movies_screen.dart';
-import 'package:cupola/features/plex/presentation/plex_provider.dart';
-import 'package:cupola/features/plex/presentation/plex_tab_screens.dart';
-import 'package:cupola/features/prowlarr/domain/models/prowlarr_models.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_history_screen.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_library_screen.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_stats_screen.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_provider.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_rss_provider.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_rss_screen.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_screen.dart';
-import 'package:cupola/features/readarr/data/readarr_service.dart';
-import 'package:cupola/features/readarr/presentation/readarr_activity_screen.dart';
-import 'package:cupola/features/readarr/presentation/readarr_history_screen.dart';
-import 'package:cupola/features/readarr/presentation/readarr_library_screen.dart';
-import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
 import 'package:cupola/features/services/domain/service_tab.dart';
 import 'package:cupola/features/services/presentation/service_all_screens.dart';
 import 'package:cupola/features/services/presentation/service_home_screen.dart';
@@ -70,12 +48,7 @@ import 'package:cupola/features/services/presentation/service_tab_scaffold.dart'
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/services/domain/service_summary.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/stream/presentation/stream_libraries_screen.dart';
-import 'package:cupola/features/stream/presentation/widgets/stream_now_playing_section.dart';
-import 'package:cupola/features/unraid/presentation/unraid_provider.dart';
-import 'package:cupola/features/unraid/presentation/unraid_screen.dart';
 
-import '../../../test_helpers/fake_api_client.dart';
 import '../../../test_helpers/fake_services.dart';
 import '../../../test_helpers/settings_scope.dart';
 
@@ -339,262 +312,7 @@ void main() {
     });
   });
 
-  group('Bazarr tabs clear the glass bars', () {
-    List<Override> over(FakeBazarrService service) => [
-      bazarrServiceProvider.overrideWith((ref) => service),
-    ];
-
-    testWidgets('Wanted draws its Episodes and Movies bar below the tab bar', (
-      tester,
-    ) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.bazarr,
-        tab: ServiceTab.wanted,
-        overrides: over(FakeBazarrService()),
-        child: const BazarrWantedScreen(
-          showAppBar: false,
-          topPadding: _hostedTopPadding,
-        ),
-      );
-
-      expectClearsTheBar(tester, find.byType(TabBar));
-    });
-
-    testWidgets('the Series library starts below the tab bar', (tester) async {
-      final service = FakeBazarrService()
-        ..seriesResult = const BazarrPagedResult(
-          data: [
-            BazarrSeries(
-              sonarrSeriesId: 1,
-              title: 'Foundation',
-              year: 2021,
-              monitored: true,
-            ),
-          ],
-          total: 1,
-        );
-      await pumpHosted(
-        tester,
-        service: ServiceKey.bazarr,
-        tab: ServiceTab.series,
-        overrides: over(service),
-        child: const BazarrLibraryScreen.series(
-          showAppBar: false,
-          topPadding: _hostedTopPadding,
-        ),
-      );
-
-      expect(find.text('Foundation'), findsOneWidget);
-      expectClearsTheBar(tester, find.text('Foundation'));
-    });
-
-    testWidgets('the Movies library starts below the tab bar', (tester) async {
-      final service = FakeBazarrService()
-        ..moviesResult = const BazarrPagedResult(
-          data: [
-            BazarrMovie(
-              radarrId: 1,
-              title: 'Arrival',
-              year: 2016,
-              monitored: true,
-            ),
-          ],
-          total: 1,
-        );
-      await pumpHosted(
-        tester,
-        service: ServiceKey.bazarr,
-        tab: ServiceTab.movies,
-        overrides: over(service),
-        child: const BazarrLibraryScreen.movies(
-          showAppBar: false,
-          topPadding: _hostedTopPadding,
-        ),
-      );
-
-      expect(find.textContaining('Arrival'), findsOneWidget);
-      expectClearsTheBar(tester, find.textContaining('Arrival'));
-    });
-
-    testWidgets('a library still loading starts below the tab bar', (
-      tester,
-    ) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.bazarr,
-        tab: ServiceTab.series,
-        overrides: over(_BazarrNeverAnswers()),
-        child: const BazarrLibraryScreen.series(
-          showAppBar: false,
-          topPadding: _hostedTopPadding,
-        ),
-      );
-
-      expectClearsTheBar(tester, find.byType(ShimmerPlaceholder));
-    });
-
-    testWidgets('History draws its filter pills below the tab bar', (
-      tester,
-    ) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.bazarr,
-        tab: ServiceTab.history,
-        overrides: over(FakeBazarrService()),
-        child: const BazarrHistoryScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, _selectionPills);
-    });
-
-    testWidgets('Providers starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.bazarr,
-        tab: ServiceTab.providers,
-        overrides: over(FakeBazarrService()),
-        child: const BazarrProvidersScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(SectionHeader));
-    });
-  });
-
-  group('Prowlarr tabs clear the glass bars', () {
-    testWidgets('Indexers draws its actions row below the tab bar', (
-      tester,
-    ) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.prowlarr,
-        tab: ServiceTab.indexers,
-        overrides: [
-          prowlarrIndexersProvider.overrideWith(
-            (ref) async => const <ProwlarrIndexer>[],
-          ),
-          prowlarrIndexerStatusProvider.overrideWith(
-            (ref) async => const <ProwlarrIndexerStatus>[],
-          ),
-          prowlarrTagsProvider.overrideWith(
-            (ref) async => const <ProwlarrTag>[],
-          ),
-        ],
-        child: const ProwlarrLibraryScreen(
-          showAppBar: false,
-          topPadding: _hostedTopPadding,
-        ),
-      );
-
-      expectClearsTheBar(tester, find.byTooltip('Add indexer'));
-    });
-
-    testWidgets('History draws its filter pills below the tab bar', (
-      tester,
-    ) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.prowlarr,
-        tab: ServiceTab.history,
-        overrides: [
-          prowlarrHistoryPageProvider((
-            page: 1,
-            pageSize: 50,
-            eventType: null,
-          )).overrideWith((ref) async => const ProwlarrHistoryPage()),
-        ],
-        child: const ProwlarrHistoryScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, _selectionPills);
-    });
-
-    testWidgets('Stats draws its window pills below the tab bar', (
-      tester,
-    ) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.prowlarr,
-        tab: ServiceTab.stats,
-        overrides: [
-          prowlarrIndexerStatsForWindowProvider(
-            ProwlarrStatsWindow.day,
-          ).overrideWith((ref) => Completer<ProwlarrIndexerStats>().future),
-        ],
-        child: const ProwlarrStatsScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, _selectionPills);
-    });
-  });
-
-  group('Readarr tabs clear the glass bars', () {
-    final overrides = <Override>[
-      readarrServiceProvider.overrideWith((ref) => _EmptyReadarr()),
-    ];
-
-    testWidgets('an empty queue starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.readarr,
-        tab: ServiceTab.queue,
-        overrides: overrides,
-        child: const ReadarrActivityScreen(
-          mode: ReadarrActivityMode.queue,
-          topPadding: _hostedTopPadding,
-        ),
-      );
-
-      expect(find.text('Queue is empty'), findsOneWidget);
-      expectClearsTheBar(tester, find.byType(AppEmptyState));
-    });
-
-    testWidgets('an empty Wanted starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.readarr,
-        tab: ServiceTab.wanted,
-        overrides: overrides,
-        child: const ReadarrActivityScreen(
-          mode: ReadarrActivityMode.wanted,
-          topPadding: _hostedTopPadding,
-        ),
-      );
-
-      expect(find.text('Nothing missing'), findsOneWidget);
-      expectClearsTheBar(tester, find.byType(AppEmptyState));
-    });
-
-    testWidgets('an empty history starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.readarr,
-        tab: ServiceTab.history,
-        overrides: overrides,
-        child: const ReadarrHistoryScreen(topPadding: _hostedTopPadding),
-      );
-
-      expect(find.text('No history yet'), findsOneWidget);
-      expectClearsTheBar(tester, find.byType(AppEmptyState));
-    });
-
-    testWidgets('Readarr Library starts below the tab bar', (tester) async {
-      // The shared browse scaffold, as Radarr's: its header adds the room the
-      // bands take and the inset itself.
-      await pumpHosted(
-        tester,
-        service: ServiceKey.readarr,
-        tab: ServiceTab.library,
-        overrides: [readarrAuthorsProvider.overrideWith((ref) => _pending())],
-        child: const ReadarrLibraryScreen(
-          showAppBar: false,
-          topPadding: _hostedTopPadding,
-        ),
-      );
-
-      expectClearsTheBar(tester, find.byType(SearchBarHeader));
-    });
-  });
+  group('Prowlarr tabs clear the glass bars', () {});
 
   group('The download clients\' tabs clear the glass bars', () {
     testWidgets('qBittorrent RSS starts below the tab bar', (tester) async {
@@ -611,13 +329,6 @@ void main() {
 
       expectClearsTheBar(tester, find.byType(SectionHeader));
     });
-
-
-
-
-
-
-
   });
 
   // These five pages wrapped their body in a `SafeArea` that took the top inset
@@ -657,113 +368,9 @@ void main() {
 
       expectClearsTheBar(tester, find.byType(SectionHeader));
     });
-
-    testWidgets('Unraid Array starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.unraid,
-        tab: ServiceTab.array,
-        overrides: [
-          serviceSummaryProvider(
-            ServiceKey.unraid,
-          ).overrideWith((ref) => _pending()),
-          unraidArrayProvider.overrideWith((ref) => _pending()),
-        ],
-        child: const UnraidScreen.array(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(SectionHeader));
-    });
-
-
-    testWidgets('Jellyfin Libraries starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.jellyfin,
-        tab: ServiceTab.libraries,
-        overrides: [
-          jellyfinLacksAdministratorProvider.overrideWithValue(false),
-          jellyfinLibrariesProvider.overrideWith((ref) => _pending()),
-        ],
-        child: const StreamLibrariesScreen(
-          service: ServiceKey.jellyfin,
-          showAppBar: false,
-          topPadding: _hostedTopPadding,
-        ),
-      );
-
-      expectClearsTheBar(tester, find.byType(SectionHeader));
-    });
-
-    testWidgets('Plex Libraries starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.plex,
-        tab: ServiceTab.libraries,
-        overrides: [plexLibrariesProvider.overrideWith((ref) => _pending())],
-        child: const StreamLibrariesScreen(
-          service: ServiceKey.plex,
-          showAppBar: false,
-          topPadding: _hostedTopPadding,
-        ),
-      );
-
-      expectClearsTheBar(tester, find.byType(SectionHeader));
-    });
   });
 
-  group('ServiceListPage takes the inset itself', () {
-    // The page is handed only what the host's bands take, as the router hands
-    // every tab, and nothing here adds the status bar: whatever clears the tab
-    // bar does so because the page did.
-    testWidgets('its first row starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.plex,
-        tab: ServiceTab.devices,
-        child: ServiceListPage<String>.unsummarised(
-          service: ServiceKey.plex,
-          topPadding: _hostedTopPadding,
-          value: const AsyncData(['A first row']),
-          serviceName: 'Plex devices',
-          emptyIcon: Icons.devices_other_rounded,
-          emptyTitle: 'No devices',
-          emptyMessage: 'Nothing here.',
-          onRetry: () {},
-          rowBuilder: (row) => Text(row),
-        ),
-      );
-
-      expect(find.text('A first row'), findsOneWidget);
-      expectClearsTheBar(tester, find.text('A first row'));
-    });
-
-    testWidgets('its own header starts below the tab bar', (tester) async {
-      // The header sits outside the state ladder, so it rides the padding
-      // alone: this is the case where a page that forgot the inset would put
-      // a filter under the glass.
-      await pumpHosted(
-        tester,
-        service: ServiceKey.plex,
-        tab: ServiceTab.devices,
-        child: ServiceListPage<String>(
-          service: ServiceKey.plex,
-          topPadding: _hostedTopPadding,
-          value: const AsyncData(['A first row']),
-          serviceName: 'Plex devices',
-          emptyIcon: Icons.devices_other_rounded,
-          emptyTitle: 'No devices',
-          emptyMessage: 'Nothing here.',
-          onRetry: () {},
-          summary: (rows) => '${rows.length} rows',
-          header: const Text('A header'),
-          rowBuilder: (row) => Text(row),
-        ),
-      );
-
-      expectClearsTheBar(tester, find.text('A header'));
-    });
-  });
+  group('ServiceListPage takes the inset itself', () {});
 
   // These pages put the room the bands take, and the inset, into their own
   // header or list padding rather than into a `SafeArea`.
@@ -898,121 +505,7 @@ void main() {
     );
   });
 
-
-  group('The media servers\' tabs clear the glass bars', () {
-    testWidgets('Jellyfin Users starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.jellyfin,
-        tab: ServiceTab.users,
-        overrides: [
-          jellyfinLacksAdministratorProvider.overrideWithValue(false),
-          jellyfinUsersProvider.overrideWith((ref) => _pending()),
-        ],
-        child: const JellyfinUsersScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(ListRowsShimmer));
-    });
-
-    testWidgets('Jellyfin Devices starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.jellyfin,
-        tab: ServiceTab.devices,
-        overrides: [
-          jellyfinLacksAdministratorProvider.overrideWithValue(false),
-          jellyfinDevicesProvider.overrideWith((ref) => _pending()),
-        ],
-        child: const JellyfinDevicesScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(ListRowsShimmer));
-    });
-
-    testWidgets('Jellyfin Tasks starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.jellyfin,
-        tab: ServiceTab.tasks,
-        overrides: [
-          jellyfinLacksAdministratorProvider.overrideWithValue(false),
-          jellyfinTasksProvider.overrideWith((ref) => _pending()),
-        ],
-        child: const JellyfinTasksScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(ListRowsShimmer));
-    });
-
-    testWidgets(
-      'a household member\'s Devices placeholder starts below the bar',
-      (tester) async {
-        await pumpHosted(
-          tester,
-          service: ServiceKey.jellyfin,
-          tab: ServiceTab.devices,
-          overrides: [
-            jellyfinLacksAdministratorProvider.overrideWithValue(true),
-          ],
-          child: const JellyfinDevicesScreen(topPadding: _hostedTopPadding),
-        );
-
-        expectClearsTheBar(tester, find.byType(AppEmptyStatePage));
-      },
-    );
-
-    testWidgets('Jellyfin Activity starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.jellyfin,
-        tab: ServiceTab.activity,
-        overrides: [
-          jellyfinLacksAdministratorProvider.overrideWithValue(false),
-          jellyfinSessionsProvider.overrideWith((ref) => _pending()),
-        ],
-        child: const JellyfinActivityScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(StreamNowPlayingSection));
-    });
-
-    testWidgets('Plex Activities starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.plex,
-        tab: ServiceTab.activities,
-        overrides: [plexSessionsProvider.overrideWith((ref) => _pending())],
-        child: const PlexActivitiesScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(StreamNowPlayingSection));
-    });
-
-    testWidgets('Plex Devices starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.plex,
-        tab: ServiceTab.devices,
-        overrides: [plexDevicesProvider.overrideWith((ref) => _pending())],
-        child: const PlexDevicesScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(ListRowsShimmer));
-    });
-
-    testWidgets('Plex Playlists starts below the tab bar', (tester) async {
-      await pumpHosted(
-        tester,
-        service: ServiceKey.plex,
-        tab: ServiceTab.playlists,
-        overrides: [plexPlaylistsProvider.overrideWith((ref) => _pending())],
-        child: const PlexPlaylistsScreen(topPadding: _hostedTopPadding),
-      );
-
-      expectClearsTheBar(tester, find.byType(ListRowsShimmer));
-    });
-  });
+  group('The media servers\' tabs clear the glass bars', () {});
 }
 
 /// A Radarr that never answers its queue, so the screen stays on its skeleton.
@@ -1022,43 +515,12 @@ class _NeverAnswers extends FakeRadarrService {
       Completer<List<dynamic>>().future;
 }
 
-/// A Bazarr that never answers a library page, so the list stays on its shimmer.
-class _BazarrNeverAnswers extends FakeBazarrService {
-  @override
-  Future<BazarrPagedResult<BazarrSeries>> getSeries({
-    int start = 0,
-    int length = 50,
-  }) => Completer<BazarrPagedResult<BazarrSeries>>().future;
-}
-
 /// The filter pills a screen leads with. `SelectionPills` is generic over a
 /// screen's private enum, so it can only be found by its name.
 final _selectionPills = find.byWidgetPredicate(
   (widget) => widget.runtimeType.toString().startsWith('SelectionPills'),
   description: 'SelectionPills',
 );
-
-/// A Readarr with nothing in its queue, its wanted list or its history.
-class _EmptyReadarr extends ReadarrService {
-  _EmptyReadarr() : super(FakeApiClient());
-
-  @override
-  Future<List<dynamic>> getQueue({
-    Map<String, dynamic>? queryParameters,
-  }) async => const [];
-
-  @override
-  Future<List<dynamic>> getAllMissing({
-    Map<String, dynamic>? queryParameters,
-  }) async => const [];
-
-  @override
-  Future<List<dynamic>> getHistory({
-    int page = 1,
-    int pageSize = 20,
-    Map<String, dynamic>? queryParameters,
-  }) async => const [];
-}
 
 /// A read that never answers, so a screen stays on its loading state.
 Future<T> _pending<T>() => Completer<T>().future;

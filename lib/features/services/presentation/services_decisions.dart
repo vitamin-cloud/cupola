@@ -10,20 +10,15 @@ import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/status/lexicon.dart';
 import 'package:cupola/core/utils/arr_activity_display.dart';
 import 'package:cupola/core/utils/image_utils.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_provider.dart';
-import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
 import 'package:cupola/features/discover/domain/models/seerr_issue.dart';
 import 'package:cupola/features/discover/domain/seerr_grant.dart';
 import 'package:cupola/features/discover/domain/seerr_issue_words.dart';
 import 'package:cupola/features/discover/presentation/discover_provider.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/features/discover/domain/models/seerr_request.dart';
-import 'package:cupola/features/prowlarr/domain/models/prowlarr_models.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/services/presentation/kept_waiting_provider.dart';
 import 'package:cupola/features/services/domain/arr_health.dart';
 import 'package:cupola/features/services/domain/arr_import.dart';
@@ -38,8 +33,6 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 import 'package:cupola/features/settings/domain/unread_secret.dart';
 import 'package:cupola/features/truenas/data/truenas_service.dart';
-import 'package:cupola/features/unraid/domain/unraid_alerts.dart';
-import 'package:cupola/features/unraid/presentation/unraid_provider.dart';
 import 'package:cupola/features/media/domain/media_key.dart';
 import 'package:cupola/features/settings/domain/connection_presentation.dart';
 import 'package:cupola/features/truenas/domain/models/alert.dart';
@@ -76,15 +69,6 @@ final dashboardDecisionSourceProvider =
           // Every Seerr, each answering for itself: a request waiting on the
           // second one is waiting on the user as much as one on the first.
           return _pendingRequestDecisions(ref);
-        // Every connection of each, each answering for itself, like the
-        // requests: a failing indexer on the second Prowlarr needs somebody as
-        // much as one on the first, and its Test has to reach that Prowlarr.
-        case DecisionSource.indexers:
-          return _decisionsOnEveryConnection(
-            ref,
-            ServiceKey.prowlarr,
-            (source) => _failingIndexerDecisions(ref, source),
-          );
         case DecisionSource.queue:
           // Not gated on one service: the faults come from whichever of eight
           // sources reported one, and the queue has already gated each of those
@@ -109,11 +93,6 @@ final dashboardDecisionSourceProvider =
               ref,
               ServiceKey.truenas,
               (source) => _storageAlertDecisions(ref, source),
-            ),
-            _decisionsOnEveryConnection(
-              ref,
-              ServiceKey.unraid,
-              (source) => _unraidAlertDecisions(ref, source),
             ),
           ]);
           return (
@@ -531,50 +510,6 @@ String _seerrRequestRoute(SeerrRequest request) {
   );
 }
 
-Future<List<DashboardDecision>> _failingIndexerDecisions(
-  Ref ref,
-  MergeConnection source,
-) async {
-  // `/indexerstatus` returns only the indexers with an active problem, so this
-  // list *is* the fault list: no filtering, and no counting against the total.
-  final results = await Future.wait([
-    ref.watch(prowlarrIndexerStatusForProvider(source.instanceId).future),
-    ref.watch(prowlarrIndexersForProvider(source.instanceId).future),
-  ]);
-  final statuses = results[0] as List<ProwlarrIndexerStatus>;
-  final indexers = results[1] as List<ProwlarrIndexer>;
-  final names = {for (final indexer in indexers) indexer.id: indexer.name};
-
-  return [
-    for (final status in statuses)
-      DashboardDecision(
-        kind: DecisionKind.failingIndexer,
-        // With the connection: two Prowlarr both number their indexers from
-        // one.
-        id: 'prowlarr-${source.instanceId}-${status.indexerId}',
-        service: ServiceKey.prowlarr,
-        title: names[status.indexerId] ?? 'Indexer ${status.indexerId}',
-        detail: joinDisplayParts([
-          'Failing',
-          // Which Prowlarr, once there are two to tell apart.
-          serviceWithConnection(ServiceKey.prowlarr, source.name, joiner: ' '),
-          status.disabledTill == null ? null : 'disabled for now',
-        ]),
-        instanceId: source.instanceId,
-        connectionName: source.name,
-        actionInstanceId: source.instanceId,
-        // The *first* failure, not the most recent one: an indexer that has been
-        // failing since breakfast outranks one that failed a minute ago, and the
-        // most recent failure of a long outage is always a minute ago.
-        occurredAt:
-            parseAddedTimestamp(status.initialFailure) ??
-            parseAddedTimestamp(status.mostRecentFailure),
-        actionId: status.indexerId,
-        route: ServiceRoutes.prowlarrIndexer(status.indexerId),
-      ),
-  ];
-}
-
 /// TrueNAS's alerts that need somebody (warning or worse, not dismissed),
 /// in plain words where the app knows the alert ([trueNasAlertHeadline]).
 Future<List<DashboardDecision>> _storageAlertDecisions(
@@ -612,45 +547,6 @@ Future<List<DashboardDecision>> _storageAlertDecisions(
   ];
 }
 
-/// What an Unraid server says needs somebody ([unraidAlerts]): the slots its
-/// array flagged, which lead to the array, and its unread notifications at
-/// warning or alert, which lead to its notifications.
-Future<List<DashboardDecision>> _unraidAlertDecisions(
-  Ref ref,
-  MergeConnection source,
-) async {
-  final client = ref.watch(unraidClientForProvider(source.instanceId));
-  final (array, notifications) = await (
-    client.getArray(),
-    client.getNotifications(),
-  ).wait;
-  return [
-    for (final alert in unraidAlerts(
-      array: array,
-      notifications: notifications,
-    ))
-      DashboardDecision(
-        kind: DecisionKind.storageAlert,
-        id: 'unraid-${source.instanceId}-${alert.id}',
-        service: ServiceKey.unraid,
-        title: alert.title,
-        detail: serviceWithConnection(
-          ServiceKey.unraid,
-          source.name,
-          joiner: ' ',
-        ),
-        reason: alert.reason,
-        occurredAt: alert.occurredAt,
-        route: alert.isDisk
-            ? ServiceRoutes.unraidArray
-            : ServiceRoutes.unraidNotifications,
-        instanceId: source.instanceId,
-        connectionName: source.name,
-        actionInstanceId: source.instanceId,
-      ),
-  ];
-}
-
 /// An \*arr's health checks at the error level, in the app's words where it
 /// knows the check (`arr_health.dart`) and in the \*arr's own otherwise; its
 /// own stay behind Why?. A warning or a notice (an update out, an indexer slow
@@ -659,16 +555,9 @@ Future<List<DashboardDecision>> _healthDecisions(
   Ref ref,
   MergeConnection source,
 ) async {
-  if (source.service == ServiceKey.bazarr) {
-    return _bazarrHealthDecisions(ref, source);
-  }
   final ArrActivityMixin arr = switch (source.service) {
     ServiceKey.radarr => ref.watch(radarrServiceForProvider(source.instanceId)),
-    ServiceKey.sonarr => ref.watch(sonarrServiceForProvider(source.instanceId)),
-    ServiceKey.readarr => ref.watch(
-      readarrServiceForProvider(source.instanceId),
-    ),
-    _ => ref.watch(lidarrServiceForProvider(source.instanceId)),
+    _ => ref.watch(sonarrServiceForProvider(source.instanceId)),
   };
   final checks = await arr.getHealth();
   final name = serviceWithConnection(source.service, source.name, joiner: ' ');
@@ -692,39 +581,6 @@ Future<List<DashboardDecision>> _healthDecisions(
           connectionName: source.name,
           actionInstanceId: source.instanceId,
         ),
-  ];
-}
-
-/// Bazarr's health issues, each a fault: without a languages profile, or
-/// with a library folder it cannot use, Bazarr fetches nothing. The headline
-/// is the app's where the check is known, Bazarr's own words stay behind Why?.
-Future<List<DashboardDecision>> _bazarrHealthDecisions(
-  Ref ref,
-  MergeConnection source,
-) async {
-  final issues = await ref
-      .watch(bazarrServiceForProvider(source.instanceId))
-      .getHealthIssues();
-  final name = serviceWithConnection(source.service, source.name, joiner: ' ');
-  return [
-    for (final issue in issues)
-      DashboardDecision(
-        kind: DecisionKind.serviceHealth,
-        id:
-            'health-${source.service.routeParam}-${source.instanceId}-'
-            '${issue.object.hashCode}-${issue.issue.hashCode}',
-        service: source.service,
-        title: issue.headline,
-        detail: name,
-        reason: issue.issue.isEmpty ? null : issue.issue,
-        subject: 'bazarr:${issue.object}',
-        // Bazarr does not date an issue.
-        occurredAt: null,
-        route: ServiceRoutes.forService(source.service),
-        instanceId: source.instanceId,
-        connectionName: source.name,
-        actionInstanceId: source.instanceId,
-      ),
   ];
 }
 

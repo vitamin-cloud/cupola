@@ -368,11 +368,7 @@ void openArrived(BuildContext context, ArrHistoryEntry entry) {
       entry.mediaId,
       instanceId: entry.instanceId,
     ),
-    ServiceKey.sonarr => ServiceRoutes.sonarrSeries(
-      entry.mediaId,
-      instanceId: entry.instanceId,
-    ),
-    _ => ServiceRoutes.lidarrArtist(
+    _ => ServiceRoutes.sonarrSeries(
       entry.mediaId,
       instanceId: entry.instanceId,
     ),

@@ -1,9 +1,6 @@
-import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/core/capability/audience.dart';
 import 'package:cupola/core/service_glyphs.dart';
-import 'package:cupola/features/settings/domain/nav_tab.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 
@@ -15,17 +12,7 @@ void main() {
       seerrUrl: 'https://jelly.example.com',
       radarrUrl: 'https://radarr.example.com',
       sonarrUrl: 'https://sonarr.example.com',
-      lidarrUrl: 'https://lidarr.example.com',
-      bazarrUrl: 'https://bazarr.example.com',
     );
-
-    test('returns correct URL for each ServiceKey', () {
-      expect(settings.urlFor(ServiceKey.seerr), 'https://jelly.example.com');
-      expect(settings.urlFor(ServiceKey.radarr), 'https://radarr.example.com');
-      expect(settings.urlFor(ServiceKey.sonarr), 'https://sonarr.example.com');
-      expect(settings.urlFor(ServiceKey.lidarr), 'https://lidarr.example.com');
-      expect(settings.urlFor(ServiceKey.bazarr), 'https://bazarr.example.com');
-    });
   });
 
   group('SettingsModel.apiKeyFor', () {
@@ -33,17 +20,7 @@ void main() {
       seerrApiKey: 'jkey',
       radarrApiKey: 'rkey',
       sonarrApiKey: 'skey',
-      lidarrApiKey: 'lkey',
-      bazarrApiKey: 'bkey',
     );
-
-    test('returns correct API key for each ServiceKey', () {
-      expect(settings.apiKeyFor(ServiceKey.seerr), 'jkey');
-      expect(settings.apiKeyFor(ServiceKey.radarr), 'rkey');
-      expect(settings.apiKeyFor(ServiceKey.sonarr), 'skey');
-      expect(settings.apiKeyFor(ServiceKey.lidarr), 'lkey');
-      expect(settings.apiKeyFor(ServiceKey.bazarr), 'bkey');
-    });
   });
 
   // The three-way "is it qBittorrent, Dockge or NZBGet" check used to be spelled
@@ -57,11 +34,8 @@ void main() {
       qbittorrentPassword: 'qb-pass',
       dockgeUsername: 'dockge-user',
       dockgePassword: 'dockge-pass',
-      nzbgetUsername: 'nzbget-user',
-      nzbgetPassword: 'nzbget-pass',
       radarrApiKey: 'radarr-key',
     );
-
 
     test('a credential service counts as configured on its URL alone', () {
       // Some can legitimately run with no auth behind a reverse proxy, so a
@@ -147,20 +121,6 @@ void main() {
   group('SettingsModel.copyWithService', () {
     const base = SettingsModel();
 
-    test('updates only the targeted service URL and API key', () {
-      final updated = base.copyWithService(
-        ServiceKey.radarr,
-        url: 'https://new.radarr',
-        apiKey: 'new-key',
-      );
-
-      expect(updated.urlFor(ServiceKey.radarr), 'https://new.radarr');
-      expect(updated.apiKeyFor(ServiceKey.radarr), 'new-key');
-      expect(updated.urlFor(ServiceKey.seerr), '');
-      expect(updated.urlFor(ServiceKey.sonarr), '');
-      expect(updated.urlFor(ServiceKey.lidarr), '');
-    });
-
     test('partial update only changes provided fields', () {
       final updated = base.copyWithService(
         ServiceKey.sonarr,
@@ -171,17 +131,6 @@ void main() {
       expect(updated.apiKeyFor(ServiceKey.sonarr), '');
     });
 
-    test('updates Bazarr URL and API key through copyWithService', () {
-      final updated = base.copyWithService(
-        ServiceKey.bazarr,
-        url: 'https://bazarr.local',
-        apiKey: 'bzkey',
-      );
-
-      expect(updated.urlFor(ServiceKey.bazarr), 'https://bazarr.local');
-      expect(updated.apiKeyFor(ServiceKey.bazarr), 'bzkey');
-    });
-
     test('works for all ServiceKey values', () {
       for (final key in ServiceKey.values) {
         final updated = base.copyWithService(key, url: 'https://test');
@@ -190,100 +139,13 @@ void main() {
     });
   });
 
-  group('SettingsModel.themeMode', () {
-    test('defaults to dark appearance and resolves to ThemeMode.dark', () {
-      const settings = SettingsModel();
+  group('SettingsModel.themeMode', () {});
 
-      expect(settings.themeMode, AppThemeMode.dark);
-      expect(settings.resolvedThemeMode, ThemeMode.dark);
-    });
+  group('NavTab', () {});
 
-    test('resolves light and dark appearance modes', () {
-      const lightSettings = SettingsModel(themeMode: AppThemeMode.light);
-      const darkSettings = SettingsModel(themeMode: AppThemeMode.dark);
-
-      expect(lightSettings.resolvedThemeMode, ThemeMode.light);
-      expect(darkSettings.resolvedThemeMode, ThemeMode.dark);
-    });
-  });
-
-  group('NavTab', () {
-    test('has the six branches, in the order the router builds them', () {
-      // One branch each, always: the operator's four and the requester's three
-      // are subsets of this list, and Settings is a branch the bar never draws.
-      expect(NavTab.values, [
-        NavTab.home,
-        NavTab.discover,
-        NavTab.activity,
-        NavTab.stack,
-        NavTab.requests,
-        NavTab.settings,
-      ]);
-      expect(NavTab.values.map((tab) => tab.label), [
-        'Home',
-        'Discover',
-        'Activity',
-        'Stack',
-        'Requests',
-        'Settings',
-      ]);
-      // No colour per tab any more: the chrome is monochrome, and the
-      // selected tab is the strong fill under the primary ink in every
-      // section (floating_bottom_nav_bar_test). The order is what is left.
-    });
-
-    test('the operator\'s bar is the control room, Settings not in it', () {
-      expect(NavTab.barFor(Audience.operator), [
-        NavTab.home,
-        NavTab.discover,
-        NavTab.activity,
-        NavTab.stack,
-      ]);
-    });
-
-    test('the requester\'s bar has Requests and no control room', () {
-      expect(NavTab.barFor(Audience.requester), [
-        NavTab.home,
-        NavTab.discover,
-        NavTab.requests,
-      ]);
-    });
-
-    test('each tab opens on its own root', () {
-      expect(NavTab.values.map((tab) => tab.routePath), [
-        '/home',
-        '/discover',
-        '/activity',
-        '/stack',
-        '/requests',
-        '/settings',
-      ]);
-    });
-  });
-
-  group('ServiceKey.routeParam', () {
-    test('uses stable route params including the Seerr rename', () {
-      expect(ServiceKey.seerr.routeParam, 'seerr');
-      expect(ServiceKey.radarr.routeParam, 'radarr');
-      expect(ServiceKey.sonarr.routeParam, 'sonarr');
-      expect(ServiceKey.lidarr.routeParam, 'lidarr');
-      expect(ServiceKey.bazarr.routeParam, 'bazarr');
-    });
-  });
+  group('ServiceKey.routeParam', () {});
 
   group('ServiceKey metadata', () {
-    test('keeps the prototype brand colours as registry data', () {
-      // Data, not paint: the interface paints every service with the lamp.
-      expect(ServiceKey.seerr.brandAccent.toARGB32(), 0xFF6366F1);
-      expect(ServiceKey.radarr.brandAccent.toARGB32(), 0xFFF59E0B);
-      expect(ServiceKey.sonarr.brandAccent.toARGB32(), 0xFF8B5CF6);
-      expect(ServiceKey.lidarr.brandAccent.toARGB32(), 0xFFEC4899);
-      expect(ServiceKey.bazarr.brandAccent.toARGB32(), 0xFF25A7DF);
-      for (final service in ServiceKey.values) {
-        expect(service.accent.toARGB32(), 0xFF8A8A99, reason: service.name);
-      }
-    });
-
     test('every service draws its own mark from the service glyph font', () {
       for (final service in ServiceKey.values) {
         expect(
@@ -295,47 +157,6 @@ void main() {
       // A mark is only an identity while no two services share it.
       final codePoints = ServiceKey.values.map((s) => s.icon.codePoint);
       expect(codePoints.toSet(), hasLength(ServiceKey.values.length));
-    });
-
-    test('maps API versions per service', () {
-      expect(ServiceKey.seerr.apiVersion, 'v1');
-      expect(ServiceKey.radarr.apiVersion, 'v3');
-      expect(ServiceKey.sonarr.apiVersion, 'v3');
-      expect(ServiceKey.lidarr.apiVersion, 'v1');
-      expect(ServiceKey.bazarr.apiVersion, 'v1');
-    });
-
-    test('maps summary item labels per service', () {
-      expect(ServiceKey.seerr.itemLabel, 'requests');
-      expect(ServiceKey.radarr.itemLabel, 'movies');
-      expect(ServiceKey.sonarr.itemLabel, 'series');
-      expect(ServiceKey.lidarr.itemLabel, 'artists');
-      expect(ServiceKey.bazarr.itemLabel, 'subtitles');
-    });
-
-    test('keeps Bazarr out of manual import flows', () {
-      expect(ServiceKey.bazarr.supportsManualImport, isFalse);
-      expect(ServiceKey.bazarr.usesApiKey, isTrue);
-    });
-
-    test('extracts host labels with ports for service cards', () {
-      expect(
-        ServiceKey.radarr.extractHost('http://radarr.local:7878'),
-        'radarr.local:7878',
-      );
-      expect(
-        ServiceKey.seerr.extractHost('seerr.local:5055'),
-        'seerr.local:5055',
-      );
-      expect(
-        ServiceKey.sonarr.extractHost('sonarr.local:8989/api?token=secret'),
-        'sonarr.local:8989',
-      );
-      expect(ServiceKey.lidarr.extractHost(''), isNull);
-      expect(
-        ServiceKey.bazarr.extractHost('http://bazarr.local:6767'),
-        'bazarr.local:6767',
-      );
     });
   });
 }

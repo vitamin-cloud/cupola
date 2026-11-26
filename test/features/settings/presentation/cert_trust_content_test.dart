@@ -216,23 +216,6 @@ void main() {
       }
     });
 
-    testWidgets('names every other service the trust decision covers', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _host(
-          CertTrustContent(
-            origin: 'https://nas.local:8443',
-            probe: (certificate: _cert, rotated: false),
-            sharedWith: [ServiceKey.sonarr, ServiceKey.prowlarr],
-          ),
-        ),
-      );
-
-      expect(find.textContaining('Sonarr'), findsWidgets);
-      expect(find.textContaining('Prowlarr'), findsWidgets);
-    });
-
     testWidgets('says nothing about sharing when nothing else uses it', (
       tester,
     ) async {

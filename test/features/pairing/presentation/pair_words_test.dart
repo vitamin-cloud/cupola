@@ -86,7 +86,6 @@ void main() {
   });
 
   group('the word for a secret', () {
-
     test('of a connection: its secret, or its access', () {
       final radarr = _connection(ServiceKey.radarr);
       expect(pairSecretNamed(radarr, UnreadSecret.credential), 'key');
@@ -171,33 +170,6 @@ void main() {
         ['1 service and its key', 'Encrypted, over your home network only'],
       );
       expect(moves.first.detail, 'Radarr');
-    });
-
-    test('says an access left behind, one row for each connection', () {
-      final moves = pairMovesOf(
-        PairPackage(
-          from: PairDevice.mac,
-          connections: [
-            _connection(ServiceKey.radarr, unread: UnreadSecret.access),
-            _connection(
-              ServiceKey.radarr,
-              label: '4K',
-              unread: UnreadSecret.credential,
-            ),
-            _connection(ServiceKey.plex, unread: UnreadSecret.credential),
-          ],
-        ),
-      );
-      expect(
-        [for (final m in moves) m.title],
-        [
-          '3 services and their keys',
-          "Radarr's access stays behind",
-          "Radarr 4K's key stays behind",
-          "Plex's token stays behind",
-          'Encrypted, over your home network only',
-        ],
-      );
     });
 
     test('names a labelled connection beside its sibling', () {

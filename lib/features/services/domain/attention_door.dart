@@ -16,7 +16,6 @@ library;
 import 'package:flutter/foundation.dart';
 
 import 'package:cupola/core/status/lexicon.dart';
-import 'package:cupola/core/utils/dynamic_map_utils.dart';
 import 'package:cupola/features/services/domain/service_tab.dart';
 
 /// The place an attention row leads. See the library doc.
@@ -184,35 +183,3 @@ AttentionWords stuckDownloadsWords(int count, {bool floor = false}) => (
   spoken:
       '${attentionCountSpoken(count, floor: floor)} downloads ${StateWord.stuck.inline}',
 );
-
-/// `3 imports failed`, `3+ imports failed`: several downloads an \*arr
-/// grabbed and could not move into the library.
-AttentionWords failedImportsWords(int count, {bool floor = false}) => (
-  headline:
-      '${attentionCount(count, floor: floor)} imports ${StateWord.failed.inline}',
-  spoken:
-      '${attentionCountSpoken(count, floor: floor)} imports ${StateWord.failed.inline}',
-);
-
-/// The key the page of the download an \*arr's queue [record] is names it by
-/// (`downloadPageKey` of the row the queue builds from it): the client's id
-/// for the transfer when the record carries one, else the record's own id.
-/// Null when the record names neither, which is a download with no page.
-String? arrQueueRecordDownloadKey(Map<String, dynamic> record) {
-  final downloadId = stringOrNull(record['downloadId'])?.trim();
-  if (downloadId != null && downloadId.isNotEmpty) return downloadId;
-  final id = intOrNull(record['id']);
-  return id == null || id <= 0 ? null : '$id';
-}
-
-/// The door of the download an \*arr's queue [record] is, on the connection
-/// [instanceId] read it from; null when the record has no page to open.
-AttentionDoor? arrQueueRecordDoor(
-  Map<String, dynamic> record, {
-  required String instanceId,
-}) {
-  final key = arrQueueRecordDownloadKey(record);
-  return key == null
-      ? null
-      : AttentionDoor.download(instanceId: instanceId, key: key);
-}

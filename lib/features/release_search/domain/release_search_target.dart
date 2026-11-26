@@ -15,12 +15,6 @@ enum ReleaseSearchScope {
 
   /// Radarr, a single `movieId`.
   movie,
-
-  /// Lidarr, every album of an `artistId`.
-  artist,
-
-  /// Lidarr, a single `albumId`.
-  album,
 }
 
 /// Identifies the thing a release search is for, and, crucially, how targets
@@ -105,25 +99,6 @@ class ReleaseSearchTarget {
       parentId = null,
       instanceId = '';
 
-  const ReleaseSearchTarget.artist({required int artistId, required this.label})
-    : service = ServiceKey.lidarr,
-      scope = ReleaseSearchScope.artist,
-      id = artistId,
-      seasonNumber = null,
-      parentId = null,
-      instanceId = '';
-
-  const ReleaseSearchTarget.album({
-    required int albumId,
-    required this.label,
-    int? artistId,
-  }) : service = ServiceKey.lidarr,
-       scope = ReleaseSearchScope.album,
-       id = albumId,
-       seasonNumber = null,
-       parentId = artistId,
-       instanceId = '';
-
   /// True when a search for `this` would be answered by a search for [other]:
   /// an episode by its season, an album by its artist.
   ///
@@ -144,10 +119,6 @@ class ReleaseSearchTarget {
             other.id == parentId &&
             seasonNumber != null &&
             other.seasonNumber == seasonNumber,
-      ReleaseSearchScope.album =>
-        other.scope == ReleaseSearchScope.artist &&
-            parentId != null &&
-            other.id == parentId,
       _ => false,
     };
   }

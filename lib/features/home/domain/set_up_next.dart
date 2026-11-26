@@ -97,12 +97,5 @@ List<SetUpSuggestion> setUpNextOf(
         line: 'Series: new episodes, downloads and air times',
         found: null,
       ),
-    if (!any(const [ServiceKey.bazarr]))
-      (
-        service: ServiceKey.bazarr,
-        title: Lexicon.setUp(ServiceKey.bazarr.title),
-        line: 'Subtitles on every title page',
-        found: null,
-      ),
   ];
 }

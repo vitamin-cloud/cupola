@@ -39,25 +39,6 @@ void main() {
     'CalendarWeekStrip',
     scenes: [
       CatalogScene(
-        'CalendarWeekStrip.band · the atrium\'s: letters, today ringed, the '
-        'days before it dimmed, a dot in each day\'s most pressing tone',
-        (_) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: CalendarWeekStrip.band(
-            days: thisWeek,
-            now: CalendarWorld.now,
-            window: CalendarWorld.window,
-            dots: _dots(thisWeek),
-          ),
-        ),
-        width: 390,
-      ),
-      CatalogScene(
-        'CalendarWeekStrip · the page\'s: today selected, filled',
-        (_) => page(thisWeek, CalendarWorld.window.start),
-        width: 390,
-      ),
-      CatalogScene(
         'Another day selected · today keeps its ring',
         (_) => page(thisWeek, DateTime(2026, 10, 2)),
         width: 390,
@@ -66,12 +47,6 @@ void main() {
         'The last week · the days past the thirty dimmed',
         (_) => page(last, last.first),
         width: 390,
-      ),
-      CatalogScene(
-        'Text at 200% · names, dates and disc stop at 1.3x together',
-        (_) => page(thisWeek, CalendarWorld.window.start),
-        width: 390,
-        textScale: catalogTextScale,
       ),
     ],
   );

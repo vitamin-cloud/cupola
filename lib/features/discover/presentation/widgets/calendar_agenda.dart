@@ -202,7 +202,7 @@ class CalendarRow extends StatelessWidget {
     final poster = ClipRRect(
       borderRadius: BorderRadius.circular(AppRadius.thumb),
       child: SizedBox.fromSize(
-        size: event.kind == CalendarKind.album ? Size.square(size.width) : size,
+        size: size,
         child: ShelfArtwork(
           art: event.poster,
           box: size,

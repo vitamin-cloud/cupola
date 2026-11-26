@@ -153,34 +153,6 @@ void main() {
         isEmpty,
       );
     });
-
-    test('an album arrives in Arrived, not in Featured', () {
-      final entries = [
-        _arrival('Sintel OST', service: ServiceKey.lidarr),
-        _arrival('Spring', ago: const Duration(hours: 5)),
-      ];
-      expect(
-        featuredArrivalsOf(
-          entries,
-          since: _now.subtract(const Duration(days: 7)),
-        ).map((entry) => entry.title),
-        ['Spring'],
-      );
-    });
-
-    test('today is today, and only movies and episodes', () {
-      final events = [
-        _today('Yesterday', day: 28),
-        _today('Sprite Fright'),
-        _today('Charge', kind: CalendarKind.album),
-        _today('Cosmos Laundromat', kind: CalendarKind.episode),
-        _today('Tomorrow', day: 30),
-      ];
-      expect(featuredTodayOf(events, _now).map((event) => event.title), [
-        'Sprite Fright',
-        'Cosmos Laundromat',
-      ]);
-    });
   });
 
   group('the line under the title', () {

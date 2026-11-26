@@ -29,20 +29,10 @@ const _onDisk = <ServiceKey, ({String url, String secret, String? username})>{
     secret: 'secure_sonarr_api_key',
     username: null,
   ),
-  ServiceKey.lidarr: (
-    url: 'lidarr_url',
-    secret: 'secure_lidarr_api_key',
-    username: null,
-  ),
   ServiceKey.qbittorrent: (
     url: 'qbittorrent_url',
     secret: 'secure_qbittorrent_password',
     username: 'qbittorrent_username',
-  ),
-  ServiceKey.bazarr: (
-    url: 'bazarr_url',
-    secret: 'secure_bazarr_api_key',
-    username: null,
   ),
   ServiceKey.truenas: (
     url: 'truenas_url',
@@ -54,34 +44,9 @@ const _onDisk = <ServiceKey, ({String url, String secret, String? username})>{
     secret: 'secure_dockge_password',
     username: 'dockge_username',
   ),
-  ServiceKey.prowlarr: (
-    url: 'prowlarr_url',
-    secret: 'secure_prowlarr_api_key',
-    username: null,
-  ),
-  ServiceKey.readarr: (
-    url: 'readarr_url',
-    secret: 'secure_readarr_api_key',
-    username: null,
-  ),
-  ServiceKey.unraid: (
-    url: 'unraid_url',
-    secret: 'secure_unraid_api_key',
-    username: null,
-  ),
   ServiceKey.jellyfin: (
     url: 'jellyfin_url',
     secret: 'secure_jellyfin_api_key',
-    username: null,
-  ),
-  ServiceKey.plex: (
-    url: 'plex_url',
-    secret: 'secure_plex_token',
-    username: null,
-  ),
-  ServiceKey.emby: (
-    url: 'emby_url',
-    secret: 'secure_emby_api_key',
     username: null,
   ),
 };
@@ -119,10 +84,6 @@ void main() {
         _primary(ServiceKey.jellyfin).viewerIdStorageKey,
         'jellyfin_user_id',
       );
-    });
-
-    test('Emby files its viewer where the storage table says', () {
-      expect(_primary(ServiceKey.emby).viewerIdStorageKey, 'emby_user_id');
     });
 
     test('a second instance never lands on the first one\'s keys', () {
@@ -182,7 +143,6 @@ void main() {
         isFalse,
       );
     });
-
   });
 
   group('isConfigured', () {
@@ -235,12 +195,6 @@ void main() {
   });
 
   group('credentialStorageSuffix', () {
-    test('matches how the service names its own secret', () {
-      expect(ServiceKey.plex.credentialStorageSuffix, 'token');
-      expect(ServiceKey.qbittorrent.credentialStorageSuffix, 'password');
-      expect(ServiceKey.radarr.credentialStorageSuffix, 'api_key');
-    });
-
     test('every credential-authenticated service files a password', () {
       for (final service in ServiceKey.values.where((s) => !s.usesApiKey)) {
         expect(

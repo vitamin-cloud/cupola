@@ -85,17 +85,6 @@ void main() {
       expect(season2.conflictsWith(episodeInSeason2), isTrue);
     });
 
-    test('an album is covered by its artist', () {
-      final artist = ReleaseSearchTarget.artist(artistId: 3, label: 'Artist');
-      final album = ReleaseSearchTarget.album(
-        albumId: 7,
-        artistId: 3,
-        label: 'Album',
-      );
-      expect(album.isCoveredBy(artist), isTrue);
-      expect(artist.isCoveredBy(album), isFalse);
-    });
-
     test('nothing is covered across two connections of the same service', () {
       // Two Sonarr have two unrelated series tables, so `seriesId 1` names two
       // different shows. Adopting across them would answer a search for one

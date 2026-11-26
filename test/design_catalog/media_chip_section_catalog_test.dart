@@ -49,26 +49,6 @@ void main() {
         ),
       ),
       CatalogScene(
-        'MediaChipSection.accented · Sonarr and Bazarr tags · the same chip on '
-        'every service',
-        (_) => _column(
-          Wrap(
-            spacing: 24,
-            runSpacing: 12,
-            children: [
-              MediaChipSection.accented(
-                values: const ['anime', 'hdr', 'silent-era'],
-                accent: ServiceKey.sonarr.accent,
-              ),
-              MediaChipSection.accented(
-                values: const ['subtitles-de', 'intertitles'],
-                accent: ServiceKey.bazarr.accent,
-              ),
-            ],
-          ),
-        ),
-      ),
-      CatalogScene(
         'MediaChipSection.neutral, then .accented · the desktop column',
         (_) => SizedBox(
           width: 720,

@@ -44,23 +44,6 @@ void main() {
       expect(loaded.isServiceConfigured(ServiceKey.jellyfin), isTrue);
     });
 
-    test('Plex round-trips its token in the generic credential slot', () async {
-      await service.saveSettings(
-        settingsWith(
-          plexUrl: 'https://plex.local:32400',
-          plexToken: 'plex-device-token',
-        ),
-      );
-
-      final loaded = await service.loadSettings();
-      expect(loaded.urlFor(ServiceKey.plex), 'https://plex.local:32400');
-      expect(loaded.apiKeyFor(ServiceKey.plex), 'plex-device-token');
-      // `apiKeyFor` is what every generic caller uses, so the token has to answer
-      // to it, the same way qBittorrent's password does.
-      expect(loaded.apiKeyFor(ServiceKey.plex), 'plex-device-token');
-      expect(loaded.isServiceConfigured(ServiceKey.plex), isTrue);
-    });
-
     test('the Plex client id is minted once and never changes', () async {
       final first = await service.loadSettings();
       expect(first.plexClientId, isNotEmpty);
@@ -108,41 +91,6 @@ void main() {
       );
       await tester.pumpAndSettle();
     }
-
-    testWidgets('names the token kind rather than reporting a bad key', (
-      tester,
-    ) async {
-      await pump(tester, ServiceKey.plex);
-
-      // The field is labelled for what Plex calls it, not "API Key".
-      expect(find.text('Plex token'), findsOneWidget);
-
-      await tester.enterText(
-        find.byType(TextFormField).last,
-        'eyJhbGciOiJIUzI1NiJ9.e30.x',
-      );
-      // Trigger validation the way saving does.
-      await tester.pumpAndSettle();
-      final form = tester.state<FormState>(find.byType(Form)).validate();
-
-      expect(form, isFalse);
-      await tester.pumpAndSettle();
-      // Accepting it would ship software that works for a week and then fails
-      // with a 401 the user cannot interpret.
-      expect(find.textContaining('expires in 7 days'), findsOneWidget);
-    });
-
-    testWidgets('a device token passes', (tester) async {
-      await pump(tester, ServiceKey.plex);
-
-      await tester.enterText(
-        find.byType(TextFormField).last,
-        'sXxYzDeviceToken1234567890',
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('expires in 7 days'), findsNothing);
-    });
 
     testWidgets('Jellyfin keeps the ordinary API-key wording', (tester) async {
       await pump(tester, ServiceKey.jellyfin);

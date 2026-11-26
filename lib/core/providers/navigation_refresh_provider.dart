@@ -28,7 +28,6 @@ extension NavigationRefreshExtension on WidgetRef {
 extension NavTabRefreshSection on NavTab {
   NavigationSection? get refreshSection => switch (this) {
     NavTab.home => NavigationSection.home,
-    NavTab.discover => NavigationSection.discover,
     NavTab.activity => NavigationSection.activity,
     NavTab.stack => NavigationSection.stack,
     NavTab.requests => NavigationSection.requests,

@@ -59,15 +59,6 @@ void main() {
       });
     });
 
-    test('mints no instance for the services it never set up', () async {
-      await seedLegacyInstall();
-      final settings = await service.loadSettings();
-
-      expect(settings.instancesOf(ServiceKey.plex), isEmpty);
-      expect(settings.instancesOf(ServiceKey.truenas), isEmpty);
-      expect(settings.instances, hasLength(4));
-    });
-
     test(
       'the roster appears on the next save, and the secrets do not move',
       () async {
@@ -219,24 +210,6 @@ void main() {
         isEmpty,
       );
     });
-
-    test(
-      'the Plex install id survives a Plex instance being removed',
-      () async {
-        await prefs.setString('plex_url', 'https://nas.lan:32400');
-        await secureStore.write(key: 'secure_plex_token', value: 'tok');
-        var settings = await service.loadSettings();
-        final clientId = settings.plexClientId;
-        expect(clientId, isNotEmpty);
-
-        settings = settings.copyWithoutInstance('plex');
-        await service.saveSettings(settings);
-
-        expect(prefs.getString('plex_url'), isNull);
-        expect(prefs.getString('plex_client_id'), clientId);
-        expect((await service.loadSettings()).plexClientId, clientId);
-      },
-    );
   });
 
   group('a roster that cannot be trusted', () {

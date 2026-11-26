@@ -15,7 +15,6 @@ import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
-import 'package:cupola/features/settings/domain/unread_secret.dart';
 
 import '../../../test_helpers/settings_scope.dart';
 
@@ -49,21 +48,6 @@ void main() {
     expect(failureRetryHelps(reason), isFalse);
     expect(failureIsFault(reason), isTrue);
     expect(failureDidNotAnswer(reason), isFalse);
-  });
-
-  test('the words name the platform\'s store', () {
-    final instance = const ServiceInstance(
-      id: 'plex',
-      service: ServiceKey.plex,
-      url: 'https://plex.test',
-    ).withUnreadSecret(UnreadSecret.credential);
-    final words = UnreadSecretWords.of(
-      instance,
-      platform: TargetPlatform.android,
-    );
-    expect(words.headline, "Cupola could not read Plex's saved token");
-    expect(words.sentence, "Android's secure storage didn't hand it over.");
-    expect(words.remedy, 'Paste the token again');
   });
 
   testWidgets('the screen standing on it leads to pasting it again', (

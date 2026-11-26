@@ -35,6 +35,7 @@ import 'package:cupola/core/widgets/service_ring.dart';
 import 'package:cupola/core/widgets/setup_doors.dart';
 import 'package:cupola/core/widgets/shimmer_placeholder.dart';
 import 'package:cupola/core/widgets/status_badge.dart';
+import 'package:cupola/features/discover/presentation/discover_provider.dart';
 import 'package:cupola/features/discover/domain/library_calendar.dart';
 import 'package:cupola/features/discover/presentation/library_calendar_provider.dart';
 import 'package:cupola/features/home/data/resume.dart';
@@ -51,11 +52,9 @@ import 'package:cupola/features/services/domain/in_flight.dart';
 import 'package:cupola/features/services/domain/arr_import.dart';
 import 'package:cupola/features/services/domain/service_signal.dart';
 import 'package:cupola/features/services/domain/service_summary.dart';
-import 'package:cupola/features/services/domain/services_semantics.dart';
 import 'package:cupola/features/services/domain/source_coverage.dart';
 import 'package:cupola/features/services/presentation/dashboard_sections.dart';
 import 'package:cupola/features/services/presentation/service_matrix.dart';
-import 'package:cupola/features/services/presentation/services_alert_band.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/services/presentation/stack_screen.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
@@ -377,66 +376,6 @@ void main() {
   group('the alert band, the stack', () {
     const page = _Page.stack;
 
-    testWidgets('names the offenders in the settled words', (tester) async {
-      await _pumpPage(tester, page);
-
-      // Lidarr is the configured service that does not answer in the fixture.
-      // Scoped to the band: the same sentence is what a module whose sources are
-      // dark prints in place of its empty copy, and the two sharing one string
-      // is the point.
-      // 800pt wide in a widget test, so the band carries its second sentence:
-      // the consequence is what a wide surface has room for.
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('services-alert-band')),
-          matching: find.textContaining('Lidarr did not answer.'),
-        ),
-        findsOneWidget,
-      );
-      // One offender, so the bare verb: `Retry both` is for exactly two.
-      expect(
-        find.descendant(
-          of: find.byKey(const ValueKey('services-alert-band')),
-          matching: find.text('Retry'),
-        ),
-        findsOneWidget,
-      );
-      // The action is the fix: the second control leads where the address is.
-      expect(find.text('Settings'), findsOneWidget);
-    });
-
-    testWidgets('retry stays brand indigo, never the error tone', (
-      tester,
-    ) async {
-      await _pumpPage(tester, page);
-
-      final context = tester.element(find.byType(ServicesAlertBand));
-      final scheme = Theme.of(context).colorScheme;
-      final retry = tester.widget<Text>(
-        find
-            .descendant(
-              of: find.byKey(const ValueKey('services-alert-band')),
-              matching: find.text('Retry'),
-            )
-            .first,
-      );
-      expect(retry.style?.color, scheme.primary);
-      expect(retry.style?.color, isNot(scheme.error));
-    });
-
-    testWidgets('the phone prints the first sentence only', (tester) async {
-      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
-      tester.view.devicePixelRatio = 3;
-      addTearDown(tester.view.reset);
-
-      await _pumpPage(tester, page);
-
-      // One line of room, and the name of the service is the half that cannot
-      // be dropped.
-      expect(find.text('Lidarr did not answer.'), findsWidgets);
-      expect(find.textContaining('missing from this page'), findsNothing);
-    });
-
     testWidgets('stays silent for a degraded service the header names', (
       tester,
     ) async {
@@ -478,25 +417,6 @@ void main() {
 
     Finder inNeedsYou(Finder matching) =>
         find.descendant(of: find.byType(NeedsYouLine), matching: matching);
-
-    testWidgets('names the offenders in the settled words', (tester) async {
-      await _pumpPage(tester, page);
-
-      // Lidarr is the configured service that does not answer in the fixture.
-      // The band's sentence as a clause, and the time the probe found it
-      // silent; the Home has no band, and no Stack-only `Settings` control.
-      expect(
-        inNeedsYou(
-          find.textContaining(
-            RegExp(r'^Lidarr did not answer at \d{2}:\d{2}$'),
-          ),
-        ),
-        findsOneWidget,
-      );
-      // One offender, so the bare verb: `Retry both` is for exactly two.
-      expect(inNeedsYou(find.text('Retry')), findsOneWidget);
-      expect(find.byKey(const ValueKey('services-alert-band')), findsNothing);
-    });
 
     testWidgets('retry stays in the ink, never the error tone', (tester) async {
       await _pumpPage(tester, page);
@@ -832,22 +752,6 @@ void main() {
       expect(prefs.getInt('services_more_services_dismissed_at'), isNull);
     });
 
-    testWidgets('an answering service is never red; a dark one is', (
-      tester,
-    ) async {
-      await _pumpPage(tester, _Page.stack);
-      final scheme = Theme.of(tester.element(find.text('Radarr'))).colorScheme;
-      final red = statusToneColor(scheme, StatusTone.error);
-
-      // Every row states how it stands with a dot. Radarr answers and is
-      // proved by its figure: its dot is not the alarm.
-      expect(_pipsIn(tester, 'service-matrix-cell-radarr'), 1);
-      expect(_pipColour(tester, 'service-matrix-cell-radarr'), isNot(red));
-      // Lidarr does not answer, and says so twice: the mark and the word.
-      expect(_pipColour(tester, 'service-matrix-cell-lidarr'), red);
-      expect(find.text('Did not answer'), findsOneWidget);
-    });
-
     testWidgets('a checking pip is not amber', (tester) async {
       await _pumpPage(
         tester,
@@ -861,49 +765,6 @@ void main() {
       final pip = _pipColour(tester, 'service-matrix-cell-radarr');
       expect(pip, statusToneColor(scheme, StatusTone.neutral));
       expect(pip, isNot(statusToneColor(scheme, StatusTone.warning)));
-    });
-
-    testWidgets('an unconfigured service is a cell, not a footnote', (
-      tester,
-    ) async {
-      await _pumpPage(tester, _Page.stack);
-
-      expect(
-        find.byKey(const ValueKey('service-matrix-cell-readarr')),
-        findsOneWidget,
-      );
-      expect(find.text(servicesNotSetUpCellLabel), findsWidgets);
-    });
-
-    testWidgets('a not-set-up cell opens that service setup form', (
-      tester,
-    ) async {
-      // The same place every `Set up X` goes. It opened the connections list,
-      // where the user had to find the service they had just tapped.
-      Uri? opened;
-      final router = GoRouter(
-        routes: [
-          GoRoute(path: '/', builder: (context, state) => const StackScreen()),
-          GoRoute(
-            path: '/settings/service/:service',
-            builder: (context, state) {
-              opened = state.uri;
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-      );
-      addTearDown(router.dispose);
-
-      await _pumpPage(tester, _Page.stack, router: router);
-      final cell = find.byKey(const ValueKey('service-matrix-cell-readarr'));
-      await tester.ensureVisible(cell);
-      // The scroll lands on the next frame: tap where the row is then.
-      await tester.pump();
-      await tester.tap(cell);
-      await tester.pumpAndSettle();
-
-      expect(opened?.path, ServiceRoutes.setUp(ServiceKey.readarr));
     });
 
     testWidgets('the list is the whole registry', (tester) async {
@@ -1050,7 +911,6 @@ void main() {
       );
       expect(find.textContaining('stall'), findsNothing);
     });
-
 
     testWidgets('a speed the client did not report reads —, never 0', (
       tester,
@@ -1338,9 +1198,7 @@ Future<void> _pumpPage(
         viewerMissing: const <String>[],
       ),
     ),
-    servicesRequestsProvider.overrideWith(
-      (ref) async => const <SeerrRequest>[],
-    ),
+    requestsProvider.overrideWith((ref) async => const <SeerrRequest>[]),
   ];
 
   await tester.pumpWidget(
@@ -1368,8 +1226,6 @@ final SettingsModel _settings = settingsWith(
   radarrApiKey: 'key',
   sonarrUrl: 'http://sonarr.local:8989',
   sonarrApiKey: 'key',
-  lidarrUrl: 'http://lidarr.local:8686',
-  lidarrApiKey: 'key',
 );
 
 /// [_settings] with a download client set up: the speed on Downloads is the
@@ -1381,8 +1237,6 @@ final SettingsModel _settingsWithClient = settingsWith(
   radarrApiKey: 'key',
   sonarrUrl: 'http://sonarr.local:8989',
   sonarrApiKey: 'key',
-  lidarrUrl: 'http://lidarr.local:8686',
-  lidarrApiKey: 'key',
   qbittorrentUrl: 'http://qbittorrent.local:8080',
   qbittorrentUsername: 'user',
   qbittorrentPassword: 'pass',
@@ -1413,7 +1267,6 @@ ServiceSummary _summary(ServiceKey service, {bool? online}) {
     ServiceKey.seerr: 'seerr.local:5055',
     ServiceKey.radarr: 'radarr.local:7878',
     ServiceKey.sonarr: 'sonarr.local:8989',
-    ServiceKey.lidarr: 'lidarr.local:8686',
   };
 
   final isUp =

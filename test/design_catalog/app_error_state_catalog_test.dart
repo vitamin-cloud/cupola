@@ -210,21 +210,6 @@ void main() {
         width: 360,
       ),
       CatalogScene(
-        'InlineErrorRetry(service:) · a certificate Cupola does not trust: both '
-        'verbs, '
-        'the amber remedy first, Retry in ink, on their own row under the '
-        'sentence',
-        (_) => InlineErrorRetry(
-          message:
-              'Unraid has a certificate Cupola does not trust, so its shares '
-              'are not shown.',
-          error: const ClassifiedFailure(ServiceFailureReason.tls),
-          service: ServiceKey.unraid,
-          onRetry: () {},
-        ),
-        width: 360,
-      ),
-      CatalogScene(
         "AppErrorState, in the requester's app · Seerr did not answer: one "
         'line with the time it first did not, no service named and no cause, '
         'and Retry as a ghost in ink',
@@ -326,32 +311,6 @@ void main() {
         'Text at 200% · AppErrorState.compact, a failure nobody can attribute',
         (_) => const AppErrorState.compact(error: 'Exception: parser'),
         width: 280,
-        textScale: catalogTextScale,
-      ),
-      CatalogScene(
-        'Text at 200% · InlineErrorRetry, a certificate Cupola does not trust: '
-        'the amber remedy first and Retry in ink, under the sentence',
-        (_) => InlineErrorRetry(
-          message:
-              'Unraid has a certificate Cupola does not trust, so its shares '
-              'are not shown.',
-          error: const ClassifiedFailure(ServiceFailureReason.tls),
-          service: ServiceKey.unraid,
-          onRetry: () {},
-        ),
-        width: 360,
-        textScale: catalogTextScale,
-      ),
-      CatalogScene(
-        'Text at 200% · InlineErrorRetry with Retry alone: under the sentence, '
-        'at the trailing edge, the sentence keeping the line',
-        (_) => InlineErrorRetry(
-          message: 'Unraid did not answer, so its containers are not shown.',
-          error: const SocketException('Connection refused'),
-          service: ServiceKey.unraid,
-          onRetry: () {},
-        ),
-        width: 360,
         textScale: catalogTextScale,
       ),
     ],

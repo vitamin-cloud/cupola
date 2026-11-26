@@ -89,18 +89,10 @@ ProbeIdentity identifyProbeAnswer(ServiceKey service, Object? body) {
     return ProbeIdentity.otherService(named);
   }
   return switch (service) {
-    ServiceKey.radarr ||
-    ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
-    ServiceKey.readarr ||
-    ServiceKey.prowlarr => _arr(service, body),
+    ServiceKey.radarr || ServiceKey.sonarr => _arr(service, body),
     ServiceKey.seerr => _hasAny(body, const ['version', 'commitTag']),
-    ServiceKey.bazarr => _bazarr(body),
     ServiceKey.jellyfin => _jellyfin(body),
-    ServiceKey.emby => _emby(body),
-    ServiceKey.plex => _hasMap(body, 'MediaContainer'),
     ServiceKey.qbittorrent => _qbittorrent(body),
-    ServiceKey.unraid => _hasAny(body, const ['data', 'errors']),
     ServiceKey.truenas || ServiceKey.dockge => ProbeIdentity.matches,
   };
 }
@@ -111,10 +103,6 @@ ProbeIdentity identifyProbeAnswer(ServiceKey service, Object? body) {
 String? conventionalBasePath(ServiceKey service) => switch (service) {
   ServiceKey.radarr => 'radarr',
   ServiceKey.sonarr => 'sonarr',
-  ServiceKey.lidarr => 'lidarr',
-  ServiceKey.readarr => 'readarr',
-  ServiceKey.prowlarr => 'prowlarr',
-  ServiceKey.bazarr => 'bazarr',
   ServiceKey.seerr => 'seerr',
   ServiceKey.jellyfin => 'jellyfin',
   ServiceKey.qbittorrent => 'qbittorrent',
@@ -123,11 +111,7 @@ String? conventionalBasePath(ServiceKey service) => switch (service) {
   // run under a path; Transmission's
   // address already takes its RPC path; the three consoles are reached at
   // their own host.
-  ServiceKey.plex ||
-  ServiceKey.emby ||
-  ServiceKey.truenas ||
-  ServiceKey.dockge ||
-  ServiceKey.unraid => null,
+  ServiceKey.truenas || ServiceKey.dockge => null,
 };
 
 /// The probe of [service] at [url] reached something else: another service
@@ -267,13 +251,6 @@ ProbeIdentity _arr(ServiceKey service, Object? body) {
   return _hasAny(body, const ['version']);
 }
 
-ProbeIdentity _bazarr(Object? body) {
-  if (body is! Map) return ProbeIdentity.notThisService;
-  return body['data'] is Map
-      ? ProbeIdentity.matches
-      : ProbeIdentity.notThisService;
-}
-
 /// Jellyfin names itself in `ProductName`, and the field decides when it is
 /// there. Without it, Emby's shape ([_looksLikeEmby]) is another service, and
 /// a body that is neither gets the benefit of the doubt, as it always had.
@@ -283,39 +260,9 @@ ProbeIdentity _jellyfin(Object? body) {
   if (product is String && product.trim().isNotEmpty) {
     final name = product.toLowerCase();
     if (name.contains('jellyfin')) return ProbeIdentity.matches;
-    // A build or a proxy that does say it is Emby.
-    return name.contains('emby')
-        ? ProbeIdentity.otherService(ServiceKey.emby)
-        : ProbeIdentity.notThisService;
+    return ProbeIdentity.notThisService;
   }
-  if (_looksLikeEmby(body)) return ProbeIdentity.otherService(ServiceKey.emby);
-  return _hasAny(body, const ['Version', 'Id', 'ServerName']);
-}
-
-/// Emby sends no `ProductName` (4.10 does not, whatever the first reading of
-/// its API assumed), so it is recognised by the shape it does have: a
-/// `LocalAddresses` **list** (Jellyfin's is the single `LocalAddress`), and
-/// `HardwareAccelerationRequiresPremiere` on `/System/Info`.
-///
-/// An empty list still counts: a server with no address of its own to
-/// advertise is the common case, and the key is the proof.
-ProbeIdentity _emby(Object? body) {
-  if (body is! Map) return ProbeIdentity.notThisService;
-  final product = body['ProductName'];
-  if (product is String && product.trim().isNotEmpty) {
-    final name = product.toLowerCase();
-    if (name.contains('emby')) return ProbeIdentity.matches;
-    return name.contains('jellyfin')
-        ? ProbeIdentity.otherService(ServiceKey.jellyfin)
-        : ProbeIdentity.notThisService;
-  }
-  // Without a name, Jellyfin's own fields are the other way to know: a body
-  // with its single `LocalAddress` or its wizard flag is not Emby's.
-  if (!_looksLikeEmby(body) &&
-      (body.containsKey('LocalAddress') ||
-          body.containsKey('StartupWizardCompleted'))) {
-    return ProbeIdentity.otherService(ServiceKey.jellyfin);
-  }
+  if (_looksLikeEmby(body)) return ProbeIdentity.notThisService;
   return _hasAny(body, const ['Version', 'Id', 'ServerName']);
 }
 
@@ -335,13 +282,6 @@ ProbeIdentity _qbittorrent(Object? body) {
 ProbeIdentity _hasAny(Object? body, List<String> keys) {
   if (body is! Map) return ProbeIdentity.notThisService;
   return keys.any(body.containsKey)
-      ? ProbeIdentity.matches
-      : ProbeIdentity.notThisService;
-}
-
-ProbeIdentity _hasMap(Object? body, String key) {
-  if (body is! Map) return ProbeIdentity.notThisService;
-  return body[key] is Map
       ? ProbeIdentity.matches
       : ProbeIdentity.notThisService;
 }

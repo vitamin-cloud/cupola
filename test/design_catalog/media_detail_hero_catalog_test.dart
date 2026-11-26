@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/widgets/ambient_background.dart';
-import 'package:cupola/core/widgets/media_detail_figure_plate.dart';
 import 'package:cupola/core/widgets/media_detail_header_metrics.dart';
 import 'package:cupola/core/widgets/media_detail_poster_row.dart';
 import 'package:cupola/core/widgets/media_detail_view.dart';
@@ -219,64 +218,6 @@ void main() {
             posterCard: const MediaPosterCard(
               heroTag: 'f',
               imageUrl: CatalogArt.poster,
-            ),
-          ),
-        ),
-        width: 390,
-        height: 320,
-      ),
-      CatalogScene(
-        'No backdrop, no poster · Bazarr, MediaDetailFigurePlate in the '
-        'poster slot · the fallback stage draws the page glyph at 22%',
-        (_) => _page(
-          accent: ServiceKey.bazarr.accent,
-          fallbackIcon: Icons.subtitles_outlined,
-          title: 'Nosferatu',
-          posterRow: MediaDetailPosterRow(
-            statusBadge: StatusBadge.animated(
-              info: const MediaStatusInfo(
-                availability: MediaAvailability.available,
-                labelOverride: 'Monitored',
-              ),
-            ),
-            title: 'Nosferatu',
-            metadataItems: const ['1922'],
-            tags: [
-              TagChip(text: '12 missing', color: ServiceKey.bazarr.accent),
-            ],
-            posterCard: MediaDetailFigurePlate(
-              value: '12',
-              label: 'Missing',
-              accent: ServiceKey.bazarr.accent,
-            ),
-          ),
-        ),
-        width: 390,
-        height: 320,
-      ),
-      CatalogScene(
-        'MediaDetailPosterRow.circular · Lidarr artist · the 92 × 92 lead, '
-        'same summary beside it',
-        (_) => _page(
-          accent: ServiceKey.lidarr.accent,
-          backdropUrl: CatalogArt.backdrop,
-          fallbackIcon: Icons.person_outline,
-          title: 'Max Schreck',
-          posterRow: MediaDetailPosterRow.circular(
-            statusBadge: StatusBadge.animated(
-              info: const MediaStatusInfo(
-                availability: MediaAvailability.available,
-              ),
-            ),
-            title: 'Max Schreck',
-            metadataItems: const ['4 albums', '38 tracks'],
-            tags: [
-              TagChip(text: '38 of 38 tracks', color: ServiceKey.lidarr.accent),
-            ],
-            posterCard: const MediaPosterCard.circular(
-              heroTag: 'g',
-              imageUrl: CatalogArt.poster,
-              fallbackIcon: Icons.person_outline,
             ),
           ),
         ),

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:cupola/core/providers/provider_retry.dart';
 import 'package:cupola/core/api/base_arr_service.dart';
 import 'package:cupola/core/status/arr_queue_snapshot.dart';
 import 'package:cupola/core/status/media_names.dart';
@@ -10,9 +9,7 @@ import 'package:cupola/core/utils/arr_activity_display.dart';
 import 'package:cupola/core/utils/arr_model_helpers.dart';
 import 'package:cupola/core/utils/dynamic_map_utils.dart';
 import 'package:cupola/core/utils/episode_code.dart';
-import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/qbittorrent/domain/models/parse_utils.dart';
 import 'package:cupola/features/qbittorrent/domain/models/torrent.dart';
@@ -346,12 +343,7 @@ final servicesQueueProvider = FutureProvider<ServicesQueue>((ref) async {
   // import on it, is the user's as much as one on the first, and reading the
   // lens alone left it off Home with nothing saying so.
   final arrQueues = [
-    for (final service in const [
-      ServiceKey.radarr,
-      ServiceKey.sonarr,
-      ServiceKey.lidarr,
-      ServiceKey.readarr,
-    ])
+    for (final service in const [ServiceKey.radarr, ServiceKey.sonarr])
       for (final source in watchMergeConnections(ref, service))
         _readQueueSource(source, () => _loadServiceQueueItems(ref, source)),
   ];
@@ -605,7 +597,6 @@ ArrActivityMixin _parserOf(
 ) => switch (source.service) {
   ServiceKey.radarr => ref.watch(radarrServiceForProvider(source.instanceId)),
   ServiceKey.sonarr => ref.watch(sonarrServiceForProvider(source.instanceId)),
-  ServiceKey.lidarr => ref.watch(lidarrServiceForProvider(source.instanceId)),
   _ => throw ArgumentError.value(source.service, 'service'),
 };
 
@@ -632,85 +623,6 @@ Future<List<ServiceQueueItem>> _nameClientRows(
       else
         row,
   ];
-}
-
-/// Every download in one client connection's own list, named: the arr's item
-/// for a download an arr's queue claims ([joinDownloads], the join In flight
-/// and Activity read), the arrs' reading for the rest ([_nameDownloads]),
-/// keyed on the client's id for it. Its machine name is the client's own
-/// name for it, as the client reported it.
-///
-/// What the clients' own pages read their rows' names off; the rows keep
-/// their look until those pages are redrawn. An arr whose queue does not
-/// answer claims nothing, and its downloads are asked about by name instead.
-final downloadClientNamesProvider = FutureProvider.autoDispose
-    .family<Map<String, MediaNames>, InstanceRef>((ref, client) async {
-      // Every read and every watch started before the first await: see
-      // [_DownloadNamer].
-      final list = _clientList(ref, client);
-      final queues = Future.wait([
-        for (final service in const [
-          ServiceKey.radarr,
-          ServiceKey.sonarr,
-          ServiceKey.lidarr,
-          ServiceKey.readarr,
-        ])
-          for (final source in watchMergeConnections(ref, service))
-            _readQueueSource(source, () => _loadServiceQueueItems(ref, source)),
-      ]);
-      final namer = _watchDownloadNamer(ref);
-      final rows = await list;
-      final arrQueues = await queues;
-      final join = joinDownloads<ServiceQueueItem, UnnamedDownload>(
-        arr: [for (final queue in arrQueues) ...queue.items],
-        clients: rows,
-        arrDownloadId: (row) => row.downloadId,
-        clientDownloadId: (row) => row.id,
-      );
-      final claimed = <String, MediaNames>{};
-      for (final (:arr, :client) in join.joined) {
-        if (client == null || claimed.containsKey(client.id)) continue;
-        final title = arr.names.title;
-        claimed[client.id] = arr.names.isRaw || title == client.name
-            ? MediaNames.raw(client.name)
-            : MediaNames(
-                title: title,
-                machineName: client.name,
-                machineKind: MachineNameKind.release,
-                source: arr.names.source,
-              );
-      }
-      return {...claimed, ...await namer.name(join.unclaimed)};
-    }, retry: noProviderRetry);
-
-/// One client connection's whole list, every download in it: the torrent
-/// library, the usenet queue.
-Future<List<UnnamedDownload>> _clientList(Ref ref, InstanceRef client) async {
-  final id = client.instanceId;
-  return switch (client.service) {
-    ServiceKey.qbittorrent => [
-      for (final torrent
-          in (await ref.watch(qbittorrentServiceForProvider(id)).mainData())
-              .torrents)
-        (id: torrent.hash, name: torrent.name, category: torrent.category),
-    ],
-    _ => throw ArgumentError.value(client.service, 'service', 'not a client'),
-  };
-}
-
-/// Every configured download client's own queue, as transfer rows, and which
-/// of the clients answered.
-///
-/// What a surface outside Home joins its \*arr records against
-/// ([joinDownloads]): Activity reads the same four clients, by the same rules
-/// (`download_client_faults.dart`), as In flight does. Read fresh, every
-/// connection through its own client: see [_readDownloadClients].
-Future<ServicesQueue> downloadClientQueues(Ref ref) async {
-  final reads = await Future.wait(_readDownloadClients(ref, fresh: true));
-  return (
-    items: [for (final read in reads) ...read.items],
-    coverage: SourceCoverage.merge(reads.map((read) => read.coverage)),
-  );
 }
 
 /// Every transfer the configured sources reported, and which of them answered.
@@ -1027,27 +939,18 @@ Future<_QueueRead> _loadServiceQueueItems(
       await ref.watch(radarrServiceForProvider(id)).getQueuePage(),
     ServiceKey.sonarr =>
       await ref.watch(sonarrServiceForProvider(id)).getQueuePage(),
-    ServiceKey.lidarr =>
-      await ref.watch(lidarrServiceForProvider(id)).getQueuePage(),
-    ServiceKey.readarr =>
-      await ref.watch(readarrServiceForProvider(id)).getQueuePage(),
     // The download clients are not `/queue` shaped and have their own loaders;
     // the rest have no queue at all.
     ServiceKey.seerr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.bazarr ||
     ServiceKey.truenas ||
     ServiceKey.dockge ||
-    ServiceKey.prowlarr ||
-    ServiceKey.unraid ||
     // A reverse proxy moves no bytes on anyone's behalf; it has nothing to
     // contribute to an in-flight queue.
     // A media server has no acquisition queue at all. Its live work is
     // outbound playback, which is a different record with different actions
     // and does not belong in a queue row.
-    ServiceKey.jellyfin ||
-    ServiceKey.plex ||
-    ServiceKey.emby => const ArrRecordPage(records: [], total: 0),
+    ServiceKey.jellyfin => const ArrRecordPage(records: [], total: 0),
   };
   final records = page.records.whereType<Map>().map(stringKeyMap);
   final now = ref.watch(stallClockProvider)();
@@ -1265,13 +1168,6 @@ ServiceQueueItem _queueItemFromRecords(
                   instanceId: instanceId,
                 ),
       },
-      ServiceKey.lidarr =>
-        intOrNull(typedItem['artistId']) == null
-            ? null
-            : ServiceRoutes.lidarrArtist(
-                intOrNull(typedItem['artistId'])!,
-                instanceId: instanceId,
-              ),
       _ => ServiceRoutes.forService(service),
     },
   );
@@ -1312,14 +1208,6 @@ String _packTitle(ServiceKey service, List<Map<String, dynamic>> records) {
   final first = records.first;
   final (name, unit) = switch (service) {
     ServiceKey.sonarr => (arrSeriesTitle(first), 'episodes'),
-    ServiceKey.lidarr => (
-      arrArtistName(first) ?? arrAlbumTitle(first),
-      'albums',
-    ),
-    ServiceKey.readarr => (
-      arrAuthorName(first) ?? arrBookTitle(first),
-      'books',
-    ),
     _ => (arrMovieTitle(first), 'movies'),
   };
   return joinDisplayParts([
@@ -1365,8 +1253,6 @@ MediaNames _packNames(
   final first = records.first;
   final named = switch (service) {
     ServiceKey.sonarr => arrSeriesTitle(first),
-    ServiceKey.lidarr => arrArtistName(first) ?? arrAlbumTitle(first),
-    ServiceKey.readarr => arrAuthorName(first) ?? arrBookTitle(first),
     _ => arrMovieTitle(first),
   };
   if (named == null || release == null || release.trim().isEmpty) {
@@ -1383,8 +1269,6 @@ String? _queueTypeLabel(ServiceKey service) {
   return switch (service) {
     ServiceKey.radarr => 'Movie',
     ServiceKey.sonarr => 'Series',
-    ServiceKey.lidarr => 'Music',
-    ServiceKey.readarr => 'Book',
     // Nothing for the rest. Only an arr reaches this: the download clients
     // build their own rows, and each already opens with the client's name,
     // which is the whole point of the row: the bytes are coming through this
@@ -1392,14 +1276,9 @@ String? _queueTypeLabel(ServiceKey service) {
     // name behind it.
     ServiceKey.seerr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.bazarr ||
     ServiceKey.truenas ||
     ServiceKey.dockge ||
-    ServiceKey.prowlarr ||
-    ServiceKey.unraid ||
-    ServiceKey.jellyfin ||
-    ServiceKey.plex ||
-    ServiceKey.emby => null,
+    ServiceKey.jellyfin => null,
   };
 }
 

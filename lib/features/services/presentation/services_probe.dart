@@ -2,15 +2,12 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:cupola/core/lifecycle/gated_poll.dart';
 import 'package:cupola/core/api/api_client.dart';
 import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/network/host_reach.dart';
 import 'package:cupola/core/status/silence_clock.dart';
 import 'package:cupola/features/dockge/data/dockge_client.dart';
-import 'package:cupola/features/emby/data/emby_client.dart';
 import 'package:cupola/features/jellyfin/data/jellyfin_client.dart';
-import 'package:cupola/features/plex/data/plex_client.dart';
 import 'package:cupola/features/dockge/data/dockge_service.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/discover/data/seerr_session.dart';
@@ -27,7 +24,6 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 import 'package:cupola/features/truenas/data/truenas_service.dart';
 import 'package:cupola/features/truenas/data/truenas_ws_client.dart';
-import 'package:cupola/features/unraid/data/unraid_client.dart';
 
 /// A live reachability probe for one service.
 ///
@@ -226,38 +222,6 @@ final serviceSummaryProvider =
         )).future,
       );
     });
-
-/// What a download client's page bands over its rows: the probe's failure,
-/// or, while the probe has not said so yet, the failure of the [list] the page
-/// polls, over rows already read. The list is read every three seconds and the
-/// probe's own deadline is longer: without this a stopped client's sections
-/// each said their list was not shown, and the rows read before went with
-/// them.
-ServiceSummary? clientPageFailure(
-  ServiceKey service, {
-  required AsyncValue<ServiceSummary> summary,
-  required AsyncValue<Object?> list,
-}) {
-  final probed = summary.whenOrNull(data: (s) => s.isOnline ? null : s);
-  if (probed != null) return probed;
-  if (!list.hasError || !list.hasValue) return null;
-  return ServiceSummary.failed(
-    service,
-    host: summary.whenOrNull(data: (s) => s.host) ?? '',
-    error: list.error!,
-  );
-}
-
-/// Probes [service]'s lens connection again for a page's poll tick, unless
-/// the last probe is still out. [serviceSummaryProvider] only delegates, so
-/// reading it again rereads the probe's last answer; this asks the server.
-void readProbeAgainUnlessInFlight(Ref ref, ServiceKey service) {
-  final instance = ref.read(activeInstanceProvider(service));
-  if (instance == null) return;
-  ref.readAgainUnlessInFlight([
-    instanceSummaryProvider((service: service, instanceId: instance.id)),
-  ]);
-}
 
 /// Everything a status probe reads about one service, as a single comparable
 /// value.
@@ -544,32 +508,10 @@ Future<String?> _loadVersion(
   // The media servers, through their own clients: each authenticates with
   // a header the shared `ApiClient` does not send, and each one's status route
   // is anonymous, so the generic branch below read any token as answering.
-  if (service == ServiceKey.jellyfin || service == ServiceKey.emby) {
-    final MediaBrowserClient client = service == ServiceKey.emby
-        ? EmbyClient(
-            baseUrl: reach.url,
-            apiKey: instance.credential,
-            pinnedCertFingerprint: reach.pin,
-            accessHeaders: reach.access.headers(),
-          )
-        : JellyfinClient(
-            baseUrl: reach.url,
-            apiKey: instance.credential,
-            pinnedCertFingerprint: reach.pin,
-            accessHeaders: reach.access.headers(),
-          );
-    return _versionOrNull(
-      () async => await client.checkCredentialAndVersion() ?? '',
-      timeout: const Duration(seconds: 6),
-      close: client.close,
-    );
-  }
-
-  if (service == ServiceKey.plex) {
-    final client = PlexClient(
-      url: reach.url,
-      token: instance.credential,
-      clientIdentifier: settings.plexClientId,
+  if (service == ServiceKey.jellyfin) {
+    final MediaBrowserClient client = JellyfinClient(
+      baseUrl: reach.url,
+      apiKey: instance.credential,
       pinnedCertFingerprint: reach.pin,
       accessHeaders: reach.access.headers(),
     );
@@ -583,20 +525,6 @@ Future<String?> _loadVersion(
   // Past both arms above, so none is left: a media server on the generic
   // branch below would be read as answering whatever key it is given.
   assert(!service.isMediaServer, '${service.name} has no credential probe');
-
-  if (service == ServiceKey.unraid) {
-    final client = UnraidClient(
-      url: reach.url,
-      apiKey: instance.credential,
-      certFingerprint: reach.pin,
-      accessHeaders: reach.access.headers(),
-    );
-    return _versionOrNull(
-      client.version,
-      timeout: const Duration(seconds: 6),
-      close: client.close,
-    );
-  }
 
   final url = reach.url;
   if (service == ServiceKey.seerr) {

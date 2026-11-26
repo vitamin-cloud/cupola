@@ -1,27 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:cupola/features/home/presentation/widgets/settings_home_row.dart';
+import 'package:cupola/features/outside/presentation/settings_notifications_screen.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/app_spacing.dart';
 import 'package:cupola/core/capability/audience.dart';
-import 'package:cupola/core/utils/unit_space.dart';
 import 'package:cupola/core/widgets/app_card.dart';
 import 'package:cupola/core/widgets/status_badge.dart';
-import 'package:cupola/features/release_search/data/release_search_transport.dart';
-import 'package:cupola/features/release_search/domain/release_search_reach.dart';
-import 'package:cupola/features/release_search/presentation/release_search_entry.dart';
-import 'package:cupola/features/release_search/presentation/release_search_settings_provider.dart';
-import 'package:cupola/features/release_search/presentation/widgets/search_headroom_card.dart';
 import 'package:cupola/features/settings/data/service_connection_provider.dart';
 import 'package:cupola/features/settings/data/service_verification.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/connection_presentation.dart';
 import 'package:cupola/features/settings/domain/connections_readout.dart';
-import 'package:cupola/features/settings/domain/regions.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/settings/domain/settings_model.dart';
-import 'package:cupola/features/settings/presentation/widgets/cert_trust_content.dart';
 import 'package:cupola/features/settings/presentation/widgets/requester_settings_rows.dart';
 import 'package:cupola/features/settings/presentation/widgets/settings_app_rows.dart';
 import 'package:cupola/features/settings/presentation/widgets/settings_section_label.dart';
@@ -72,9 +65,10 @@ class SettingsSummaryPane extends ConsumerWidget {
           const DemoSettingsCard(),
           const RequesterAccountCard(),
           const SizedBox(height: AppSpacing.xl),
-          const _RegionSummaryCard(),
-          const SizedBox(height: AppSpacing.xl),
-          const _AppearanceSummaryCard(),
+          const _SummaryCard(
+            label: 'General',
+            children: [SettingsHomeRow(), SettingsNotificationsRow()],
+          ),
           const SizedBox(height: AppSpacing.xl),
           _SummaryCard(
             label: 'About',
@@ -95,40 +89,19 @@ class SettingsSummaryPane extends ConsumerWidget {
         const DemoSettingsCard(),
         const ConnectionsSummaryCard(),
         const SizedBox(height: AppSpacing.xl),
-        const _TrustedCertificatesSummaryCard(),
-        const SizedBox(height: AppSpacing.xl),
-        const _BackgroundSearchSummaryCard(),
-        const SizedBox(height: AppSpacing.xl),
-        const _RegionSummaryCard(),
-        const SizedBox(height: AppSpacing.xl),
-        const _AppearanceSummaryCard(),
-        const SizedBox(height: AppSpacing.xl),
+        // The same rows as the phone's General section.
         _SummaryCard(
-          label: 'Onboarding',
+          label: 'General',
           children: [
+            const SettingsBackgroundRow(),
+            const SettingsNotificationsRow(),
             const SettingsRevisitOnboardingRow(),
             if (offersCode) const SettingsAnotherDeviceRow(),
+            const SettingsResetAppDataRow(),
           ],
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        const _AboutSummaryCard(),
-        const SizedBox(height: AppSpacing.xl),
-        const _SummaryCard(
-          label: 'Danger zone',
-          children: [SettingsResetAppDataRow()],
         ),
       ],
     );
-  }
-}
-
-/// About: the same four rows the phone index draws.
-class _AboutSummaryCard extends StatelessWidget {
-  const _AboutSummaryCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return _SummaryCard(label: 'About', children: settingsAboutRows(context));
   }
 }
 
@@ -275,216 +248,6 @@ class _GroupRow extends StatelessWidget {
   }
 }
 
-/// Trusted certificates: how many origins are pinned, and any pin nothing uses.
-class _TrustedCertificatesSummaryCard extends ConsumerWidget {
-  const _TrustedCertificatesSummaryCard();
-
-  /// Past this many orphans the list itself is the place to work, not a summary.
-  static const int _maxNamedOrphans = 3;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(currentSettingsProvider);
-    final origins = settings.trustedCertificates.keys.toList()..sort();
-    // An origin no configured service reaches any more. Not a fault. Nothing
-    // is broken and nothing is at risk, but it is the one thing on this pane
-    // that cannot be found anywhere else, since the per-service form only ever
-    // shows the pin for its own address (ADR-6).
-    final orphans = origins
-        .where((origin) => settings.servicesSharingOriginOf(origin).isEmpty)
-        .toList(growable: false);
-
-    return _SummaryCard(
-      label: 'Trusted certificates',
-      children: [
-        SettingsCard.grouped(
-          leading: const Icon(Icons.verified_user_outlined),
-          title: switch (origins.length) {
-            0 => 'Nothing pinned',
-            1 => '1 pinned origin',
-            _ => '${origins.length} pinned origins',
-          },
-          semanticHint: 'opens the trusted certificates list',
-          onTap: () => context.push('/settings/certificates'),
-        ),
-        for (final origin in orphans.take(_maxNamedOrphans))
-          _NoteRow(
-            icon: Icons.link_off_rounded,
-            title: displayOrigin(origin),
-            subtitle: 'No configured service uses this address.',
-            onTap: () => context.push('/settings/certificates'),
-            semanticHint: 'opens the trusted certificates list',
-          ),
-      ],
-    );
-  }
-}
-
-/// Background search: the two caps, and anything stopping a search reaching
-/// past the app.
-class _BackgroundSearchSummaryCard extends ConsumerWidget {
-  const _BackgroundSearchSummaryCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(releaseSearchSettingsProvider);
-    // Through the provider, never `Platform`: `flutter_test` runs on a desktop,
-    // so reading the host directly would put every test on the desktop branch.
-    final platform = ref.watch(releaseSearchPlatformProvider);
-    final canRunInBackground = backgroundSearchSupported(platform: platform);
-
-    final caps =
-        '${settings.concurrency} at a time\u00A0· give up after '
-        '${withUnit(settings.timeout.inMinutes, 'min')}';
-
-    return _SummaryCard(
-      label: 'Background search',
-      children: [
-        SettingsCard.grouped(
-          leading: const Icon(Icons.travel_explore_rounded),
-          title: canRunInBackground
-              ? '${settings.backgroundEnabled ? 'On' : 'Off'}\u00A0· $caps'
-              // Not a fault and not a setting: a desktop app is not suspended,
-              // so there is nothing here to hand to the OS.
-              : 'Not needed here, the app keeps running\u00A0· $caps',
-          semanticHint: 'opens background search settings',
-          onTap: () => context.push('/settings/background-search'),
-        ),
-        // Only when the user asked for notifications: a permission nobody wants
-        // being un-granted is not a fault, it is the default.
-        if (settings.notifyOnFinish &&
-            ref.watch(notificationPermissionProvider).value == false)
-          const _NoteRow(
-            icon: Icons.notifications_off_rounded,
-            title: 'Notifications are blocked',
-            subtitle: 'Turned off for Stack in system settings.',
-            tone: StatusTone.warning,
-          ),
-        for (final entry in _foregroundOnly(ref).entries)
-          _NoteRow(
-            icon: Icons.phonelink_off_rounded,
-            title: joinServiceNames(entry.value),
-            subtitle: switch (entry.key) {
-              ReleaseSearchReach.whileOpenTrustedCert =>
-                'Searches run while Stack is open, the certificate is '
-                    'trusted only inside the app.',
-              _ =>
-                'Searches run while Stack is open, the address is '
-                    'cleartext.',
-            },
-          ),
-      ],
-    );
-  }
-
-  /// The release-search services whose lens instance cannot hand a search to
-  /// the OS, grouped by the reason: the two reasons have different fixes, and
-  /// only one of them is something the user can do anything about.
-  ///
-  /// Configured services only: reach answers for an empty address as readily
-  /// as for a real one, and a limit announced about a service that is not set
-  /// up is a limit on nothing.
-  Map<ReleaseSearchReach, List<ServiceKey>> _foregroundOnly(WidgetRef ref) {
-    final settings = ref.watch(currentSettingsProvider);
-    final grouped = <ReleaseSearchReach, List<ServiceKey>>{};
-    for (final service in ServiceKey.values.where(
-      (service) =>
-          SearchHeadroomCard.appliesTo(service) &&
-          settings.isServiceConfigured(service),
-    )) {
-      final reach = ref.watch(releaseSearchLensReachProvider(service));
-      if (reach == ReleaseSearchReach.whileOpenTrustedCert ||
-          reach == ReleaseSearchReach.whileOpenCleartext) {
-        grouped.putIfAbsent(reach, () => []).add(service);
-      }
-    }
-    return grouped;
-  }
-}
-
-/// Region: the value, and the half of the truth that looks like a filter.
-class _RegionSummaryCard extends ConsumerWidget {
-  const _RegionSummaryCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final region = SettingsModel.normalizeRegion(
-      ref.watch(currentSettingsProvider).region,
-    );
-
-    return _SummaryCard(
-      label: 'Region',
-      children: [
-        SettingsCard.grouped(
-          leading: const Icon(Icons.language_rounded),
-          title: '${commonRegions[region] ?? region} ($region)',
-          semanticHint: 'opens the region picker',
-          onTap: () => context.push('/settings/region'),
-        ),
-        // Standing, not conditional: this is the one thing about the setting a
-        // user reliably gets wrong, and it is wrong from the moment it is set.
-        const _NoteRow(
-          icon: Icons.filter_alt_off_rounded,
-          title: 'Not a Discover filter',
-          subtitle:
-              'It reaches release dates, ratings and watch providers, never '
-              'which titles Discover returns.',
-        ),
-      ],
-    );
-  }
-}
-
-/// Appearance: which palette, and the fact that it is the only choice there is.
-class _AppearanceSummaryCard extends ConsumerWidget {
-  const _AppearanceSummaryCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(currentSettingsProvider).themeMode;
-
-    return _SummaryCard(
-      label: 'Appearance',
-      children: [
-        SettingsCard.grouped(
-          leading: const Icon(Icons.palette_rounded),
-          title: mode.label,
-          semanticHint: 'opens the appearance picker',
-          onTap: () => context.push('/settings/appearance'),
-        ),
-        // Says it here because the absence of a Material You switch reads as
-        // an omission until you know it is a decision: the interface is
-        // monochrome, and its only colour is the artwork's light and the
-        // five tones. In the user's words, not the palette's.
-        const _NoteRow(
-          icon: Icons.colorize_rounded,
-          title: 'Lit by what you watch',
-          subtitle:
-              'The interface stays neutral. Its color comes from the artwork '
-              'on screen, never from the system accent.',
-        ),
-      ],
-    );
-  }
-}
-
-/// `1 gesture introduces itself` · `2 of 3 gestures introduce themselves`.
-///
-/// A count and a verb, and the verb agrees with the count rather than with the
-/// noun after "of": the line used to read "1 of 1 gestures introduces itself",
-/// which is wrong at every count. All of them is said as all of them, and none
-/// as none.
-String gestureHintsLine({required int introducing, required int total}) {
-  if (introducing <= 0) return 'No gesture introduces itself';
-  final verb = introducing == 1 ? 'introduces itself' : 'introduce themselves';
-  if (introducing >= total) {
-    return total == 1
-        ? '1 gesture introduces itself'
-        : 'All $total gestures introduce themselves';
-  }
-  return '$introducing of $total gestures $verb';
-}
-
 /// A card: its eyebrow, an optional command of its own, and its rows.
 class _SummaryCard extends StatelessWidget {
   const _SummaryCard({
@@ -519,51 +282,6 @@ class _SummaryCard extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         SettingsGroupCard(children: children),
       ],
-    );
-  }
-}
-
-/// A row that states one fact about the area this card covers.
-///
-/// Tone defaults to neutral because most of what these cards have to say is a
-/// limit rather than a fault: a certificate nobody uses, a setting that does
-/// less than its name suggests, and the amber in this system means something
-/// is failing right now.
-class _NoteRow extends StatelessWidget {
-  const _NoteRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.tone = StatusTone.neutral,
-    this.onTap,
-    this.semanticHint,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final StatusTone tone;
-  final VoidCallback? onTap;
-  final String? semanticHint;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final color = statusToneColor(
-      colorScheme,
-      tone,
-      surface: colorScheme.surfaceContainer,
-    );
-
-    return SettingsCard.grouped(
-      leading: Icon(icon),
-      title: title,
-      subtitle: subtitle,
-      accentColor: color,
-      subtitleColor: tone == StatusTone.neutral ? null : color,
-      semanticLabel: '$title. $subtitle',
-      semanticHint: semanticHint,
-      onTap: onTap,
     );
   }
 }

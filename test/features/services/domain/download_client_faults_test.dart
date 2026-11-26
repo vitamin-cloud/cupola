@@ -28,15 +28,7 @@ Torrent _qb(
 });
 
 void main() {
-  group('transmissionInFlight', () {
-
-
-
-
-
-
-
-  });
+  group('transmissionInFlight', () {});
 
   group('qbittorrentInFlight', () {
     test('downloading, fetching metadata and moving are transfers', () {
@@ -192,8 +184,6 @@ void main() {
       );
     });
 
-
-
     test('idleSince reads the last activity, else the time added, else '
         'nothing', () {
       expect(
@@ -242,67 +232,5 @@ void main() {
 
   group('usenetQueueStoppedByDisk', () {
     const gb = 1024 * 1024 * 1024;
-
-    test('a paused queue that cannot hold its smallest job was stopped by '
-        'its disk', () {
-      expect(
-        usenetQueueStoppedByDisk(
-          paused: true,
-          freeBytes: gb ~/ 2,
-          remainingBytes: [8 * gb, gb],
-        ),
-        isTrue,
-      );
-    });
-
-    test('a paused queue with room for a job was paused on purpose', () {
-      expect(
-        usenetQueueStoppedByDisk(
-          paused: true,
-          freeBytes: 2 * gb,
-          remainingBytes: [8 * gb, gb],
-        ),
-        isFalse,
-      );
-    });
-
-    test('a running queue, a timed pause, an unknown free space and an '
-        'empty queue prove nothing', () {
-      expect(
-        usenetQueueStoppedByDisk(
-          paused: false,
-          freeBytes: 0,
-          remainingBytes: [gb],
-        ),
-        isFalse,
-      );
-      expect(
-        usenetQueueStoppedByDisk(
-          paused: true,
-          timedPause: true,
-          freeBytes: 0,
-          remainingBytes: [gb],
-        ),
-        isFalse,
-      );
-      expect(
-        usenetQueueStoppedByDisk(
-          paused: true,
-          freeBytes: null,
-          remainingBytes: [gb],
-        ),
-        isFalse,
-      );
-      expect(
-        usenetQueueStoppedByDisk(
-          paused: true,
-          freeBytes: 0,
-          remainingBytes: [0, null],
-        ),
-        isFalse,
-      );
-    });
   });
-
-
 }

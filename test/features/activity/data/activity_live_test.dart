@@ -165,42 +165,6 @@ Future<void> _flush(WidgetTester tester) async {
 
 void main() {
   group('the poll', () {
-    testWidgets('All: the queues and who is watching every fifteen seconds, '
-        'the requests every minute', (tester) async {
-      final rig = await _start(tester);
-      final poll = rig.container.listen(
-        activityLivePollProvider(ActivityTab.all),
-        (_, _) {},
-      );
-
-      await tester.pump(activityLiveInterval - const Duration(seconds: 1));
-      expect(rig['queue'], 0);
-      await tester.pump(const Duration(seconds: 1));
-      await _flush(tester);
-      expect(rig['queue'], 1);
-      expect(rig['decisions.queue'], 1);
-      expect(rig['sessions'], 1);
-      // The requests keep their own, slower clock.
-      expect(rig['requests'], 0);
-
-      await tester.pump(activityLiveInterval);
-      await _flush(tester);
-      expect(rig['queue'], 2);
-      expect(rig['sessions'], 2);
-      expect(rig['requests'], 0);
-
-      // Sixty seconds in: the requests, once.
-      await tester.pump(activityLiveInterval * 2);
-      await _flush(tester);
-      expect(rig['queue'], 4);
-      expect(rig['requests'], 1);
-      expect(rig['pending'], 1);
-      expect(rig['decisions.requests'], 1);
-
-      poll.close();
-      await tester.pump(const Duration(milliseconds: 1));
-    });
-
     testWidgets('Downloads: the queues, never who is watching, never the '
         'requests', (tester) async {
       final rig = await _start(tester);
@@ -221,34 +185,6 @@ void main() {
       await tester.pump(const Duration(milliseconds: 1));
     });
 
-    testWidgets('Requests: the requests every minute and nothing of the '
-        'queues', (tester) async {
-      final rig = await _start(tester);
-      final poll = rig.container.listen(
-        activityLivePollProvider(ActivityTab.requests),
-        (_, _) {},
-      );
-
-      await tester.pump(activityRequestsInterval - const Duration(seconds: 1));
-      expect(rig['requests'], 0);
-      await tester.pump(const Duration(seconds: 1));
-      await _flush(tester);
-      expect(rig['requests'], 1);
-      expect(rig['pending'], 1);
-      expect(rig['decisions.requests'], 1);
-
-      await tester.pump(activityRequestsInterval * 2);
-      await _flush(tester);
-      expect(rig['requests'], 3);
-
-      expect(rig['queue'], 0);
-      expect(rig['decisions.queue'], 0);
-      expect(rig['sessions'], 0);
-
-      poll.close();
-      await tester.pump(const Duration(milliseconds: 1));
-    });
-
     testWidgets('History has no clock: a week does not change by the '
         'second', (tester) async {
       final rig = await _start(tester);
@@ -264,131 +200,9 @@ void main() {
       poll.close();
       await tester.pump(const Duration(milliseconds: 1));
     });
-
-    testWidgets('the page leaves the screen: the timers go with it', (
-      tester,
-    ) async {
-      final rig = await _start(tester);
-      final poll = rig.container.listen(
-        activityLivePollProvider(ActivityTab.all),
-        (_, _) {},
-      );
-      await tester.pump(activityLiveInterval);
-      await _flush(tester);
-      expect(rig['queue'], 1);
-
-      poll.close();
-      await tester.pump(const Duration(milliseconds: 1));
-      await tester.pump(activityRequestsInterval * 3);
-      await _flush(tester);
-      expect(rig['queue'], 1);
-      expect(rig['requests'], 0);
-    });
-
-    testWidgets('a slow queue is left to answer, and who is watching is '
-        'still read', (tester) async {
-      // Servers that take the connection and say nothing: the queue's read
-      // outlasts the tick, and every tick used to throw it away (13/10).
-      final gate = Completer<void>();
-      final rig = await _start(tester, queueGate: gate);
-      final poll = rig.container.listen(
-        activityLivePollProvider(ActivityTab.all),
-        (_, _) {},
-      );
-      await tester.pump(activityLiveInterval * 3);
-      await _flush(tester);
-      expect(rig['queue'], 0);
-      expect(rig['decisions.queue'], 0);
-      expect(rig['sessions'], 3);
-
-      // It answers, and the next tick reads it again.
-      gate.complete();
-      await _flush(tester);
-      await tester.pump(activityLiveInterval);
-      await _flush(tester);
-      expect(rig['queue'], 1);
-      expect(rig['decisions.queue'], 1);
-
-      poll.close();
-      await tester.pump(const Duration(milliseconds: 1));
-    });
-
-    testWidgets('a slow Seerr is asked once, never a second time on top of '
-        'the first', (tester) async {
-      final rig = await _start(tester, holdRequests: true);
-      // The first read of the list is still out.
-      invalidateSeerrRequests(rig.container);
-      await _flush(tester);
-      expect(rig['requests'], 1);
-      rig.forget();
-
-      final poll = rig.container.listen(
-        activityLivePollProvider(ActivityTab.requests),
-        (_, _) {},
-      );
-      await tester.pump(activityRequestsInterval * 3);
-      await _flush(tester);
-      expect(rig['requests'], 0);
-
-      // It answers, and the next minute asks again.
-      rig.heldRequests!.complete(const <SeerrRequest>[]);
-      await _flush(tester);
-      await tester.pump(activityRequestsInterval);
-      await _flush(tester);
-      expect(rig['requests'], 1);
-
-      poll.close();
-      await tester.pump(const Duration(milliseconds: 1));
-    });
   });
 
   group('what a pull drops', () {
-    testWidgets('All: everything the page draws, but the week\'s failures', (
-      tester,
-    ) async {
-      final rig = await _start(tester);
-
-      invalidateActivity(rig.ref, ActivityTab.all);
-      await _flush(tester);
-
-      expect(rig['queue'], 1);
-      expect(rig['decisions.queue'], 1);
-      expect(rig['decisions.requests'], 1);
-      expect(rig['sessions'], 1);
-      expect(rig['requests'], 1);
-      expect(rig['arrivals'], 1);
-      expect(rig['history'], 1);
-      expect(rig['failures'], 0);
-    });
-
-    testWidgets('Downloads: the queues and what finished, not the requests '
-        'nor who is watching', (tester) async {
-      final rig = await _start(tester);
-
-      invalidateActivity(rig.ref, ActivityTab.downloads);
-      await _flush(tester);
-
-      expect(rig['queue'], 1);
-      expect(rig['arrivals'], 1);
-      expect(rig['history'], 1);
-      expect(rig['requests'], 0);
-      expect(rig['sessions'], 0);
-      expect(rig['failures'], 0);
-    });
-
-    testWidgets('Requests: the list alone', (tester) async {
-      final rig = await _start(tester);
-
-      invalidateActivity(rig.ref, ActivityTab.requests);
-      await _flush(tester);
-
-      expect(rig['requests'], 1);
-      expect(rig['queue'], 0);
-      expect(rig['arrivals'], 0);
-      expect(rig['failures'], 0);
-      expect(rig['sessions'], 0);
-    });
-
     testWidgets('History: the week\'s two halves, nothing else', (
       tester,
     ) async {

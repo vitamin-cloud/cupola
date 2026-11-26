@@ -80,31 +80,4 @@ void main() {
       isNull,
     );
   });
-
-  test('a title named by Radarr\'s own id lends its poster only when the '
-      'names agree', () async {
-    final container = _container();
-    expect(
-      await container.read(
-        arrPublicPosterByIdProvider((
-          service: ServiceKey.radarr,
-          id: 1,
-          title: 'Fight club',
-        )).future,
-      ),
-      _poster,
-      reason: 'the same title, spelled another way',
-    );
-    expect(
-      await container.read(
-        arrPublicPosterByIdProvider((
-          service: ServiceKey.radarr,
-          id: 1,
-          title: 'The Matrix',
-        )).future,
-      ),
-      isNull,
-      reason: 'the same id on another Radarr is another movie',
-    );
-  });
 }

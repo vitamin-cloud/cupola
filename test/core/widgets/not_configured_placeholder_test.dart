@@ -45,8 +45,6 @@ void main() {
     return router.state.uri.toString();
   }
 
-
-
   testWidgets('the generic form resolves the name to the same setup form', (
     tester,
   ) async {

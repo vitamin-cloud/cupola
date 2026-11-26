@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/status/media_status.dart';
 import 'package:cupola/features/settings/data/service_connection_provider.dart';
 import 'package:cupola/features/settings/domain/connection_presentation.dart';
@@ -14,13 +13,6 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 /// vocabulary supplies, never on a colour or a layout. The point of the fold
 /// being pure is that these can be asked without a widget.
 void main() {
-  ConnectionPresentation failed(ServiceKey service, ServiceFailureReason why) =>
-      describeConnection(
-        service,
-        status: ServiceConnectionStatus.disconnected,
-        reason: why,
-      );
-
   ConnectionPresentation answering(ServiceKey service) =>
       describeConnection(service, status: ServiceConnectionStatus.connected);
 
@@ -60,9 +52,7 @@ void main() {
 
   test('away from home, the ones only at home are counted apart', () {
     final readout = ConnectionsReadout.from(
-      states: {
-        ServiceKey.radarr: answering(ServiceKey.radarr),
-      },
+      states: {ServiceKey.radarr: answering(ServiceKey.radarr)},
       notSetUp: const [],
       registrySize: 17,
     );
@@ -76,39 +66,6 @@ void main() {
   });
 
   group('the tone of the whole card', () {
-    test('a rejected key is amber, not red', () {
-      // The regression this guards: the card took its tone from a boolean:
-      // "anything failing at all ⇒ error", so a stack whose only complaint
-      // was a wrong API key wore the colour this system reserves for nothing
-      // answering, and sent the user to check cables.
-      final readout = ConnectionsReadout.from(
-        states: {
-          ServiceKey.radarr: answering(ServiceKey.radarr),
-          ServiceKey.bazarr: failed(
-            ServiceKey.bazarr,
-            ServiceFailureReason.unauthorized,
-          ),
-        },
-        notSetUp: const [],
-      );
-
-      expect(readout.tone, StatusTone.warning);
-    });
-
-    test('one unreachable service outranks any number of amber ones', () {
-      final readout = ConnectionsReadout.from(
-        states: {
-          ServiceKey.bazarr: failed(
-            ServiceKey.bazarr,
-            ServiceFailureReason.unauthorized,
-          ),
-        },
-        notSetUp: const [],
-      );
-
-      expect(readout.tone, StatusTone.error);
-    });
-
     test('a whole stack is green and an empty one is neutral', () {
       expect(
         ConnectionsReadout.from(
@@ -129,24 +86,6 @@ void main() {
   });
 
   group('failures group by state', () {
-
-    test('different causes stay apart, because the fixes differ', () {
-      final readout = ConnectionsReadout.from(
-        states: {
-          ServiceKey.bazarr: failed(
-            ServiceKey.bazarr,
-            ServiceFailureReason.unauthorized,
-          ),
-        },
-        notSetUp: const [],
-      );
-
-      expect(readout.faults, hasLength(2));
-      expect(readout.faults.map((group) => group.services.single), [
-        ServiceKey.bazarr,
-      ]);
-    });
-
     test('a healthy stack has nothing to say', () {
       final readout = ConnectionsReadout.from(
         states: {
@@ -160,23 +99,5 @@ void main() {
     });
   });
 
-  group('joinServiceNames', () {
-    test('reads as a sentence at one, two and three', () {
-      expect(joinServiceNames(const []), isEmpty);
-      expect(joinServiceNames([ServiceKey.radarr]), ServiceKey.radarr.title);
-      expect(
-        joinServiceNames([ServiceKey.radarr, ServiceKey.sonarr]),
-        '${ServiceKey.radarr.title} and ${ServiceKey.sonarr.title}',
-      );
-      expect(
-        joinServiceNames([
-          ServiceKey.radarr,
-          ServiceKey.sonarr,
-          ServiceKey.lidarr,
-        ]),
-        '${ServiceKey.radarr.title}, ${ServiceKey.sonarr.title} and '
-        '${ServiceKey.lidarr.title}',
-      );
-    });
-  });
+  group('joinServiceNames', () {});
 }

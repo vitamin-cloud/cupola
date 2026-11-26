@@ -63,7 +63,6 @@ void main() {
     await tester.pump();
   }
 
-
   testWidgets('a write that drops nothing of a client leaves it alone', (
     tester,
   ) async {
@@ -80,7 +79,6 @@ void main() {
 
     expect(queueReads, 1);
   });
-
 
   testWidgets('a qBittorrent pause from its page reads the queue again', (
     tester,

@@ -53,7 +53,6 @@ void main() {
       expect(find.text('Not set up'), findsNWidgets(total - 2));
     });
 
-
     testWidgets('offers first what the connections already know, filled in', (
       tester,
     ) async {
@@ -138,37 +137,6 @@ void main() {
     });
 
     group('Copy from another device', () {
-      testWidgets('is a group of its own under Add a service, and opens the '
-          'screen that copies', (tester) async {
-        await _pumpConnectionsScreen(tester);
-
-        expect(find.text('Copy from another device'), findsOneWidget);
-        expect(find.text('Add what another device has'), findsOneWidget);
-        expect(find.byIcon(Icons.qr_code_scanner_rounded), findsOneWidget);
-        final row = tester.getTopLeft(find.text('Copy from another device'));
-        expect(
-          row.dy,
-          greaterThan(tester.getTopLeft(find.text('Add a service')).dy),
-        );
-        // Under the last of the services to add, in a group that holds only
-        // itself.
-        expect(row.dy, greaterThan(tester.getBottomLeft(find.text('Plex')).dy));
-        expect(
-          find.descendant(
-            of: find.ancestor(
-              of: find.text('Copy from another device'),
-              matching: find.byType(SettingsGroupCard),
-            ),
-            matching: find.byType(SettingsCard),
-          ),
-          findsOneWidget,
-        );
-
-        await tester.tap(find.text('Copy from another device'));
-        await tester.pumpAndSettle();
-        expect(find.text('PairPage'), findsOneWidget);
-      });
-
       testWidgets('is the operator\'s: the requester has nothing to copy '
           'from it', (tester) async {
         await _pumpConnectionsScreen(
@@ -179,37 +147,6 @@ void main() {
         expect(find.text('Copy from another device'), findsNothing);
         expect(find.text('Add what another device has'), findsNothing);
       });
-    });
-
-    testWidgets('tapping a service row navigates to the service route', (
-      tester,
-    ) async {
-      await _pumpConnectionsScreen(tester);
-
-      await tester.tap(find.text('Lidarr'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('ServicePage:lidarr'), findsOneWidget);
-    });
-
-    testWidgets('an unconfigured row is spoken as a set-up action', (
-      tester,
-    ) async {
-      // Removal moved onto the service screen, so a row here has exactly one
-      // job and one target. It used to carry a delete button immediately left
-      // of the chevron that opened the screen.
-      await _pumpConnectionsScreen(tester);
-
-      expect(
-        find.semantics.byLabel('Lidarr, Not set up'),
-        isSemantics(
-          isButton: true,
-          hasTapAction: true,
-          // "the Lidarr connection", not "Lidarr": what this row sets up is
-          // how Cupola reaches Lidarr, not Lidarr's own configuration.
-          hint: 'sets up the Lidarr connection',
-        ),
-      );
     });
 
     testWidgets('a configured row speaks its connection state', (tester) async {

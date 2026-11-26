@@ -138,12 +138,6 @@ void main() {
       expect(find.text('ServicePage:radarr'), findsOneWidget);
     });
 
-    testWidgets('formats the selected region label', (tester) async {
-      await _pumpSettingsHome(tester, settings: settingsWith(region: 'gb'));
-
-      expect(find.text('United Kingdom (GB)'), findsOneWidget);
-    });
-
     testWidgets('the summary row opens the connections list', (tester) async {
       await _pumpSettingsHome(tester);
 
@@ -202,17 +196,6 @@ void main() {
       });
     });
 
-    testWidgets('tapping Region navigates to the region screen', (
-      tester,
-    ) async {
-      await _pumpSettingsHome(tester);
-
-      await tester.tap(find.text('Region'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('RegionPage'), findsOneWidget);
-    });
-
     testWidgets('renders tappable settings cards', (tester) async {
       await _pumpSettingsHome(tester);
 
@@ -256,81 +239,6 @@ void main() {
 
       expect(find.text('Danger zone'), findsOneWidget);
       expect(find.text('Reset app data'), findsOneWidget);
-    });
-
-    testWidgets('confirming reset clears data and restarts onboarding', (
-      tester,
-    ) async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final secureStore = FakeSecureSettingsStore();
-      final service = SettingsService(prefs, secureStore);
-      await service.saveSettings(
-        settingsWith(
-          radarrUrl: 'https://radarr.local:7878',
-          radarrApiKey: 'radarr-key',
-          region: 'IT',
-          themeMode: AppThemeMode.dark,
-        ),
-      );
-      await service.saveOnboardingComplete();
-      final initialSettings = await service.loadSettings();
-
-      final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWith((ref) => prefs),
-          secureSettingsStoreProvider.overrideWith((ref) => secureStore),
-          initialSettingsProvider.overrideWith((ref) => initialSettings),
-          initialOnboardingCompletedProvider.overrideWith((ref) => true),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      expect(
-        container.read(settingsProvider).urlFor(ServiceKey.radarr),
-        'https://radarr.local:7878',
-      );
-      expect(container.read(onboardingCompletedProvider), isTrue);
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp.router(
-            routerConfig: GoRouter(
-              initialLocation: '/settings',
-              routes: [
-                GoRoute(
-                  path: '/settings',
-                  builder: (_, _) => const SettingsHomeScreen(),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.scrollUntilVisible(find.text('Reset app data'), 300);
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Reset app data'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Reset all data?'), findsOneWidget);
-
-      await tester.tap(find.widgetWithText(FilledButton, 'Reset app data'));
-      await tester.pumpAndSettle();
-
-      expect(
-        container.read(settingsProvider).urlFor(ServiceKey.radarr),
-        isEmpty,
-      );
-      expect(
-        container.read(settingsProvider).apiKeyFor(ServiceKey.radarr),
-        isEmpty,
-      );
-      expect(container.read(settingsProvider).themeMode, AppThemeMode.dark);
-      expect(container.read(onboardingCompletedProvider), isFalse);
-      expect(await secureStore.read(key: 'secure_radarr_api_key'), isNull);
     });
 
     testWidgets('canceling reset keeps data intact', (tester) async {

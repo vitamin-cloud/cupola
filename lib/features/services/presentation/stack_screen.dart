@@ -16,7 +16,6 @@ import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/widgets/status_badge.dart';
 import 'package:cupola/features/media/presentation/media_parts.dart';
 import 'package:cupola/features/movies/presentation/movies_provider.dart';
-import 'package:cupola/features/music/presentation/music_provider.dart';
 import 'package:cupola/features/series/presentation/series_provider.dart';
 import 'package:cupola/features/services/domain/services_semantics.dart';
 import 'package:cupola/features/services/presentation/service_kpi_provider.dart';
@@ -377,7 +376,6 @@ void _invalidateStack(WidgetRef ref, {bool libraries = true}) {
   if (libraries) {
     ref.invalidate(moviesProvider);
     ref.invalidate(seriesProvider);
-    ref.invalidate(musicProvider);
   }
   // And the four non-swallowing reads the rail makes of those same libraries.
   // They are separate providers so that a server which did not answer reads an

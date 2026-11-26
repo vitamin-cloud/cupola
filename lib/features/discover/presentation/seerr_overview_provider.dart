@@ -167,32 +167,6 @@ List<SeerrOverviewRow> seerrDecisionRows(
     _row(request, now: now, tone: StatusTone.neutral, voice: voice),
 ]);
 
-/// The requests Seerr has already accepted and is still working on.
-///
-/// **This** one reads `displayStatus`, and that is correct here: the question
-/// is where the media is, not what the request needs from a person. The trap is
-/// in the other direction: a decisions list keyed off `displayStatus` silently
-/// drops the approvals for titles the library already holds.
-///
-/// [StatusTone.info]: work in flight is informational, not a fault and not
-/// backlog.
-SeerrOverviewSection seerrProcessingSection(
-  List<SeerrRequest> requests, {
-  required DateTime now,
-  int limit = seerrProcessingPreviewLimit,
-  SeerrRowVoice voice = _operatorVoice,
-}) {
-  final picked = seerrProcessingPick(requests, limit: limit);
-  return (
-    rows: List.unmodifiable([
-      for (final request in picked.shown)
-        _row(request, now: now, tone: StatusTone.info, voice: voice),
-    ]),
-    total: picked.total,
-    isFloor: !holdsEveryRequest(requests),
-  );
-}
-
 /// The requests [seerrProcessingSection] draws, newest first and cut to
 /// [limit], and how many Seerr is working on in all.
 ///

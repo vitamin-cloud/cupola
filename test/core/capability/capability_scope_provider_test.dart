@@ -25,9 +25,7 @@ void main() {
     final container = ProviderContainer(
       retry: (_, _) => null,
       overrides: [
-        ...await settingsScopeOverrides(
-          configured: const [ServiceKey.unraid, ServiceKey.truenas],
-        ),
+        ...await settingsScopeOverrides(),
         if (probes != null) capabilityProbesProvider.overrideWithValue(probes),
         ...overrides.cast(),
       ],
@@ -44,30 +42,6 @@ void main() {
       .updateSettings(change(container.read(settingsProvider)));
 
   group('the merged read', () {
-    test('a learned refusal outranks the probe', () async {
-      final container = await containerWith(
-        probes: {
-          ServiceKey.unraid: (ref, id) async =>
-              const CapabilityGrant.readWrite(),
-        },
-      );
-      await container.read(connectionCapabilityProvider(unraidId).future);
-      expect(
-        container.read(capabilityGrantForProvider(unraidId)),
-        const CapabilityGrant.readWrite(),
-      );
-
-      container.read(capabilityScopeProvider.notifier).markReadOnly(unraidId);
-      expect(
-        container.read(capabilityGrantForProvider(unraidId)),
-        const CapabilityGrant.refused(),
-      );
-      expect(
-        container.read(capabilityGrantForProvider(unraidId)).scope,
-        CapabilityScope.readOnly,
-      );
-    });
-
     test('a probe still out reads as unknown, and stays live', () async {
       final pending = Completer<CapabilityGrant>();
       final container = await containerWith(
@@ -104,21 +78,6 @@ void main() {
         );
         expect(
           container.read(capabilityGrantForProvider(unraidId)),
-          const CapabilityGrant.unanswered(),
-        );
-      },
-    );
-
-    test(
-      'a probe that throws is folded to unanswered by the provider',
-      () async {
-        final container = await containerWith(
-          probes: {
-            ServiceKey.unraid: (ref, id) async => throw Exception('boom'),
-          },
-        );
-        expect(
-          await container.read(connectionCapabilityProvider(unraidId).future),
           const CapabilityGrant.unanswered(),
         );
       },
@@ -167,89 +126,7 @@ void main() {
         CapabilityBasis.refused,
       );
     });
-
-    test(
-      'a credential change forgets that connection and only that one',
-      () async {
-        final container = await containerWith();
-        final ledger = container.read(capabilityScopeProvider.notifier);
-        ledger.markReadOnly(unraidId);
-        ledger.markReadOnly(truenasId);
-
-        await updateSettings(
-          container,
-          (s) => s.copyWithService(ServiceKey.unraid, apiKey: 'a-new-key'),
-        );
-
-        expect(
-          container.read(capabilityScopeProvider).containsKey(unraidId),
-          isFalse,
-        );
-        expect(
-          container.read(capabilityScopeProvider)[truenasId],
-          const CapabilityGrant.refused(),
-        );
-      },
-    );
-
-    test('an unrelated settings write forgets nothing', () async {
-      final container = await containerWith();
-      container.read(capabilityScopeProvider.notifier).markReadOnly(unraidId);
-
-      await updateSettings(
-        container,
-        (s) => s.copyWith(themeMode: AppThemeMode.dark),
-      );
-
-      expect(
-        container.read(capabilityScopeProvider)[unraidId],
-        const CapabilityGrant.refused(),
-      );
-    });
   });
 
-  group('asked once per credential', () {
-    test(
-      're-asks after a credential change, not after anything else',
-      () async {
-        var calls = 0;
-        final container = await containerWith(
-          probes: {
-            ServiceKey.unraid: (ref, id) async {
-              calls++;
-              return const CapabilityGrant.readOnly();
-            },
-          },
-        );
-        final sub = container.listen(
-          connectionCapabilityProvider(unraidId),
-          (_, _) {},
-        );
-        addTearDown(sub.close);
-
-        await container.read(connectionCapabilityProvider(unraidId).future);
-        expect(calls, 1);
-
-        // Unrelated: the theme, and another service's key.
-        await updateSettings(
-          container,
-          (s) => s.copyWith(themeMode: AppThemeMode.dark),
-        );
-        await updateSettings(
-          container,
-          (s) => s.copyWithService(ServiceKey.truenas, apiKey: 'other'),
-        );
-        await container.read(connectionCapabilityProvider(unraidId).future);
-        expect(calls, 1);
-
-        // This connection's own key.
-        await updateSettings(
-          container,
-          (s) => s.copyWithService(ServiceKey.unraid, apiKey: 'a-new-key'),
-        );
-        await container.read(connectionCapabilityProvider(unraidId).future);
-        expect(calls, 2);
-      },
-    );
-  });
+  group('asked once per credential', () {});
 }

@@ -5,7 +5,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
 import 'package:cupola/features/release_search/domain/release_search_headroom.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
@@ -142,8 +141,6 @@ final headroomProbeProvider =
             response = await ref.read(sonarrServiceProvider).probeHeaders();
           case ServiceKey.radarr:
             response = await ref.read(radarrServiceProvider).probeHeaders();
-          case ServiceKey.lidarr:
-            response = await ref.read(lidarrServiceProvider).probeHeaders();
           default:
             throw UnsupportedError(
               '${service.name} has no release search to measure',

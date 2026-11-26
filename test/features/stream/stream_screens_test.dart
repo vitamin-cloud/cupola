@@ -4,14 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/core/widgets/cross_service_action.dart';
-
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/widgets/not_configured_placeholder.dart';
 import 'package:cupola/core/widgets/status_badge.dart';
 import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
-import 'package:cupola/features/plex/domain/models/plex_models.dart';
-import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
@@ -79,9 +75,7 @@ Widget _nowPlayingHost(ServiceKey service) => Scaffold(
       children: [
         StreamNowPlayingSection(
           service: service,
-          sessions: service == ServiceKey.jellyfin
-              ? ref.watch(jellyfinSessionsProvider)
-              : ref.watch(plexSessionsProvider),
+          sessions: ref.watch(jellyfinSessionsProvider),
         ),
       ],
     ),
@@ -127,49 +121,6 @@ Future<void> _pumpLibraries(
   );
   await tester.pumpAndSettle();
 }
-
-final _plexConfigured = settingsWith(
-  plexUrl: 'http://plex.local:32400',
-  plexToken: 'token',
-);
-
-/// A Plex server whose capability sheet the test chooses.
-///
-/// `null` is the shape that matters most here: the sheet has not resolved yet,
-/// or the build simply does not send `myPlexSubscription`.
-Future<void> _pumpPlexNowPlaying(
-  WidgetTester tester, {
-  List<StreamSession> sessions = const [],
-  PlexServerCapabilities? capabilities,
-}) async {
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: [
-        currentSettingsProvider.overrideWith((ref) => _plexConfigured),
-        plexSessionsProvider.overrideWith((ref) async => sessions),
-        // Null is a sheet that has not answered yet.
-        plexCapabilitiesProvider.overrideWith(
-          (ref) => capabilities == null
-              ? Completer<PlexServerCapabilities>().future
-              : Future.value(capabilities),
-        ),
-      ],
-      child: MaterialApp(home: _nowPlayingHost(ServiceKey.plex)),
-    ),
-  );
-  await tester.pumpAndSettle();
-}
-
-PlexServerCapabilities _capabilities({bool? subscription}) =>
-    PlexServerCapabilities(
-      friendlyName: 'tower',
-      machineIdentifier: 'abc',
-      version: '1.41',
-      myPlexUsername: 'matt',
-      myPlexSubscription: subscription,
-      multiuser: true,
-      transcoderActiveVideoSessions: 0,
-    );
 
 /// The colour the tone authority resolves for [tone] on a filled card.
 ///
@@ -334,31 +285,6 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('session controls are never capability-gated', (tester) async {
-      // A non-administrator Jellyfin token is only ever shown sessions it may
-      // control, so there is no refusal to gate against; dimming these would
-      // dim controls that work. A shared account's Plex token is refused the
-      // sessions themselves, so a session on screen is one the owner's token
-      // read. Neither draws a capability gate on a session control.
-      final handle = tester.ensureSemantics();
-      for (final pump in [
-        () => _pumpNowPlaying(tester, sessions: [_session()]),
-        () => _pumpPlexNowPlaying(tester, sessions: [_session()]),
-      ]) {
-        await tester.pumpWidget(const SizedBox.shrink());
-        await pump();
-        expect(find.byType(CapabilityGatedAction), findsNothing);
-        final stop = find.byTooltip('Stop this playback');
-        if (stop.evaluate().isEmpty) continue;
-        expect(tester.getSemantics(stop).hint, isEmpty);
-        expect(
-          find.ancestor(of: stop, matching: find.byType(Opacity)),
-          findsNothing,
-        );
-      }
-      handle.dispose();
-    });
-
     testWidgets('a paused session offers resume, named for what it does', (
       tester,
     ) async {
@@ -480,81 +406,7 @@ void main() {
     });
   });
 
-  group('Plex is stop-alone, and the owner\'s own', () {
-    testWidgets('pause and message are absent, because Plex cannot do them', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-      await _pumpPlexNowPlaying(
-        tester,
-        sessions: [_session()],
-        capabilities: _capabilities(subscription: true),
-      );
-
-      // Pause and message are Jellyfin remote-control commands relayed over the
-      // socket the server already holds. Plex's player routes address the client
-      // directly on the LAN, so the board keeps stop alone (absent, not dimmed):
-      // a dimmed control promises a way to enable it and there is none.
-      expectReachableControl(tester, 'Stop this playback');
-      expectNoControl('Pause this playback');
-      expectNoControl('Send a message to this player');
-      handle.dispose();
-    });
-
-    testWidgets('a server that never mentions Plex Pass keeps its stop', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-      await _pumpPlexNowPlaying(
-        tester,
-        sessions: [_session()],
-        capabilities: _capabilities(subscription: null),
-      );
-
-      // `PlexServerCapabilities.canTerminateSessions` treats silence as
-      // available on purpose, so a missing attribute hides the button on
-      // nobody's server by mistake; the terminate call explains itself if it
-      // comes back 401. The board used to re-derive the gate as
-      // `myPlexSubscription != true` and disagree with it.
-      expectReachableControl(tester, 'Stop this playback');
-      handle.dispose();
-    });
-
-    testWidgets('the stop is there before the capability sheet answers', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-      await _pumpPlexNowPlaying(
-        tester,
-        sessions: [_session()],
-        capabilities: null,
-      );
-
-      // Same defect, second population: while the sheet was unresolved the
-      // control was absent and then appeared a beat later, which on a live list
-      // reads as a glitch.
-      expectReachableControl(tester, 'Stop this playback');
-      handle.dispose();
-    });
-
-    testWidgets('a Plex Pass-less server offers no stop at all', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-      await _pumpPlexNowPlaying(
-        tester,
-        sessions: [_session()],
-        capabilities: _capabilities(subscription: false),
-      );
-
-      // The one case where absence is right: Plex answers a terminate on a
-      // server without Plex Pass with a 401 that has nothing to do with the
-      // token, which would send the user off to re-paste a credential that was
-      // fine.
-      expectNoControl('Stop this playback');
-      handle.dispose();
-    });
-  });
+  group('Plex is stop-alone, and the owner\'s own', () {});
 
   group('the delivery tone', () {
     test('transcode is the only fault arm', () {

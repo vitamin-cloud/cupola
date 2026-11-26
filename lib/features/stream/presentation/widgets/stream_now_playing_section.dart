@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cupola/features/stream/domain/stream_server_client.dart';
 import 'package:cupola/core/app_spacing.dart';
-import 'package:cupola/core/capability/connection_capability.dart';
 import 'package:cupola/core/room_art.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/title_light.dart';
@@ -12,8 +11,6 @@ import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/features/jellyfin/data/jellyfin_client.dart';
 import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
 import 'package:cupola/features/media/presentation/open_media.dart';
-import 'package:cupola/features/plex/presentation/plex_capability.dart';
-import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/services/domain/service_tab.dart';
 import 'package:cupola/features/settings/domain/connection_presentation.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -87,83 +84,55 @@ class StreamNowPlayingSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // A Plex token refused the sessions may be a shared account's, which is
-    // not a fault: only the owner's token sees who is watching. The probe
-    // says whose it is; until it has, the region keeps loading rather than
-    // drawing a refusal it may take back a moment later.
-    var value = sessions;
-    var ownerOnly = false;
-    if (service == ServiceKey.plex && sessions.hasError && !sessions.hasValue) {
-      switch (plexSessionsRefusal(
-        ref,
-        instanceId.isEmpty
-            ? capabilityConnectionId(ref, ServiceKey.plex)
-            : instanceId,
-        sessions.error,
-      )) {
-        case PlexSessionsRefusal.ownerOnly:
-          ownerOnly = true;
-        case PlexSessionsRefusal.pending:
-          value = const AsyncLoading<List<StreamSession>>();
-        case PlexSessionsRefusal.failure:
-          break;
-      }
-    }
-
-    if (_slab) return _slabOf(context, ref, value, ownerOnly: ownerOnly);
+    final value = sessions;
+    if (_slab) return _slabOf(context, ref, value);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // The header carries the page inset itself.
         const SectionHeader(title: 'Now playing', showChevron: false),
-        if (ownerOnly)
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: PlexOwnerOnlyNote(),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: AsyncValueWidget<List<StreamSession>>(
-              value: value,
-              serviceName: service.title,
-              instanceId: instanceId,
-              onRetry: () => refreshStreamSessions(ref, service, instanceId),
-              isEmpty: (list) => list.isEmpty,
-              emptyBuilder: const _IdleRoom(),
-              data: (list) => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (var i = 0; i < list.length; i++)
-                    Padding(
-                      padding: EdgeInsets.only(
-                        bottom: i == list.length - 1 ? 0 : AppSpacing.md,
-                      ),
-                      child: StaggeredEntrance(
-                        index: i,
-                        child: _litCard(
-                          ref,
-                          list[i],
-                          (poster, headers, light) => StreamSessionCard(
-                            session: list[i],
-                            accent: service.accent,
-                            posterUrl: poster,
-                            posterHeaders: headers,
-                            light: light,
-                            onStop: _stopHandler(context, ref, list[i]),
-                            onTogglePause: _pauseHandler(context, ref, list[i]),
-                            onMessage: _messageHandler(context, ref, list[i]),
-                            onOpenPerson: _personHandler(context, ref, list[i]),
-                            onOpenTitle: _titleHandler(context, list[i]),
-                          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+          child: AsyncValueWidget<List<StreamSession>>(
+            value: value,
+            serviceName: service.title,
+            instanceId: instanceId,
+            onRetry: () => refreshStreamSessions(ref, service, instanceId),
+            isEmpty: (list) => list.isEmpty,
+            emptyBuilder: const _IdleRoom(),
+            data: (list) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < list.length; i++)
+                  Padding(
+                    padding: EdgeInsets.only(
+                      bottom: i == list.length - 1 ? 0 : AppSpacing.md,
+                    ),
+                    child: StaggeredEntrance(
+                      index: i,
+                      child: _litCard(
+                        ref,
+                        list[i],
+                        (poster, headers, light) => StreamSessionCard(
+                          session: list[i],
+                          accent: service.accent,
+                          posterUrl: poster,
+                          posterHeaders: headers,
+                          light: light,
+                          onStop: _stopHandler(context, ref, list[i]),
+                          onTogglePause: _pauseHandler(context, ref, list[i]),
+                          onMessage: _messageHandler(context, ref, list[i]),
+                          onOpenPerson: _personHandler(context, ref, list[i]),
+                          onOpenTitle: _titleHandler(context, list[i]),
                         ),
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
           ),
+        ),
       ],
     );
   }
@@ -172,12 +141,10 @@ class StreamNowPlayingSection extends ConsumerWidget {
   Widget _slabOf(
     BuildContext context,
     WidgetRef ref,
-    AsyncValue<List<StreamSession>> value, {
-    required bool ownerOnly,
-  }) {
+    AsyncValue<List<StreamSession>> value,
+  ) {
     final tab = switch (service) {
-      ServiceKey.plex => ServiceTab.activities,
-      ServiceKey.jellyfin || ServiceKey.emby => ServiceTab.activity,
+      ServiceKey.jellyfin => ServiceTab.activity,
       _ => throw ArgumentError.value(
         service.name,
         'service',
@@ -190,50 +157,48 @@ class StreamNowPlayingSection extends ConsumerWidget {
       title: 'Now playing',
       destination: tabsFor(service)?.contains(tab) ?? false ? tab : null,
       light: first == null ? null : _lightOf(ref, first),
-      child: ownerOnly
-          ? const PlexOwnerOnlyNote()
-          : AsyncValueWidget<List<StreamSession>>(
-              value: value,
-              serviceName: service.title,
-              instanceId: instanceId,
-              onRetry: () => refreshStreamSessions(ref, service, instanceId),
-              isEmpty: (list) => list.isEmpty,
-              emptyBuilder: const _IdleRoom(),
-              data: (list) => list.length == 1
-                  ? StreamSessionFeature(
-                      session: list.single,
-                      picture: _pictureOf(ref, list.single, wide: true),
-                      onStop: _stopHandler(context, ref, list.single),
-                      onTogglePause: _pauseHandler(context, ref, list.single),
-                      onMessage: _messageHandler(context, ref, list.single),
-                      onOpenTitle: _titleHandler(context, list.single),
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (var i = 0; i < list.length; i++) ...[
-                          if (i > 0)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: AppSpacing.md,
-                              ),
-                              child: Divider(
-                                height: 1,
-                                color: CupolaRoom.of(context).hair,
-                              ),
-                            ),
-                          StreamSessionLine(
-                            session: list[i],
-                            picture: _pictureOf(ref, list[i], wide: false),
-                            onStop: _stopHandler(context, ref, list[i]),
-                            onTogglePause: _pauseHandler(context, ref, list[i]),
-                            onMessage: _messageHandler(context, ref, list[i]),
-                            onOpenTitle: _titleHandler(context, list[i]),
-                          ),
-                        ],
-                      ],
+      child: AsyncValueWidget<List<StreamSession>>(
+        value: value,
+        serviceName: service.title,
+        instanceId: instanceId,
+        onRetry: () => refreshStreamSessions(ref, service, instanceId),
+        isEmpty: (list) => list.isEmpty,
+        emptyBuilder: const _IdleRoom(),
+        data: (list) => list.length == 1
+            ? StreamSessionFeature(
+                session: list.single,
+                picture: _pictureOf(ref, list.single, wide: true),
+                onStop: _stopHandler(context, ref, list.single),
+                onTogglePause: _pauseHandler(context, ref, list.single),
+                onMessage: _messageHandler(context, ref, list.single),
+                onOpenTitle: _titleHandler(context, list.single),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < list.length; i++) ...[
+                    if (i > 0)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.md,
+                        ),
+                        child: Divider(
+                          height: 1,
+                          color: CupolaRoom.of(context).hair,
+                        ),
+                      ),
+                    StreamSessionLine(
+                      session: list[i],
+                      picture: _pictureOf(ref, list[i], wide: false),
+                      onStop: _stopHandler(context, ref, list[i]),
+                      onTogglePause: _pauseHandler(context, ref, list[i]),
+                      onMessage: _messageHandler(context, ref, list[i]),
+                      onOpenTitle: _titleHandler(context, list[i]),
                     ),
-            ),
+                  ],
+                ],
+              ),
+      ),
     );
   }
 
@@ -367,11 +332,6 @@ class StreamNowPlayingSection extends ConsumerWidget {
     // A player that takes no remote commands would ignore the stop the
     // server relays: no control rather than one that does nothing.
     if (service.speaksMediaBrowser && !session.takesCommands) return null;
-
-    if (service == ServiceKey.plex &&
-        !ref.watch(plexStopOfferedProvider(instanceId))) {
-      return null;
-    }
 
     return () => _confirmStop(context, ref, session);
   }

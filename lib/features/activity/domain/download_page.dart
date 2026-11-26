@@ -242,12 +242,7 @@ enum DownloadStepState {
 typedef DownloadStep = ({String name, String detail, DownloadStepState state});
 
 /// The arrs whose downloads go through every step.
-const _arrs = {
-  ServiceKey.radarr,
-  ServiceKey.sonarr,
-  ServiceKey.lidarr,
-  ServiceKey.readarr,
-};
+const _arrs = {ServiceKey.radarr, ServiceKey.sonarr};
 
 /// The media servers a step may name, in the order the app prefers them
 /// (registry order).
@@ -315,7 +310,7 @@ List<DownloadStep> downloadStepsOf(
           state: DownloadStepState.later,
         );
   final eta = item.etaSeconds;
-  final plays = player != null && item.service != ServiceKey.readarr;
+  final plays = player != null;
   return [
     (
       name: 'Grabbed',

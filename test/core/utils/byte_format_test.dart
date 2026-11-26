@@ -157,31 +157,9 @@ void main() {
     });
   });
 
-  group('formatMegabytes', () {
-    test('reads SABnzbd/NZBGet MB fields on the same ladder as raw bytes', () {
-      expect(formatMegabytes(0), '0\u00A0B');
-      expect(formatMegabytes(512), '512\u00A0MB');
-      expect(formatMegabytes(1500), '1.5\u00A0GB');
-      expect(formatMegabytes(3000), '2.9\u00A0GB');
-      expect(formatMegabytes(40 * 1024), '40.0\u00A0GB');
-      expect(formatMegabytes(150 * 1024), '150\u00A0GB');
-    });
+  group('formatMegabytes', () {});
 
-    test('drops below MB when the remainder is small, instead of "0.0 MB"', () {
-      // The old SABnzbd-only formatter bottomed out at MB and printed
-      // "0.5 MB" for half a megabyte; the shared ladder goes all the way down.
-      expect(formatMegabytes(0.5), '512\u00A0KB');
-    });
-  });
-
-  group('formatKilobytesPerSecond', () {
-    test('reads SABnzbd kbpersec', () {
-      expect(formatKilobytesPerSecond(0), '0\u00A0B/\u2060s');
-      expect(formatKilobytesPerSecond(512), '512\u00A0KB/\u2060s');
-      expect(formatKilobytesPerSecond(2048.5), '2.0\u00A0MB/\u2060s');
-      expect(formatKilobytesPerSecond(50 * 1024), '50.0\u00A0MB/\u2060s');
-    });
-  });
+  group('formatKilobytesPerSecond', () {});
 
   group('formatBytesOfTotal', () {
     test('writes the unit once, on the total\'s', () {

@@ -21,15 +21,6 @@ void main() {
       final playlist = _item({'path': '/downloads/200-linkin_park.m3u'});
       expect(manualImportIsSupportedFile(ServiceKey.sonarr, playlist), isFalse);
     });
-
-    test('music is not importable by Sonarr, and video not by Lidarr', () {
-      final song = _item({'path': '/downloads/Green Day - Smooth.mp3'});
-      expect(manualImportIsSupportedFile(ServiceKey.sonarr, song), isFalse);
-      expect(manualImportIsSupportedFile(ServiceKey.lidarr, song), isTrue);
-
-      final video = _item({'path': '/downloads/Wicked.2025.mkv'});
-      expect(manualImportIsSupportedFile(ServiceKey.lidarr, video), isFalse);
-    });
   });
 
   group('manualImportFileNamesTitle', () {
@@ -96,36 +87,6 @@ void main() {
   });
 
   group('manualImportGroupTitle', () {
-    test('groups by the matched media title per service', () {
-      expect(
-        manualImportGroupTitle(
-          ServiceKey.sonarr,
-          _item({
-            'series': {'id': 1, 'title': 'Boruto'},
-          }),
-        ),
-        'Boruto',
-      );
-      expect(
-        manualImportGroupTitle(
-          ServiceKey.radarr,
-          _item({
-            'movie': {'id': 1, 'title': 'Inception'},
-          }),
-        ),
-        'Inception',
-      );
-      expect(
-        manualImportGroupTitle(
-          ServiceKey.lidarr,
-          _item({
-            'artist': {'id': 1, 'artistName': 'Linkin Park'},
-          }),
-        ),
-        'Linkin Park',
-      );
-    });
-
     test('falls back to Unmatched with no match', () {
       expect(manualImportGroupTitle(ServiceKey.sonarr, _item({})), 'Unmatched');
     });
@@ -179,22 +140,6 @@ void main() {
       );
       expect(identity.code, '2010');
       expect(identity.title, isNull);
-    });
-
-    test('lidarr carries the track range and the album', () {
-      final identity = manualImportIdentityFor(
-        ServiceKey.lidarr,
-        _item({
-          'artist': {'id': 1, 'artistName': 'Linkin Park'},
-          'album': {'id': 2, 'title': 'From Zero'},
-          'tracks': [
-            {'id': 1, 'trackNumber': 3, 'title': 'A'},
-            {'id': 2, 'trackNumber': 5, 'title': 'B'},
-          ],
-        }),
-      );
-      expect(identity.code, 'Tracks 3–5');
-      expect(identity.title, 'From Zero');
     });
   });
 
@@ -255,32 +200,6 @@ void main() {
       final b = episode(1, 1, name: 'b');
       final a = episode(1, 1, name: 'a');
       expect(sorted(ServiceKey.sonarr, [b, none, a]), [none, a, b]);
-    });
-
-    test('lidarr orders by album, then by track number as a number', () {
-      ManualImportItem track(String album, int number) => _item({
-        'album': {'id': 1, 'title': album},
-        'tracks': [
-          {'id': 1, 'trackNumber': number},
-        ],
-      });
-      final order = sorted(ServiceKey.lidarr, [
-        track('Meteora', 10),
-        track('Hybrid Theory', 2),
-        track('Meteora', 2),
-        track('Hybrid Theory', 10),
-      ]);
-      expect(
-        order.map(
-          (item) => (item.album!['title'], item.tracks.first['trackNumber']),
-        ),
-        [
-          ('Hybrid Theory', 2),
-          ('Hybrid Theory', 10),
-          ('Meteora', 2),
-          ('Meteora', 10),
-        ],
-      );
     });
 
     test('radarr orders by year', () {
@@ -346,24 +265,6 @@ void main() {
       );
       // Not 2049, which is what the title looks like in the filename.
       expect(identity.code, '2017');
-    });
-
-    test('lidarr takes the track numbers from the matched tracks', () {
-      final identity = manualImportIdentityFor(
-        ServiceKey.lidarr,
-        _item({
-          'path': '/downloads/09 - Somewhere I Belong.flac',
-          'name': '09 - Somewhere I Belong',
-          'artist': {'id': 1, 'artistName': 'Linkin Park'},
-          'album': {'id': 2, 'title': 'Meteora'},
-          'tracks': [
-            {'id': 3, 'trackNumber': 4, 'title': 'Somewhere I Belong'},
-          ],
-        }),
-      );
-      // The filename says 09; the matched track is 4.
-      expect(identity.code, 'Track 4');
-      expect(identity.title, 'Meteora');
     });
   });
 

@@ -94,20 +94,13 @@ class LabEndpoints {
     ServiceKey.seerr: (proxy: 25055, direct: 5055),
     ServiceKey.radarr: (proxy: 27878, direct: 7878),
     ServiceKey.sonarr: (proxy: 28989, direct: 8989),
-    ServiceKey.lidarr: (proxy: 28686, direct: 8686),
-    ServiceKey.readarr: (proxy: 28787, direct: 8787),
-    ServiceKey.prowlarr: (proxy: 29696, direct: 9696),
-    ServiceKey.bazarr: (proxy: 26767, direct: 6767),
     // Through the fault layer on the WebUI's own port, so qBittorrent accepts
     // the Host the app sends; read directly on another published port (see
     // docker-compose.testlab.yml), with the Host its WebUI expects.
     ServiceKey.qbittorrent: (proxy: 8080, direct: 18080),
     ServiceKey.jellyfin: (proxy: 28096, direct: 8096),
-    ServiceKey.emby: (proxy: 28098, direct: 8097),
-    ServiceKey.plex: (proxy: 23240, direct: 32400),
     ServiceKey.dockge: (proxy: 25001, direct: 5001),
     ServiceKey.truenas: (proxy: 28460, direct: 8460),
-    ServiceKey.unraid: (proxy: 28480, direct: 8480),
   };
 
   /// The address the app reaches [service] at, through the fault layer.
@@ -408,14 +401,7 @@ class Lab {
   /// The arrs' keys, read from the arrs' own configuration in the lab's
   /// state: the repository never holds one.
   late final Map<ServiceKey, String> arrKeys = {
-    for (final service in const [
-      ServiceKey.radarr,
-      ServiceKey.sonarr,
-      ServiceKey.lidarr,
-      ServiceKey.readarr,
-      ServiceKey.prowlarr,
-      ServiceKey.bazarr,
-    ])
+    for (final service in const [ServiceKey.radarr, ServiceKey.sonarr])
       service: arrKeyOf(credentials.stateDir, service.name) ?? '',
   };
 
@@ -423,16 +409,12 @@ class Lab {
   static const Map<ServiceKey, String> _secretNames = {
     ServiceKey.seerr: 'CUPOLA_TESTLAB_SEERR_API_KEY',
     ServiceKey.jellyfin: 'CUPOLA_TESTLAB_JELLYFIN_TOKEN',
-    ServiceKey.emby: 'CUPOLA_TESTLAB_EMBY_TOKEN',
-    ServiceKey.plex: 'CUPOLA_TESTLAB_PLEX_TOKEN',
   };
 
   /// The names the bootstrap gave the user a key-only server is read as. An
   /// Emby API key belongs to no one, so the connection also names the
   /// administrator it browses as; a Jellyfin token is a user's own.
-  static const Map<ServiceKey, String> _viewerNames = {
-    ServiceKey.emby: 'CUPOLA_TESTLAB_EMBY_USER_ID',
-  };
+  static const Map<ServiceKey, String> _viewerNames = {};
 
   /// The names the bootstrap gave the pair of a service, when it wrote one.
   static const Map<ServiceKey, ({String user, String password})> _pairNames = {
@@ -450,7 +432,6 @@ class Lab {
   /// TrueNAS and Unraid read an API key, and their simulators fix it.
   static const Map<ServiceKey, String> _fixedKeys = {
     ServiceKey.truenas: 'test-key',
-    ServiceKey.unraid: 'test-key',
   };
 
   /// The connection the app holds for [service] in this lab: its address

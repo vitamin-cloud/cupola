@@ -298,18 +298,13 @@ final class RoleGate {
   bool namesService(ServiceKey service) {
     if (_operator) return true;
     return switch (service) {
-      ServiceKey.jellyfin || ServiceKey.plex || ServiceKey.emby => true,
+      ServiceKey.jellyfin => true,
       ServiceKey.seerr ||
       ServiceKey.radarr ||
       ServiceKey.sonarr ||
-      ServiceKey.lidarr ||
       ServiceKey.qbittorrent ||
-      ServiceKey.bazarr ||
       ServiceKey.truenas ||
-      ServiceKey.dockge ||
-      ServiceKey.prowlarr ||
-      ServiceKey.readarr ||
-      ServiceKey.unraid => false,
+      ServiceKey.dockge => false,
     };
   }
 

@@ -633,20 +633,6 @@ ServiceFailureReason _fromTls(TlsException error) {
   return ServiceFailureReason.noSecureConnection;
 }
 
-/// Heuristic for the services that report an auth failure inside a 200 body
-/// instead of an HTTP status: SABnzbd's `{"status": false, "error": …}` and
-/// Unraid's GraphQL `errors` array. Matches the wording those APIs use; a
-/// miss only costs the generic message, never a wrong verdict on reachability.
-bool looksUnauthorizedMessage(String message) {
-  final text = message.toLowerCase();
-  return text.contains('unauthor') ||
-      text.contains('api key') ||
-      text.contains('apikey') ||
-      text.contains('forbidden') ||
-      text.contains('access denied') ||
-      text.contains('not logged in');
-}
-
 /// Maps a non-2xx HTTP status onto a cause, for callers that inspect the
 /// status themselves instead of letting the client throw.
 ServiceFailureReason reasonForStatusCode(int code) {

@@ -67,39 +67,6 @@ void main() {
   );
 
   // P5 has Seerr and Jellyfin and no arr of its own.
-  testWidgets('P5: a service that is not set up is dimmed, tappable, and '
-      'opens its setup', (tester) async {
-    final handle = tester.ensureSemantics();
-    final harness = await pumpPicker(tester, Profiles.p5);
-
-    for (final service in ['Radarr', 'Sonarr', 'Lidarr']) {
-      expect(dimmed(service), findsOneWidget, reason: service);
-    }
-    expect(find.text('Not set up'), findsNWidgets(3));
-    expect(
-      tester.getSemantics(
-        find.bySemanticsLabel(RegExp(r'^Radarr, Not set up')),
-      ),
-      isSemantics(
-        label: 'Radarr, Not set up',
-        hint: 'requires Radarr, opens its setup',
-        isButton: true,
-        hasTapAction: true,
-      ),
-    );
-    // The dim never takes height off the row.
-    final row = tester.getRect(
-      find.ancestor(of: find.text('Radarr'), matching: find.byType(InkWell)),
-    );
-    expect(row.height, greaterThanOrEqualTo(44));
-
-    await tester.tap(find.text('Radarr'));
-    await tester.pumpAndSettle();
-    expect(find.text('setup of radarr'), findsOneWidget);
-
-    handle.dispose();
-    await harness.unmount(tester);
-  });
 
   // P1 has two Radarr: the first unnamed, the second called 4K.
   testWidgets('P1: each connection is named, the unnamed one by its place', (

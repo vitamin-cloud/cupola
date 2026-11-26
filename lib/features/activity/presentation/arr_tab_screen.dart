@@ -86,7 +86,6 @@ class _ArrTabScreenState extends ConsumerState<ArrTabScreen> {
   ServiceKey get _service => switch (widget.serviceType) {
     ServiceType.movies => ServiceKey.radarr,
     ServiceType.series => ServiceKey.sonarr,
-    ServiceType.music => ServiceKey.lidarr,
     ServiceType.discover => throw UnsupportedError(
       'Seerr does not expose an arr activity tab',
     ),

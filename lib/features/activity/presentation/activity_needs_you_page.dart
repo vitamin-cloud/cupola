@@ -85,7 +85,7 @@ class _ActivityNeedsYouPageState extends ConsumerState<ActivityNeedsYouPage> {
     return AmbientScaffold(
       appBar: const GlassAppBar.inPage(pageTitle: 'Needs you'),
       body: RefreshIndicator(
-        onRefresh: () => refreshActivity(ref, ActivityTab.all),
+        onRefresh: () => refreshActivity(ref, ActivityTab.downloads),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: EdgeInsets.only(

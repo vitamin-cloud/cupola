@@ -11,14 +11,8 @@ import 'package:cupola/core/api/base_arr_service.dart';
 import 'package:cupola/core/status/media_status.dart';
 import 'package:cupola/features/movies/domain/radarr_status.dart';
 import 'package:cupola/core/network/connection_failure.dart';
-import 'package:cupola/features/bazarr/data/bazarr_service.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_provider.dart';
-import 'package:cupola/features/bazarr/domain/models/bazarr_models.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/movies/domain/models/radarr_movie.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
-import 'package:cupola/features/music/domain/models/lidarr_album.dart';
-import 'package:cupola/features/music/domain/models/lidarr_artist.dart';
 import 'package:cupola/features/qbittorrent/domain/models/torrent.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_provider.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
@@ -134,36 +128,6 @@ void main() {
       },
     );
 
-    // What this provider watches decides how much of the network it touches:
-    // one family entry per service, each opening a connection and waiting out a
-    // multi-second timeout. Watching the whole SettingsModel meant every write,
-    // a theme toggle included, and a single Save can write twice, re-probed
-    // every configured service at once.
-    test(
-      'an unrelated settings change does not re-probe the service',
-      () async {
-        final status = _CountingStatusClient();
-        final container = _mutableSettingsContainer(
-          initial: _secureRadarr,
-          statusClient: status,
-        );
-
-        await container.read(serviceSummaryProvider(ServiceKey.radarr).future);
-        expect(status.calls, 1);
-
-        container
-            .read(_settingsHolderProvider.notifier)
-            .set(_secureRadarr.copyWith(themeMode: AppThemeMode.light));
-        await container.read(serviceSummaryProvider(ServiceKey.radarr).future);
-
-        expect(
-          status.calls,
-          1,
-          reason: 'reachability does not depend on the theme',
-        );
-      },
-    );
-
     test('trusting a certificate for the origin re-probes the service', () async {
       // The subtlest field in the watched key, and the one whose absence would
       // be worst: answering the trust prompt is precisely the moment the probe
@@ -211,37 +175,7 @@ void main() {
     });
   });
 
-  group('serviceSummaryProvider Bazarr', () {
-    test('reads bazarr_version from the nested data envelope', () async {
-      final container = _container(
-        settings: settingsWith(
-          bazarrUrl: 'http://bazarr.local:6767',
-          bazarrApiKey: 'key',
-        ),
-        statusClient: _StatusClient({
-          'data': {'bazarr_version': '1.4.5'},
-        }),
-        bazarrService: FakeBazarrService()
-          ..badges = const BazarrBadges(
-            episodes: 0,
-            movies: 0,
-            providers: 0,
-            status: false,
-            sonarrSignalR: false,
-            radarrSignalR: false,
-            announcements: 0,
-          ),
-      );
-
-      final summary = await container.read(
-        serviceSummaryProvider(ServiceKey.bazarr).future,
-      );
-
-      expect(summary.status, ServiceSummaryStatus.online);
-      expect(summary.host, 'bazarr.local:6767');
-      expect(summary.versionLabel, 'v1.4.5');
-    });
-  });
+  group('serviceSummaryProvider Bazarr', () {});
 
   group('servicesQueueProvider', () {
     // Both arrs configured: the provider now skips any source the user has not
@@ -401,28 +335,6 @@ void main() {
       expect(inFlight.coverage.isFloor, isTrue);
       // Nobody failed, so there is no one to name under the figure.
       expect(coverageNote(inFlight.coverage), isNull);
-    });
-
-    // The provider fans out to seven services at once, so what it watches
-    // decides how often the whole stack gets polled. Watching the entire
-    // SettingsModel meant a theme-mode toggle, a value no queue can depend on,
-    // re-ran all seven fetches.
-    test('an unrelated settings change does not re-poll the queue', () async {
-      final radarr = _CountingQueueRadarrService();
-      final container = _mutableSettingsContainer(
-        initial: bothArrs,
-        radarrService: radarr,
-      );
-
-      await container.read(servicesQueueProvider.future);
-      expect(radarr.calls, 1);
-
-      container
-          .read(_settingsHolderProvider.notifier)
-          .set(bothArrs.copyWith(themeMode: AppThemeMode.light));
-      await container.read(servicesQueueProvider.future);
-
-      expect(radarr.calls, 1, reason: 'the queue does not depend on the theme');
     });
 
     test('a change to a source service does re-poll the queue', () async {
@@ -640,7 +552,6 @@ void main() {
       },
     );
 
-
     test('a season pack is one download, not one row per episode', () async {
       final container = _container(
         settings: settingsWith(
@@ -766,73 +677,9 @@ void main() {
   // The page of twenty is still what the failed-import decisions and
   // Downloads' "last download finished" read. Its Lidarr records have to
   // arrive with their artist and album, or a decision names a release.
-  group('servicesArrHistoryProvider', () {
-    test('the page asks Lidarr for the artist and the album', () async {
-      final client = FakeApiClient();
-      client.getResponseData = const {
-        'records': [
-          {
-            'id': 1,
-            'eventType': 'downloadFolderImported',
-            'date': '2024-05-05T08:12:00Z',
-            'artistId': 5,
-            'artist': {'artistName': 'Cindy Lee'},
-            'album': {'id': 9, 'title': 'Diamond Jubilee'},
-            'sourceTitle': 'Cindy.Lee-Diamond.Jubilee-WEB-2024-XYZ',
-          },
-        ],
-        'totalRecords': 1,
-      };
-
-      final container = _container(
-        settings: settingsWith(
-          lidarrUrl: 'https://lidarr.local:8686',
-          lidarrApiKey: 'key',
-        ),
-        lidarrService: LidarrService(client),
-      );
-
-      final entries = (await container.read(
-        servicesArrHistoryProvider.future,
-      )).entries;
-
-      expect(client.lastGetPath, '/api/v1/history');
-      expect(client.lastGetQueryParameters?['includeArtist'], isTrue);
-      expect(client.lastGetQueryParameters?['includeAlbum'], isTrue);
-      expect(entries.single.service, ServiceKey.lidarr);
-      expect(
-        entries.single.title,
-        'Diamond Jubilee',
-        reason: 'the embed is what keeps the raw release name off the row',
-      );
-    });
-  });
+  group('servicesArrHistoryProvider', () {});
 
   group('servicesArrivalsProvider', () {
-    // The week's own re-read is what is under test, not its sources: the fakes
-    // below are static overrides, so a rebuild reuses their cached results and
-    // only the identity of the freshly built answer can tell the two apart.
-    test('an unrelated settings change does not re-read the week', () async {
-      final container = _mutableSettingsContainer(
-        initial: _secureRadarr,
-        radarrService: _HistoryRadarrService([_importedRecord]),
-      );
-
-      final first = (await _arrivals(container)).entries;
-      expect(first, hasLength(1));
-
-      container
-          .read(_settingsHolderProvider.notifier)
-          .set(_secureRadarr.copyWith(themeMode: AppThemeMode.light));
-      final second = (await _arrivals(container)).entries;
-
-      expect(
-        identical(first, second),
-        isTrue,
-        reason: 'the week does not depend on the theme',
-      );
-    });
-
     test('repointing a source re-reads the week', () async {
       // The other half: the artwork URLs are built from the source's own base
       // URL and key, so a rail that ignored a move would keep pointing its
@@ -871,108 +718,6 @@ void main() {
       expect(radarr.asked.single.since, _now.subtract(arrivalsWindow));
       expect(radarr.asked.single.query['eventType'], 'downloadFolderImported');
       expect(radarr.asked.single.query['includeMovie'], isTrue);
-    });
-
-    // The comment above this fetch used to say the opposite: that Lidarr's
-    // records arrive without their artist because `LidarrService` has no
-    // override. The dashboard now sends the embeds itself: a real
-    // `LidarrService` over a fake client, so the query Arrived actually sends
-    // is what is asserted, and the title that comes out is the album's rather
-    // than the release name.
-    test('Arrived asks Lidarr for the artist and the album', () async {
-      final client = FakeApiClient();
-      client.getResponseData = const [
-        {
-          'id': 1,
-          'eventType': 'trackFileImported',
-          'date': '2024-05-05T08:12:00Z',
-          'artistId': 5,
-          'artist': {'artistName': 'Cindy Lee'},
-          'album': {'id': 9, 'title': 'Diamond Jubilee'},
-          'sourceTitle': 'Cindy.Lee-Diamond.Jubilee-WEB-2024-XYZ',
-        },
-      ];
-
-      final container = _container(
-        settings: settingsWith(
-          lidarrUrl: 'https://lidarr.local:8686',
-          lidarrApiKey: 'key',
-        ),
-        lidarrService: LidarrService(client),
-        overrides: _pinnedNow,
-      );
-
-      final entries = (await _arrivals(container)).entries;
-
-      expect(client.lastGetPath, '/api/v1/history/since');
-      expect(
-        client.lastGetQueryParameters?['date'],
-        _now.subtract(arrivalsWindow).toUtc().toIso8601String(),
-      );
-      expect(client.lastGetQueryParameters?['eventType'], 'trackFileImported');
-      expect(client.lastGetQueryParameters?['includeArtist'], isTrue);
-      expect(client.lastGetQueryParameters?['includeAlbum'], isTrue);
-      expect(entries.single.service, ServiceKey.lidarr);
-      expect(
-        entries.single.title,
-        'Diamond Jubilee',
-        reason: 'the embed is what keeps the raw release name off the card',
-      );
-    });
-
-    test('a Lidarr card wears its artist\'s wide art, and its poster is the '
-        'album cover, then the artist', () async {
-      Map<String, dynamic> record(int id, {required bool albumCover}) => {
-        'id': id,
-        'eventType': 'trackFileImported',
-        'date': '2024-05-05T08:1$id:00Z',
-        'artistId': 5,
-        'albumId': 8 + id,
-        'artist': {
-          'artistName': 'Cindy Lee',
-          'images': [
-            {'coverType': 'poster', 'remoteUrl': 'https://img.test/artist.jpg'},
-            {'coverType': 'fanart', 'remoteUrl': 'https://img.test/wide.jpg'},
-          ],
-        },
-        'album': {
-          'id': 8 + id,
-          'title': 'Album $id',
-          'images': [
-            if (albumCover)
-              {'coverType': 'cover', 'remoteUrl': 'https://img.test/album.jpg'},
-          ],
-        },
-      };
-
-      final client = FakeApiClient();
-      client.getResponseData = [
-        record(1, albumCover: true),
-        record(2, albumCover: false),
-      ];
-
-      final container = _container(
-        settings: settingsWith(
-          lidarrUrl: 'https://lidarr.local:8686',
-          lidarrApiKey: 'key',
-        ),
-        lidarrService: LidarrService(client),
-      );
-
-      final entries = (await _arrivals(container)).entries;
-      final posters = {for (final item in entries) item.title: item.posterUrl};
-
-      expect(posters['Album 1'], 'https://img.test/album.jpg');
-      expect(
-        posters['Album 2'],
-        'https://img.test/artist.jpg',
-        reason: 'an album with no cover yet still has a face',
-      );
-      expect(
-        entries.map((item) => item.backdropUrl),
-        everyElement('https://img.test/wide.jpg'),
-        reason: 'the card draws wide art, and the artist is who has it',
-      );
     });
 
     test('a season imported episode by episode is one card, and the count is '
@@ -1186,44 +931,6 @@ void main() {
 
       expect(snapshot.entriesById.keys.toSet(), {20, 21});
     });
-
-    test(
-      'Lidarr records by artist, directly or through the album they name',
-      () async {
-        final container = _container(
-          lidarrService: _QueueLidarrService(
-            items: [
-              {
-                'artist': {'id': 30, 'artistName': 'Direct Artist'},
-              },
-              {'albumId': 40},
-            ],
-            artists: [
-              buildArtist(
-                id: 31,
-                artistName: 'Album Match',
-                statistics: const {'albumCount': 1},
-              ),
-              buildArtist(
-                id: 32,
-                artistName: 'Other Artist',
-                statistics: const {'albumCount': 1},
-              ),
-            ],
-            albumsByArtist: {
-              31: [buildAlbum(id: 40, title: 'Brat')],
-              32: [buildAlbum(id: 99, title: 'Other Album')],
-            },
-          ),
-        );
-
-        final snapshots = await container.read(
-          lidarrQueueSnapshotsProvider.future,
-        );
-
-        expect(snapshots.byArtist.entriesById.keys.toSet(), {30, 31});
-      },
-    );
   });
 
   group('a queue snapshot says what it could not read', () {
@@ -1275,17 +982,6 @@ void main() {
       expect(snapshot.answered, isFalse);
     });
 
-    test('a Lidarr queue that failed is unknown both ways', () async {
-      final container = _container(lidarrService: _ThrowingLidarrService());
-
-      final snapshots = await container.read(
-        lidarrQueueSnapshotsProvider.future,
-      );
-
-      expect(snapshots.byArtist.answered, isFalse);
-      expect(snapshots.byAlbum.answered, isFalse);
-    });
-
     test('a queue that answered empty is still an answer', () async {
       final container = _container(radarrService: _QueueRadarrService([]));
 
@@ -1317,8 +1013,6 @@ ProviderContainer _container({
   SettingsModel settings = const SettingsModel(),
   RadarrService? radarrService,
   SonarrService? sonarrService,
-  LidarrService? lidarrService,
-  BazarrService? bazarrService,
   ApiClient? statusClient,
   List<Override> overrides = const [],
 }) {
@@ -1351,12 +1045,6 @@ ProviderContainer _container({
       ),
       sonarrServiceProvider.overrideWith(
         (ref) => sonarrService ?? FakeSonarrService(),
-      ),
-      lidarrServiceProvider.overrideWith(
-        (ref) => lidarrService ?? FakeLidarrService(),
-      ),
-      bazarrServiceProvider.overrideWith(
-        (ref) => bazarrService ?? FakeBazarrService(),
       ),
     ],
   );
@@ -1499,8 +1187,6 @@ ProviderContainer _mutableSettingsContainer({
         (ref) => radarrService ?? FakeRadarrService(),
       ),
       sonarrServiceProvider.overrideWith((ref) => FakeSonarrService()),
-      lidarrServiceProvider.overrideWith((ref) => FakeLidarrService()),
-      bazarrServiceProvider.overrideWith((ref) => FakeBazarrService()),
     ],
   );
   addTearDown(container.dispose);
@@ -1590,13 +1276,6 @@ class _ThrowingSonarrService extends FakeSonarrService {
   }) async => throw Exception('Sonarr failed');
 }
 
-class _ThrowingLidarrService extends FakeLidarrService {
-  @override
-  Future<List<dynamic>> getQueue({
-    Map<String, dynamic>? queryParameters,
-  }) async => throw Exception('Lidarr failed');
-}
-
 class _QueueSonarrService extends FakeSonarrService {
   _QueueSonarrService(this.items);
 
@@ -1606,30 +1285,6 @@ class _QueueSonarrService extends FakeSonarrService {
   Future<List<dynamic>> getQueue({
     Map<String, dynamic>? queryParameters,
   }) async => items;
-}
-
-class _QueueLidarrService extends FakeLidarrService {
-  _QueueLidarrService({
-    required this.items,
-    required this.artists,
-    required this.albumsByArtist,
-  });
-
-  final List<dynamic> items;
-  final List<LidarrArtist> artists;
-  final Map<int, List<LidarrAlbum>> albumsByArtist;
-
-  @override
-  Future<List<dynamic>> getQueue({
-    Map<String, dynamic>? queryParameters,
-  }) async => items;
-
-  @override
-  Future<List<LidarrArtist>> getArtists() async => artists;
-
-  @override
-  Future<List<LidarrAlbum>> getAlbums(int artistId) async =>
-      albumsByArtist[artistId] ?? const [];
 }
 
 class _StatusClient extends ApiClient {

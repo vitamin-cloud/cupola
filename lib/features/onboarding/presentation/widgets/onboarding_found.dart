@@ -638,9 +638,7 @@ class _OnboardingFoundState extends ConsumerState<OnboardingFound> {
       final count = rows.length;
       headline =
           '$title knows $count more ${count == 1 ? 'service' : 'services'}';
-      subtitle = widget.source.service == ServiceKey.prowlarr
-          ? 'Prowlarr hides keys: paste each one below.'
-          : rows.every((r) => r.foundLine != null)
+      subtitle = rows.every((r) => r.foundLine != null)
           ? '$title reaches them by their names inside Docker.'
           : 'It already has their addresses and keys, so there is nothing to '
                 'type.';

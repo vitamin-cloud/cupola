@@ -66,7 +66,6 @@ SettingsModel _sender() => const SettingsModel(
       url: 'http://192.168.1.10:8989',
       unreadSecret: UnreadSecret.credential,
     ),
-    ServiceInstance(id: 'lidarr', service: ServiceKey.lidarr),
   ],
   trustedCertificates: {
     'https://radarr.home.arpa:443': _radarrPin,

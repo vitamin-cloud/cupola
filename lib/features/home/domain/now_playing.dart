@@ -57,6 +57,3 @@ String nowPlayingInitial(StreamSession session) {
 String nowPlayingOfflineSentence(SourceCoverage coverage) {
   return coverageFailureSentence(coverage);
 }
-
-/// What is not on the list while Tracearr is silent.
-const nowPlayingTracearrMissing = 'What only Tracearr sees is not shown.';

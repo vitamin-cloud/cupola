@@ -457,11 +457,9 @@ class ArrLife {
     _grabs++;
     _life.add(
       WorldDownload(
-        id: usenet
-            ? 'SABnzbd_nzo_demo_$_grabs'
-            : 'de' * 4 + _grabs.toRadixString(16).padLeft(32, '0'),
+        id: 'de' * 4 + _grabs.toRadixString(16).padLeft(32, '0'),
         release: release,
-        client: usenet ? 'sabnzbd' : 'qbittorrent',
+        client: 'qbittorrent',
         state: DownloadState.downloading,
         progress: 0,
         size: size,

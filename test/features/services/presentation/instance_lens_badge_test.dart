@@ -260,7 +260,6 @@ void main() {
     expect(prefs.getString('active_instances'), contains('radarr-hd11111'));
   });
 
-
   testWidgets('announces itself as the lens, not as a service switcher', (
     tester,
   ) async {

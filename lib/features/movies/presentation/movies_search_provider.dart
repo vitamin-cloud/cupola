@@ -5,18 +5,11 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:cupola/core/providers/provider_retry.dart';
 import 'package:cupola/core/utils/search_results_loader.dart';
-import 'package:cupola/core/widgets/media_find.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/movies/domain/models/radarr_movie.dart';
 
 /// Provider for the current search query in Movies section.
 final moviesSearchQueryProvider = StateProvider<String>((ref) => '');
-
-/// Where the Movies wall's search looks: its library, or Radarr. Back to the
-/// library when the field is emptied.
-final moviesFindScopeProvider = StateProvider<MediaFindScope>(
-  (ref) => MediaFindScope.library,
-);
 
 /// Provider for search results in Movies section.
 ///

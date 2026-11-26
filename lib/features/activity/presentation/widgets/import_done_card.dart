@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:cupola/core/app_radius.dart';
 import 'package:cupola/core/app_spacing.dart';
@@ -8,7 +7,6 @@ import 'package:cupola/core/lifecycle/gated_poll.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/utils/dynamic_map_utils.dart';
 import 'package:cupola/core/utils/sample_age.dart';
-import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/widgets/failure_remedy.dart';
 import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/features/activity/data/activity_live.dart';
@@ -103,7 +101,7 @@ class _ImportDoneCardState extends ConsumerState<ImportDoneCard> {
       // a provider then asks the provider scope to rebuild in the middle of
       // that build. Riverpod 3.3.1 let it pass; later versions assert.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) invalidateActivity(ref, ActivityTab.all);
+        if (mounted) invalidateActivity(ref, ActivityTab.downloads);
       });
     }
   }
@@ -333,7 +331,6 @@ class _Report extends ConsumerWidget {
       for (final file in report.files)
         switch (service) {
           ServiceKey.radarr => file.movie,
-          ServiceKey.lidarr => file.artist,
           _ => file.series,
         },
     };
@@ -342,10 +339,6 @@ class _Report extends ConsumerWidget {
     final payload = payloads.first!;
     final focus = report.instanceId.isEmpty ? null : report.instanceId;
     switch (service) {
-      case ServiceKey.lidarr:
-        return () => context.push(
-          ServiceRoutes.lidarrArtist(ids.single!, instanceId: focus),
-        );
       case ServiceKey.radarr:
         final tmdb = intOrNull(payload['tmdbId']) ?? 0;
         if (tmdb <= 0) return null;

@@ -1,5 +1,4 @@
 import 'package:cupola/core/status/lexicon.dart';
-import 'package:cupola/features/discover/domain/models/discover_detail_model.dart';
 import 'package:cupola/features/discover/domain/models/seerr_request.dart';
 import 'package:cupola/features/discover/presentation/discover_detail_view_model.dart';
 import 'package:cupola/features/media/domain/media_copies.dart';
@@ -58,21 +57,6 @@ MediaReleases? mediaReleasesOf(List<MediaRow> rows, String region) {
         physical: _date(movie.physicalRelease),
       );
       return _dated(found) ? found : null;
-    }
-  }
-  return null;
-}
-
-/// Where the title streams, or can be bought or rented, in [region]: TMDB's
-/// list through the first Seerr that answered. Null without a Seerr, or when
-/// the region names nowhere.
-WatchProviderRegion? mediaWatchProvidersOf(List<MediaRow> rows, String region) {
-  for (final value in _answered(rows)) {
-    if (value is MediaSeerrRecord) {
-      final providers = DiscoverDetailViewModel.of(
-        value.details,
-      ).watchProvidersForRegion(region);
-      return providers != null && providers.hasAny ? providers : null;
     }
   }
   return null;

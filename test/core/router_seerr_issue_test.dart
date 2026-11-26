@@ -27,7 +27,6 @@ import 'package:cupola/features/home/data/home_live.dart';
 import 'package:cupola/features/media/domain/media_key.dart';
 import 'package:cupola/features/media/presentation/media_report_provider.dart';
 import 'package:cupola/features/media/presentation/seerr_issue_thread_screen.dart';
-import 'package:cupola/features/settings/domain/nav_tab.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
@@ -245,22 +244,6 @@ void main() {
           find.byType(StatefulNavigationShell).first,
         )
         .currentIndex;
-
-    testWidgets('the requester opens her report from Discover and Back '
-        'returns there, Discover still the tab', (tester) async {
-      final router = await open(tester, '/discover', requester: true);
-      final before = tabOf(tester);
-      expect(before, NavTab.discover.index);
-      unawaited(router.push('/requests/issues/12?i=seerr'));
-      await tester.pumpAndSettle();
-      expect(find.byType(SeerrIssueThreadScreen), findsOneWidget);
-      expect(tabOf(tester), before);
-      router.pop();
-      await tester.pumpAndSettle();
-      expect(find.byType(SeerrIssueThreadScreen), findsNothing);
-      expect(router.state.uri.path, '/discover');
-      expect(tabOf(tester), before);
-    });
 
     testWidgets('the operator opens an issue from another service of the '
         'Stack, and from Discover, and Back returns', (tester) async {

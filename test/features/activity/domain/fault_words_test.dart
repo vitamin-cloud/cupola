@@ -70,19 +70,6 @@ void main() {
     );
   });
 
-  test('an indexer and a stack say what happened', () {
-    final indexer = faultWordsOf(
-      _decision(
-        DecisionKind.failingIndexer,
-        service: ServiceKey.prowlarr,
-        title: 'NZBgeek',
-        detail: 'Failing\u00A0· Prowlarr\u00A0· disabled for now',
-      ),
-    );
-    expect(indexer.headline, 'NZBgeek is failing');
-    expect(indexer.explanation, 'Prowlarr has stopped searching it for now.');
-  });
-
   test('a headline in the service\'s own words loses its full stop', () {
     expect(
       faultWordsOf(
@@ -93,21 +80,6 @@ void main() {
         ),
       ).headline,
       'Missing root folder: /movies',
-    );
-  });
-
-  test('the other kinds keep the control the Home row has', () {
-    expect(
-      faultActionLabel(
-        _decision(DecisionKind.failingIndexer, service: ServiceKey.prowlarr),
-      ),
-      'Test',
-    );
-    expect(
-      faultActionLabel(
-        _decision(DecisionKind.storageAlert, service: ServiceKey.truenas),
-      ),
-      'Open alert',
     );
   });
 }

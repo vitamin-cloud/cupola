@@ -85,38 +85,6 @@ ManualImportFixAssignment _sonarrAssignment({
   );
 }
 
-ManualImportFixAssignment _lidarrAssignment({
-  int artistId = 0,
-  int? albumId,
-  List<int> trackIds = const [],
-}) {
-  return ManualImportFixAssignment(
-    match: ManualImportLookupResult(
-      id: artistId,
-      title: 'Some Artist',
-      raw: artistId > 0
-          ? {'id': artistId, 'title': 'Some Artist'}
-          : const <String, dynamic>{},
-    ),
-    album: albumId == null
-        ? null
-        : ManualImportAlbum(
-            id: albumId,
-            title: 'Some Album',
-            raw: {'id': albumId, 'title': 'Some Album'},
-          ),
-    tracks: trackIds
-        .map(
-          (id) => ManualImportTrack(
-            id: id,
-            title: 'T$id',
-            raw: {'id': id, 'title': 'T$id'},
-          ),
-        )
-        .toList(growable: false),
-  );
-}
-
 void main() {
   group('mapImportError', () {
     test('a connection error is Radarr that did not answer', () {
@@ -187,28 +155,6 @@ void main() {
       expect(msg, isNot(contains('movie')));
     });
 
-    test(
-      'returns the 500 hint message for lidarr (artist/album/track naming)',
-      () {
-        final err = DioException(
-          requestOptions: RequestOptions(path: '/api/v1/command'),
-          response: Response<dynamic>(
-            requestOptions: RequestOptions(path: '/api/v1/command'),
-            statusCode: 500,
-          ),
-          type: DioExceptionType.badResponse,
-        );
-        final msg = mapImportError(err, ServiceKey.lidarr);
-        expect(msg, contains('answered with an error'));
-        expect(
-          msg,
-          contains("doesn't match a known artist/album/track pattern"),
-        );
-        expect(msg, contains('Artist/Album/Track.ext'));
-        expect(msg, isNot(contains('movie')));
-      },
-    );
-
     test('a 404 names the address and keeps what Radarr said', () {
       final err = DioException(
         requestOptions: RequestOptions(path: '/x'),
@@ -245,20 +191,6 @@ void main() {
     test('returns error.toString() for non-DioException throwables', () {
       expect(mapImportError(Exception('boom'), ServiceKey.radarr), 'boom');
     });
-
-    test(
-      'an unattributable DioException is a request that did not complete',
-      () {
-        final err = DioException(
-          requestOptions: RequestOptions(path: '/x'),
-          type: DioExceptionType.unknown,
-        );
-        expect(
-          mapImportError(err, ServiceKey.lidarr),
-          'The request to Lidarr did not complete.',
-        );
-      },
-    );
   });
 
   group('libraryGuardError', () {
@@ -290,39 +222,11 @@ void main() {
       expect(msg, contains('library'));
     });
 
-    test('returns non-null for lidarr with no tracks', () {
-      final msg = libraryGuardError(
-        ServiceKey.lidarr,
-        _lidarrAssignment(artistId: 1, albumId: 2),
-      );
-      expect(msg, isNotNull);
-      expect(msg, contains('library'));
-    });
-
-    test('returns non-null for lidarr with no album', () {
-      final msg = libraryGuardError(
-        ServiceKey.lidarr,
-        _lidarrAssignment(artistId: 1, trackIds: [4]),
-      );
-      expect(msg, isNotNull);
-      expect(msg, contains('library'));
-    });
-
     test('returns null for a valid sonarr assignment with episodes', () {
       expect(
         libraryGuardError(
           ServiceKey.sonarr,
           _sonarrAssignment(seriesId: 10, episodeIds: [50]),
-        ),
-        isNull,
-      );
-    });
-
-    test('returns null for a valid lidarr assignment with album + tracks', () {
-      expect(
-        libraryGuardError(
-          ServiceKey.lidarr,
-          _lidarrAssignment(artistId: 1, albumId: 2, trackIds: [4]),
         ),
         isNull,
       );

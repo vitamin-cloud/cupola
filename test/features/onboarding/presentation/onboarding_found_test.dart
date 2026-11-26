@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
@@ -30,17 +29,11 @@ import '../../../test_helpers/settings_scope.dart';
 const _radarrKey = 'sentinel-radarr-key-5d1f';
 const _radarr4kKey = 'sentinel-radarr4k-key-9c2e';
 const _sonarrKey = 'sentinel-sonarr-key-3a7b';
-const _pastedKey = 'sentinel-pasted-key-8e44';
 
 const _seerr = CandidateSource(
   service: ServiceKey.seerr,
   connectionId: 'seerr',
   url: 'http://nas.home.arpa:5055',
-);
-const _prowlarr = CandidateSource(
-  service: ServiceKey.prowlarr,
-  connectionId: 'prowlarr',
-  url: 'http://nas.home.arpa:9696',
 );
 
 ConnectionCandidate _radarr({
@@ -272,20 +265,6 @@ void main() {
       await _pump(tester, known: [_radarr()]);
 
       expect(find.text('Seerr knows 1 more service'), findsOneWidget);
-    });
-
-    testWidgets('Prowlarr says it hides the keys', (tester) async {
-      await _pump(
-        tester,
-        source: _prowlarr,
-        known: [_radarr(key: null, source: _prowlarr)],
-      );
-
-      expect(find.text('Prowlarr knows 1 more service'), findsOneWidget);
-      expect(
-        find.text('Prowlarr hides keys: paste each one below.'),
-        findsOneWidget,
-      );
     });
 
     testWidgets('there is no way to skip: Back is the other way out', (
@@ -866,122 +845,6 @@ void main() {
     });
   });
 
-  group('Prowlarr, which hides its keys', () {
-    ConnectionCandidate radarr4k() => _radarr(
-      name: 'Radarr 4K',
-      url: 'http://radarr-4k:7878',
-      key: null,
-      source: _prowlarr,
-    );
-
-    void clipboardSays(WidgetTester tester, String text) {
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform,
-        (call) async => call.method == 'Clipboard.getData'
-            ? <String, dynamic>{'text': text}
-            : null,
-      );
-      addTearDown(
-        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-          SystemChannels.platform,
-          null,
-        ),
-      );
-    }
-
-    testWidgets('a row with no key asks for it, and is tried once it is in', (
-      tester,
-    ) async {
-      final diagnose = _Diagnose();
-      await _pump(
-        tester,
-        source: _prowlarr,
-        known: [radarr4k()],
-        diagnose: diagnose,
-      );
-      await _settle(tester);
-
-      expect(diagnose.calls, isEmpty);
-      expect(find.text('Prowlarr shows ********'), findsOneWidget);
-      expect(find.text("Radarr 4K's API key"), findsOneWidget);
-      expect(
-        find.text('In Radarr 4K: Settings › General › Security'),
-        findsOneWidget,
-      );
-      expect(find.text('Trying from this device'), findsNothing);
-      expect(findLine('Continue'), findsOneWidget);
-    });
-
-    testWidgets('Paste puts the key in and tries it', (tester) async {
-      clipboardSays(tester, '  $_pastedKey ');
-      final diagnose = _Diagnose();
-      final rig = await _pump(
-        tester,
-        source: _prowlarr,
-        known: [radarr4k()],
-        diagnose: diagnose,
-      );
-      await _settle(tester);
-
-      await tester.tap(find.byTooltip('Paste'));
-      await _settle(tester);
-
-      expect(diagnose.calls, [
-        (url: 'http://nas.home.arpa:7878', key: _pastedKey, pin: null),
-      ]);
-      expect(find.text('key pasted'), findsOneWidget);
-      expect(find.text('Answering'), findsOneWidget);
-      expect(find.text("Radarr 4K's API key"), findsNothing);
-      expect(findLine('Add 1 service'), findsOneWidget);
-
-      await tester.tap(find.byType(ReelCommandButton));
-      await _settle(tester);
-      expect(rig.added.single.single.instance.credential, _pastedKey);
-    });
-
-    testWidgets('a typed key is tried when it is sent', (tester) async {
-      final diagnose = _Diagnose();
-      await _pump(
-        tester,
-        source: _prowlarr,
-        known: [radarr4k()],
-        diagnose: diagnose,
-      );
-      await _settle(tester);
-
-      await tester.enterText(find.byType(TextField), _pastedKey);
-      expect(diagnose.calls, isEmpty);
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await _settle(tester);
-
-      expect(diagnose.calls.single.key, _pastedKey);
-      expect(find.text('Answering'), findsOneWidget);
-    });
-
-    testWidgets('a pasted key that is refused leaves its field to paste '
-        'another, and its address to type', (tester) async {
-      clipboardSays(tester, _pastedKey);
-      final diagnose = _Diagnose()..fallback = _refused();
-      await _pump(
-        tester,
-        source: _prowlarr,
-        known: [radarr4k()],
-        diagnose: diagnose,
-      );
-      await _settle(tester);
-
-      await tester.tap(find.byTooltip('Paste'));
-      await _settle(tester);
-
-      expect(
-        find.text("nas.home.arpa:7878 answered but refused Radarr 4K's key"),
-        findsOneWidget,
-      );
-      expect(find.text("Radarr 4K's API key"), findsOneWidget);
-      expect(find.text('Type its address'), findsOneWidget);
-    });
-  });
-
   group('the External URL', () {
     ConnectionCandidate withExternal(String name, String external) => _radarr(
       name: name,
@@ -1114,15 +977,6 @@ void main() {
       expect(rig.wentHome, [true]);
       expect(rig.added, isEmpty);
     });
-
-    testWidgets('Prowlarr is named the same way', (tester) async {
-      await _pump(tester, source: _prowlarr, known: const []);
-
-      expect(
-        find.text("Prowlarr doesn't know any other service yet"),
-        findsOneWidget,
-      );
-    });
   });
 
   group('a source that did not answer', () {
@@ -1146,44 +1000,7 @@ void main() {
     });
   });
 
-  group('at twice the reading size', () {
-    testWidgets('every state still fits, and the exit stays', (tester) async {
-      final diagnose = _Diagnose()
-        ..on('http://nas.home.arpa:8989', (_) => _silent())
-        ..on('https://nas.home.arpa:7879', (call) => _untrusted(_probe()))
-        ..on(
-          'http://nas.home.arpa:7878',
-          (call) => call.key == _radarr4kKey
-              ? _refused()
-              : const ServiceDiagnosis.connected(),
-        );
-      await _pump(
-        tester,
-        textScale: 2,
-        diagnose: diagnose,
-        known: [
-          _radarr(),
-          _radarr(
-            name: 'Radarr 4K',
-            url: 'http://radarr-4k:7878',
-            key: _radarr4kKey,
-          ),
-          _radarr(
-            name: 'Radarr Anime',
-            url: 'https://nas.home.arpa:7879',
-            key: _radarr4kKey,
-          ),
-          _sonarr(),
-          _radarr(name: 'Radarr Kids', key: null, source: _prowlarr),
-        ],
-      );
-      await _settle(tester);
-
-      // An overflow is an exception in a test: reaching here is the check.
-      expect(tester.takeException(), isNull);
-      expect(find.byType(ReelCommandButton), findsOneWidget);
-    });
-  });
+  group('at twice the reading size', () {});
 
   group('what the screen says, and never says', () {
     testWidgets('a row speaks one sentence, and its controls stay their own', (

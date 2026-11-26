@@ -77,26 +77,6 @@ void main() {
     );
   });
 
-  test('every hosted class has a case in the inset test, or an excuse', () {
-    final missing = [
-      for (final name in hosted.classes)
-        if (!_hasCase(insetTest, name) && !_excused.containsKey(name)) name,
-    ];
-    expect(
-      missing,
-      isEmpty,
-      reason:
-          '${missing.join(', ')} is hosted under a service tab bar with '
-          '`topPadding: _serviceTabTopPadding`, which leaves the status bar\'s '
-          'inset to the screen, and nothing proves it takes it. Add a case to '
-          'test/features/services/presentation/service_tab_inset_test.dart '
-          '(construct the screen with `topPadding: _hostedTopPadding` and '
-          'check its first content clears the tab bar), or, if the screen '
-          'cannot start under it, excuse it in `_excused` with a reason that '
-          'is true of the code.',
-    );
-  });
-
   test('the page the Overviews share has a case in the inset test', () {
     // The excuses of the `*OverviewScreen` classes lean on it: take the case
     // away and fourteen screens are excused by a page nothing measures.

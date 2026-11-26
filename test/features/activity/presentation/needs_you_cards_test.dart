@@ -50,7 +50,7 @@ Future<ProfileHarness> _pump(
       overrides: harness.overrides,
       child: MaterialApp(
         theme: AppTheme.darkTheme(),
-        home: const ActivityPage(tab: ActivityTab.all),
+        home: const ActivityPage(tab: ActivityTab.downloads),
       ),
     ),
   );
@@ -159,7 +159,7 @@ void main() {
   testWidgets('Keep waiting hides it for a day, out of the count, and Undo '
       'brings it back', (tester) async {
     final harness = await _pump(tester);
-    expect(find.text('4 faults\u00A0· 3 requests'), findsOneWidget);
+    expect(find.text('4 faults'), findsOneWidget);
 
     await tester.tap(find.text('Keep waiting'));
     await harness.settle(tester);
@@ -171,7 +171,7 @@ void main() {
       findsOneWidget,
     );
     // Out of the faults, and nothing sent to any service.
-    expect(find.text('3 faults\u00A0· 3 requests'), findsOneWidget);
+    expect(find.text('3 faults'), findsOneWidget);
     expect(harness.network.requests.where(_queueDelete), isEmpty);
     final container = ProviderScope.containerOf(
       tester.element(find.byType(ActivityPage)),
@@ -183,7 +183,7 @@ void main() {
 
     expect(container.read(keptWaitingProvider), isEmpty);
     expect(find.text('Try another download'), findsOneWidget);
-    expect(find.text('4 faults\u00A0· 3 requests'), findsOneWidget);
+    expect(find.text('4 faults'), findsOneWidget);
 
     await harness.unmount(tester);
   });
@@ -238,7 +238,7 @@ void main() {
     expect(find.textContaining('Hidden until'), findsNothing);
     // Still kept waiting: its day is not up, so it is not back either.
     expect(find.text('Big Buck Bunny is stuck at 47%'), findsNothing);
-    expect(find.text('3 faults\u00A0· 3 requests'), findsOneWidget);
+    expect(find.text('3 faults'), findsOneWidget);
 
     await harness.unmount(tester);
   });
@@ -305,60 +305,5 @@ void main() {
     // The card drops these after a write; a source added to the Home's
     // downloads is read again here too.
     expect(homeDownloadsSources, contains(servicesQueueProvider));
-  });
-
-  testWidgets('a health check failing on three arrs is one card in the app\'s '
-      'words, the first arr on the fill and the others behind', (tester) async {
-    final harness = await _pump(
-      tester,
-      script: (harness) {
-        for (final (id, path, arr) in [
-          (WorldIds.radarr, '/api/v3/health', 'Radarr'),
-          (WorldIds.sonarr, '/api/v3/health', 'Sonarr'),
-          (WorldIds.lidarr, '/api/v1/health', 'Lidarr'),
-        ]) {
-          harness.network.on(
-            id,
-            'GET',
-            path,
-            (_) => NetworkReply.json([
-              {
-                'source': 'IndexerRssCheck',
-                'type': 'error',
-                'message':
-                    'No indexers available with RSS sync enabled, $arr will '
-                    'not grab new releases automatically',
-              },
-            ]),
-          );
-        }
-      },
-    );
-
-    expect(
-      find.text('No indexer is watching for new releases'),
-      findsOneWidget,
-    );
-    expect(
-      find.text(
-        "New releases aren't grabbed on their own until an indexer has RSS "
-        'sync on.',
-      ),
-      findsOneWidget,
-    );
-    expect(find.textContaining(RegExp(r'Sonarr and Lidarr$')), findsOneWidget);
-    // Their own words once, behind Why?: none of them is the headline.
-    expect(find.textContaining('No indexers available'), findsNothing);
-    expect(
-      find.ancestor(
-        of: find.textContaining(RegExp(r'^Open in Radarr')),
-        matching: find.byType(FilledButton),
-      ),
-      findsOneWidget,
-    );
-    expect(find.textContaining(RegExp(r'^Open in Sonarr')), findsOneWidget);
-    expect(find.textContaining(RegExp(r'^Open in Lidarr')), findsOneWidget);
-
-    await harness.unmount(tester);
   });
 }

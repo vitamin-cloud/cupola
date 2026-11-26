@@ -15,7 +15,6 @@ import 'package:cupola/features/activity/presentation/widgets/activity_formatter
     show activitySecondaryLine, formatActivityDuration, formatActivitySize;
 import 'package:cupola/features/discover/domain/models/seerr_request.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/services/domain/download_join.dart';
 import 'package:cupola/features/services/domain/in_flight.dart'
@@ -359,7 +358,6 @@ class GlobalActivityItem {
 const globalActivityServices = [
   ServiceKey.radarr,
   ServiceKey.sonarr,
-  ServiceKey.lidarr,
   ServiceKey.seerr,
 ];
 
@@ -440,7 +438,6 @@ final connectionArrServiceProvider =
       return switch (serviceType) {
         ServiceType.movies => ref.watch(radarrServiceForProvider(instanceId)),
         ServiceType.series => ref.watch(sonarrServiceForProvider(instanceId)),
-        ServiceType.music => ref.watch(lidarrServiceForProvider(instanceId)),
         ServiceType.discover => throw ArgumentError.value(
           serviceType,
           'serviceType',
@@ -497,8 +494,6 @@ final resolvedArrServiceProvider =
           return ref.watch(radarrServiceProvider);
         case ServiceType.series:
           return ref.watch(sonarrServiceProvider);
-        case ServiceType.music:
-          return ref.watch(lidarrServiceProvider);
         case ServiceType.discover:
           throw ArgumentError.value(
             serviceType,
@@ -572,11 +567,7 @@ ActivityFeed _merge(
 }
 
 /// The three \*arr services that appear in the global feed, as service types.
-const _arrActivityServiceTypes = [
-  ServiceType.movies,
-  ServiceType.series,
-  ServiceType.music,
-];
+const _arrActivityServiceTypes = [ServiceType.movies, ServiceType.series];
 
 /// One future per configured connection, plus a placeholder for each \*arr the
 /// user has not set up.
@@ -774,7 +765,6 @@ ServiceKey _serviceKeyFor(ServiceType serviceType) {
     ServiceType.discover => ServiceKey.seerr,
     ServiceType.movies => ServiceKey.radarr,
     ServiceType.series => ServiceKey.sonarr,
-    ServiceType.music => ServiceKey.lidarr,
   };
 }
 

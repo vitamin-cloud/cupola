@@ -4,8 +4,6 @@
 library;
 
 import 'package:cupola/features/movies/domain/models/radarr_movie.dart';
-import 'package:cupola/features/music/domain/models/lidarr_album.dart';
-import 'package:cupola/features/music/domain/models/lidarr_artist.dart';
 import 'package:cupola/features/series/domain/models/sonarr_episode.dart';
 import 'package:cupola/features/series/domain/models/sonarr_series.dart';
 
@@ -93,55 +91,6 @@ SonarrSeries buildSeries({
     seriesType: seriesType,
     certification: certification,
     ratings: ratings,
-  );
-}
-
-LidarrArtist buildArtist({
-  int id = 1,
-  String artistName = 'Artist',
-  // Empty by default, which is what a lookup row without a MusicBrainz id
-  // looks like: the one shape Lidarr cannot be asked to add.
-  String foreignArtistId = '',
-  String status = 'active',
-  bool monitored = true,
-  String? overview,
-  String? path,
-  String? artistType,
-  String? disambiguation,
-  List<String> genres = const [],
-  Map<String, dynamic>? statistics,
-  List<dynamic> images = const [],
-}) {
-  return LidarrArtist(
-    id: id,
-    artistName: artistName,
-    foreignArtistId: foreignArtistId,
-    status: status,
-    overview: overview,
-    monitored: monitored,
-    images: images,
-    statistics: statistics,
-    genres: genres,
-    artistType: artistType,
-    disambiguation: disambiguation,
-    path: path,
-  );
-}
-
-LidarrAlbum buildAlbum({
-  int id = 10,
-  String title = 'Album',
-  String releaseDate = '2024-01-01',
-  bool monitored = true,
-  Map<String, dynamic>? statistics,
-}) {
-  return LidarrAlbum(
-    id: id,
-    title: title,
-    releaseDate: releaseDate,
-    monitored: monitored,
-    images: const [],
-    statistics: statistics,
   );
 }
 

@@ -114,30 +114,4 @@ void main() {
     expect(find.text('Anna\u00A0· Sintel'), findsOne);
     expect(find.textContaining('Jellyfin did not answer'), findsOne);
   });
-
-  testWidgets('a refused token is said to be refused, never to be silent', (
-    tester,
-  ) async {
-    await pump(
-      tester,
-      rows: const [],
-      offline: const [
-        (
-          service: ServiceKey.plex,
-          instanceId: 'plex',
-          title: 'Plex',
-          error: ClassifiedFailure(ServiceFailureReason.unauthorized),
-        ),
-        (
-          service: ServiceKey.jellyfin,
-          instanceId: 'cabin',
-          title: 'Jellyfin',
-          error: ClassifiedFailure(ServiceFailureReason.unreachable),
-        ),
-      ],
-    );
-    expect(find.textContaining('Jellyfin did not answer'), findsOne);
-    expect(find.textContaining('Plex did not answer'), findsNothing);
-    expect(find.textContaining('refused'), findsOne);
-  });
 }

@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/status/arr_queue_snapshot.dart';
-import 'package:cupola/core/status/lexicon.dart';
 import 'package:cupola/features/discover/domain/library_calendar.dart';
 import 'package:cupola/features/media/domain/media_key.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -163,77 +162,6 @@ void main() {
     expect(
       read(const ArrQueueSnapshot.failed('down')).first.statusLine(now),
       'Out today',
-    );
-  });
-
-  test('an episode has its time, its mark, and leads nothing on its day', () {
-    final events = libraryCalendarEvents(
-      [
-        reading(ServiceKey.sonarr, 'Sonarr', [
-          {
-            'id': 3001,
-            'seasonNumber': 3,
-            'episodeNumber': 1,
-            'airDateUtc': DateTime(2026, 10, 2, 21).toUtc().toIso8601String(),
-            'hasFile': false,
-            'series': {'title': 'Cosmos Laundromat', 'tvdbId': 900},
-          },
-          {
-            'id': 4010,
-            'seasonNumber': 4,
-            'episodeNumber': 10,
-            'finaleType': 'season',
-            'airDateUtc': DateTime(2026, 10, 11, 20).toUtc().toIso8601String(),
-            'series': {'title': 'The Long Field', 'tvdbId': 901},
-          },
-        ]),
-        reading(ServiceKey.lidarr, 'Lidarr', [
-          {
-            'id': 4,
-            'title': 'Sintel (Anniversary Edition)',
-            'foreignAlbumId': 'mb-4',
-            'releaseDate': day(3),
-            'artistId': 1,
-            'artist': {'artistName': 'Jan Morgenstern'},
-          },
-        ]),
-      ],
-      window,
-      now,
-    );
-
-    expect(
-      [for (final e in events) e.title],
-      [
-        // Friday: the album, a date with no time, before the 21:00 episode.
-        'Sintel (Anniversary Edition)',
-        'Cosmos Laundromat',
-        'The Long Field',
-      ],
-    );
-    final album = events[0];
-    expect(album.statusLine(now), 'Jan Morgenstern\u00A0· not out yet');
-    expect(album.lead(), (lead: 'Album', under: 'all day'));
-    expect(
-      album.target,
-      const CalendarShelfTarget(ServiceKey.lidarr, 'Lidarr', 1),
-    );
-
-    final premiere = events[1];
-    expect(premiere.lead(), (lead: '21:00', under: null));
-    expect(
-      premiere.statusLine(now),
-      'S3\u00A0E1\u00A0· premiere\u00A0· not aired',
-    );
-    expect(premiere.target, isA<CalendarMediaTarget>());
-    expect(
-      premiere.spoken(now),
-      'Friday 2 October at 21:00, Cosmos Laundromat season 3 premiere, '
-      'not aired yet, in Sonarr',
-    );
-    expect(
-      events[2].statusLine(now),
-      'S4\u00A0E10\u00A0· season finale\u00A0· not aired',
     );
   });
 
@@ -505,99 +433,4 @@ void main() {
       );
     },
   );
-
-  group('the month\'s grid and the day beside it', () {
-    CalendarEvent episode(
-      int dayOffset,
-      int number, {
-      CalendarMark? mark,
-      String title = 'Cosmos Laundromat',
-    }) => CalendarEvent(
-      identity: '$title-3-$number',
-      kind: CalendarKind.episode,
-      day: DateTime(2026, 9, 29 + dayOffset),
-      airsAt: DateTime(2026, 9, 29 + dayOffset, 21),
-      title: title,
-      season: 3,
-      episode: number,
-      mark: mark,
-      sources: const ['Sonarr'],
-      state: const CalendarState.notYet(),
-    );
-    final disc = CalendarEvent(
-      identity: 'sf-disc',
-      kind: CalendarKind.movie,
-      day: DateTime(2026, 10, 12),
-      title: 'Sprite Fright',
-      release: Lexicon.onDisc,
-      sources: const ['Radarr', 'Radarr 4K'],
-      state: const CalendarState.notYet(),
-    );
-    final album = CalendarEvent(
-      identity: 'album',
-      kind: CalendarKind.album,
-      day: DateTime(2026, 10, 2),
-      title: 'Sintel (Anniversary Edition)',
-      byline: 'Jan Morgenstern',
-      sources: const ['Lidarr'],
-      state: const CalendarState.notYet(),
-    );
-
-    test('a day\'s first line: the time and code, the kind of release', () {
-      expect(calendarGridLead(episode(3, 1)), '21:00 S3\u00A0E1');
-      expect(calendarGridLead(disc), 'Disc');
-      expect(calendarGridLead(album), 'Album');
-    });
-
-    test('the tip under the pointer names the release, the standing and '
-        'the connections', () {
-      expect(
-        calendarEventTip(disc, now),
-        'Sprite Fright\u00A0· on disc\u00A0· not out yet\u00A0· Radarr, Radarr 4K',
-      );
-      expect(
-        calendarEventTip(album, now),
-        'Sintel (Anniversary Edition)\u00A0· Jan Morgenstern\u00A0· not out yet\u00A0· '
-        'Lidarr',
-      );
-    });
-
-    test('the day in a sentence: three named, the rest counted', () {
-      expect(calendarDaySummary(const []), 'Nothing on this day.');
-      expect(
-        calendarDaySummary([album, episode(3, 1, mark: CalendarMark.premiere)]),
-        '2 things: an album by Jan Morgenstern and the premiere of Cosmos '
-        'Laundromat season 3.',
-      );
-      expect(
-        calendarDaySummary([
-          disc,
-          album,
-          episode(3, 4, title: 'Night Shift'),
-          episode(3, 5, title: 'Night Shift'),
-        ]),
-        '4 things: Sprite Fright on disc, an album by Jan Morgenstern, '
-        'Night Shift S3\u00A0E4 and 1 more.',
-      );
-    });
-
-    test('the rest of a season, after the episode and only its season', () {
-      final premiere = episode(3, 1, mark: CalendarMark.premiere);
-      final events = [
-        premiere,
-        episode(10, 2),
-        episode(17, 3),
-        episode(10, 9, title: 'Night Shift'),
-        disc,
-      ];
-      expect(
-        [
-          for (final event in calendarLaterInSeason(premiere, events))
-            event.episode,
-        ],
-        [2, 3],
-      );
-      expect(calendarLaterInSeason(disc, events), isEmpty);
-    });
-  });
 }

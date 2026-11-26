@@ -120,33 +120,6 @@ String? proxyUsernameProblem(String username) {
   return null;
 }
 
-/// Whether [access] can be saved for [service]: complete, and free of every
-/// clash above. The form's validators say which field is wrong; this is the
-/// whole answer, for a caller with no field to point at.
-bool accessIsValid(ServiceKey service, ConnectionAccess access) =>
-    switch (access) {
-      NoAccess() => true,
-      CloudflareServiceToken(:final clientId, :final clientSecret) =>
-        clientId.trim().isNotEmpty && clientSecret.trim().isNotEmpty,
-      ProxyPassword(:final username) =>
-        service.offersProxyPassword && proxyUsernameProblem(username) == null,
-      CustomHeaders(:final entries) =>
-        entries.isNotEmpty &&
-            !exceedsAccessHeadersLimit(entries) &&
-            [
-              for (final (index, entry) in entries.indexed)
-                customHeaderNameProblem(
-                      service,
-                      entry.name,
-                      earlier: [
-                        for (final other in entries.take(index)) other.name,
-                      ],
-                    ) ??
-                    customHeaderValueProblem(entry.value),
-            ].every((problem) => problem == null) &&
-            !entries.any((e) => duplicatesCredentialHeader(service, e.name)),
-    };
-
 /// The Access choice a gateway's remedy opens the connection form on:
 /// Cloudflare Access for Access, Password for a proxy's password prompt or a
 /// sign-in page (Custom headers where a proxy password cannot travel), the

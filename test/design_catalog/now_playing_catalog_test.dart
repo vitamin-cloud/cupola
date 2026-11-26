@@ -87,47 +87,6 @@ Widget _one(BuildContext context) => ServiceOverviewSection(
   ),
 );
 
-/// Two playbacks, as a Plex room draws them: lines, Stop alone.
-Widget _several(BuildContext context) => ServiceOverviewSection(
-  service: ServiceKey.plex,
-  title: 'Now playing',
-  destination: ServiceTab.activities,
-  light: _lights[CatalogArt.poster]?.art,
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      StreamSessionLine(
-        session: _session(
-          user: 'Giulia',
-          title: 'Spring',
-          device: 'Apple TV',
-          progress: 0.3,
-          remaining: const Duration(minutes: 12),
-        ),
-        picture: (url: CatalogArt.backdrop, headers: null),
-        onStop: _noop,
-      ),
-      const Padding(
-        padding: EdgeInsets.symmetric(vertical: 12),
-        child: Divider(height: 1),
-      ),
-      StreamSessionLine(
-        session: _session(
-          user: 'Tom',
-          title: 'Big Buck Bunny',
-          device: 'iPhone',
-          method: StreamPlayMethod.transcode,
-          reasons: const ['1080p → 720p'],
-          progress: 0.8,
-          remaining: const Duration(minutes: 4),
-        ),
-        picture: (url: CatalogArt.poster, headers: null),
-        onStop: _noop,
-      ),
-    ],
-  ),
-);
-
 void main() {
   setUpAll(_readLights);
 
@@ -140,13 +99,6 @@ void main() {
         'the slab, who and what, the screen and how it plays, the bar and '
         'what is left, the controls Jellyfin allows; lit by the title',
         _one,
-        width: 390,
-      ),
-      CatalogScene(
-        'StreamNowPlayingSection.slab · several playbacks · a line each, a '
-        'wide thumbnail beside the words, Stop alone on Plex; a transcode in '
-        'amber',
-        _several,
         width: 390,
       ),
       CatalogScene(

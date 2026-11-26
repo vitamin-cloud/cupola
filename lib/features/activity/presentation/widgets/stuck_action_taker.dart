@@ -167,6 +167,5 @@ mixin StuckActionTaker<T extends ConsumerStatefulWidget> on ConsumerState<T> {
 
 ServiceType _typeOf(ServiceKey service) => switch (service) {
   ServiceKey.sonarr => ServiceType.series,
-  ServiceKey.lidarr => ServiceType.music,
   _ => ServiceType.movies,
 };

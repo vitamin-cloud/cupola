@@ -35,12 +35,7 @@ Color _verbColour(WidgetTester tester, String label) {
 }
 
 void main() {
-  group('from a failed probe', () {
-
-
-
-
-  });
+  group('from a failed probe', () {});
 
   group('rule 1: presence is the signal', () {
     testWidgets('no band paints a fill or a border', (tester) async {
@@ -438,23 +433,6 @@ void main() {
         tester.getTopLeft(find.text('Sign in again')).dx,
         lessThan(tester.getTopLeft(find.text('Retry')).dx),
       );
-    });
-
-    testWidgets('Plex refuses a token, not a key', (tester) async {
-      await _pump(
-        tester,
-        FaultBand.fault(
-          serviceName: 'Plex',
-          reason: ServiceFailureReason.unauthorized,
-          onRetry: () {},
-          onOpenSettings: () {},
-        ),
-      );
-      expect(
-        find.textContaining('Plex answered but refused the token'),
-        findsOneWidget,
-      );
-      expect(filled('Paste the token again'), findsOneWidget);
     });
 
     testWidgets('no form remedy: Retry is the remedy, in the amber fill', (

@@ -27,7 +27,7 @@ const _radarr = ServiceInstance(
 );
 const _prowlarr = ServiceInstance(
   id: 'prowlarr',
-  service: ServiceKey.prowlarr,
+  service: ServiceKey.seerr,
   url: 'http://192.0.2.10:8080',
   credential: 'prowlarr-key',
 );
@@ -188,8 +188,6 @@ void main() {
   });
 
   group('away from home, a connection with no address away', () {
-
-
     test('a folded service is never better than its worst answer, and only '
         'at home is below a fault', () {
       const answered = ServiceDiagnosis.connected();

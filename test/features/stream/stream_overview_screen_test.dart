@@ -6,8 +6,6 @@ import 'package:cupola/core/models/service_kpi.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
-import 'package:cupola/features/plex/domain/models/plex_models.dart';
-import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/services/domain/service_summary.dart';
 import 'package:cupola/features/services/presentation/service_kpi_provider.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
@@ -53,43 +51,6 @@ void main() {
     expect(find.textContaining('Mb/s'), findsNothing);
   });
 
-  testWidgets('Plex draws its own two regions on top of the shared ones', (
-    tester,
-  ) async {
-    await _pump(tester, service: ServiceKey.plex);
-
-    expect(
-      tester
-          .widgetList<SectionHeader>(find.byType(SectionHeader))
-          .map((header) => header.title),
-      ['Now playing', 'On deck', 'Recently added', 'Libraries', 'Server'],
-    );
-  });
-
-  testWidgets('each section link is named after the tab it opens', (
-    tester,
-  ) async {
-    await _pump(tester, service: ServiceKey.plex);
-
-    expect(
-      tester
-          .widgetList<SectionHeader>(find.byType(SectionHeader))
-          .map((header) => header.semanticHint),
-      [
-        // Now playing leads to the tab that lists the playbacks.
-        'opens the Plex Activities tab',
-        // On deck and what was added are whole in Activities.
-        'opens the Plex Activities tab',
-        'opens the Plex Activities tab',
-        'opens the Plex Libraries tab',
-        // Server has nowhere to go: Plex's bar has no tab that owns connection
-        // settings, and a link named after a tab that does not exist is a
-        // promise the app cannot keep.
-        null,
-      ],
-    );
-  });
-
   testWidgets('one playback is drawn large, with what is left and the '
       'controls Jellyfin allows', (tester) async {
     await _pump(
@@ -122,32 +83,6 @@ void main() {
     );
   });
 
-  testWidgets('several playbacks are drawn as lines, one sentence each', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      service: ServiceKey.plex,
-      sessions: [
-        _session('a', 'Giulia', 'Spring'),
-        _session('b', 'Tom', 'Big Buck Bunny'),
-      ],
-    );
-
-    expect(find.byType(StreamSessionFeature), findsNothing);
-    expect(find.byType(StreamSessionLine), findsNWidgets(2));
-    expect(find.text('Giulia\u00A0· Spring'), findsOneWidget);
-    expect(find.text('Tom\u00A0· Big Buck Bunny'), findsOneWidget);
-    // Plex stops and nothing else: no pause, no message.
-    expect(find.byTooltip('Pause this playback'), findsNothing);
-    expect(find.byTooltip('Stop this playback'), findsNWidgets(2));
-    expect(
-      find.semantics.byLabel('Spring'),
-      findsOneWidget,
-      reason: 'a line speaks once, by its title',
-    );
-  });
-
   testWidgets('playbacks do not overflow at an accessibility reading size', (
     tester,
   ) async {
@@ -163,25 +98,6 @@ void main() {
       );
       expect(tester.takeException(), isNull);
     }
-  });
-
-  testWidgets('the Libraries header counts rooms and names the one scanning', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      service: ServiceKey.plex,
-      libraries: [
-        _library(name: 'Movies', refreshing: true),
-        _library(name: 'TV'),
-        _library(name: 'Music'),
-      ],
-    );
-
-    final header = tester.widget<SectionHeader>(
-      find.widgetWithText(SectionHeader, 'Libraries'),
-    );
-    expect(header.subtitle, '3 libraries\u00A0· Movies scanning');
   });
 
   testWidgets('a scan in progress speaks one sentence', (tester) async {
@@ -276,106 +192,6 @@ void main() {
     expect(find.text('No libraries on this server'), findsOneWidget);
   });
 
-  testWidgets('a Plex server that did not mention Plex Pass reads —', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      service: ServiceKey.plex,
-      capabilities: _capabilities(subscription: null),
-    );
-
-    // `GET /` answered, and simply did not carry the attribute. An em dash says
-    // the server was asked; "Not on this server" would be a claim it never
-    // made, and it is the claim that decides whether a stop control appears.
-    expect(
-      find.semantics.byLabel('Plex Pass, stopping a stream needs it, —'),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('a Plex server that answered says what it answered', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      service: ServiceKey.plex,
-      capabilities: _capabilities(subscription: true, multiuser: true),
-    );
-
-    expect(find.text('Living room'), findsOneWidget);
-    expect(find.text('Active'), findsOneWidget);
-    // Stated only because the server said `multiuser`, and stated as the
-    // limitation it causes rather than as trivia, with a figure in the figure
-    // slot, so the row reads and speaks like the three above it instead of
-    // putting a bare noun phrase where a datum goes.
-    expect(find.text('Owner only'), findsOneWidget);
-    expect(
-      find.semantics.byLabel(
-        'Plex Home, Cupola reads the owner’s watch state, Owner only',
-      ),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('the On deck rail names the episode and how far in', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      service: ServiceKey.plex,
-      onDeck: [
-        // As Plex sends an episode: its own name, and the series beside it.
-        _item(
-          id: '12',
-          title: 'Hello, Ms. Cobel',
-          subtitle: 'Severance',
-          progress: 0.3,
-        ),
-      ],
-    );
-
-    expect(find.text('Severance'), findsOneWidget);
-    expect(find.textContaining('Hello, Ms. Cobel'), findsOneWidget);
-    // How far in is the bar under the picture.
-    expect(find.byType(LinearProgressIndicator), findsOneWidget);
-  });
-
-  testWidgets('a Plex with nothing part-watched rests', (tester) async {
-    await _pump(tester, service: ServiceKey.plex);
-
-    expect(find.text('Nothing part-watched'), findsOneWidget);
-  });
-
-  testWidgets('nothing overflows at an accessibility reading size', (
-    tester,
-  ) async {
-    await _pump(
-      tester,
-      service: ServiceKey.plex,
-      textScaleFactor: 3.0,
-      libraries: [
-        _library(
-          name: 'Documentaries, Concerts And Everything Else We Keep',
-          refreshing: true,
-        ),
-      ],
-      onDeck: [
-        _item(
-          id: '12',
-          title:
-              'A Series With An Extremely Long Title That Nobody Abbreviates',
-          subtitle: 'S02E05\u00A0· Woe’s Hollow',
-          progress: 0.42,
-        ),
-      ],
-      capabilities: _capabilities(subscription: true),
-    );
-
-    // A `RenderFlex overflowed` is thrown, not merely painted, under test.
-    expect(tester.takeException(), isNull);
-  });
-
   testWidgets('a server that was never set up gets its own door', (
     tester,
   ) async {
@@ -402,7 +218,6 @@ Future<void> _pump(
   List<StreamLibrary> libraries = const [],
   List<StreamSession> sessions = const [],
   List<StreamItem> onDeck = const [],
-  PlexServerCapabilities? capabilities,
   bool failLibraries = false,
   bool configured = true,
   bool answering = true,
@@ -418,10 +233,7 @@ Future<void> _pump(
                 jellyfinApiKey: 'key',
                 jellyfinUserId: 'viewer-1',
               )
-            : settingsWith(
-                plexUrl: 'http://plex.lan:32400',
-                plexToken: 'token',
-              ))
+            : settingsWith())
       : const SettingsModel();
 
   await tester.pumpWidget(
@@ -435,12 +247,7 @@ Future<void> _pump(
         // Both sessions providers: the page reads one of them, and overriding
         // the other costs nothing while keeping the harness symmetrical.
         jellyfinSessionsProvider.overrideWith((ref) async => sessions),
-        plexSessionsProvider.overrideWith((ref) async => sessions),
         jellyfinLibrariesProvider.overrideWith((ref) async {
-          if (failLibraries) throw Exception('libraries failed');
-          return libraries;
-        }),
-        plexLibrariesProvider.overrideWith((ref) async {
           if (failLibraries) throw Exception('libraries failed');
           return libraries;
         }),
@@ -449,10 +256,6 @@ Future<void> _pump(
             StreamWatchingShelf.continueWatching => onDeck,
             _ => const <StreamItem>[],
           },
-        ),
-        // A sheet that answered, by default one that sends no flags.
-        plexCapabilitiesProvider.overrideWith(
-          (ref) async => capabilities ?? _capabilities(),
         ),
         // The reachability probe the identity line reads.
         serviceSummaryProvider.overrideWith(
@@ -523,32 +326,3 @@ StreamLibrary _library({
   lastScannedAt: scannedAt,
   isRefreshing: refreshing,
 );
-
-StreamItem _item({
-  required String id,
-  required String title,
-  String? subtitle,
-  double? progress,
-}) => StreamItem(
-  id: id,
-  title: title,
-  subtitle: subtitle,
-  kind: StreamItemKind.episode,
-  posterPath: null,
-  year: null,
-  runtimeMs: progress == null ? null : 1000,
-  isPlayed: false,
-  resumeOffsetMs: progress == null ? null : (progress * 1000).round(),
-  unplayedChildCount: null,
-);
-
-PlexServerCapabilities _capabilities({bool? subscription, bool? multiuser}) =>
-    PlexServerCapabilities(
-      friendlyName: 'Living room',
-      machineIdentifier: 'abc',
-      version: '1.41.6',
-      myPlexUsername: 'matt',
-      myPlexSubscription: subscription,
-      multiuser: multiuser,
-      transcoderActiveVideoSessions: 0,
-    );

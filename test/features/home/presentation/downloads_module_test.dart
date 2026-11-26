@@ -179,7 +179,6 @@ void main() {
     expect(find.text('Keep waiting'), findsNothing);
   });
 
-
   testWidgets('without a download client the speed is not guessed, and the '
       'module says where it comes from', (tester) async {
     await pump(

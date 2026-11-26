@@ -37,10 +37,6 @@ String mapImportError(Object error, ServiceKey service) {
               'or the folder name gives no hint. '
               'Try naming the folder after the series, e.g. '
               '`Series Title/S01E01.ext`, then rescan.',
-        ServiceKey.lidarr =>
-          "the file's name doesn't match a known artist/album/track pattern, "
-              'or the folder name gives no hint. '
-              'Try organizing into `Artist/Album/Track.ext`, then rescan.',
         _ => 'check the service logs for the full error.',
       };
       return '$title answered with an error while processing the manual '
@@ -83,11 +79,6 @@ String? libraryGuardError(ServiceKey service, ManualImportFixAssignment a) {
         return 'Pick at least one episode from your ${service.title} library '
             'before importing.';
       }
-    case ServiceKey.lidarr:
-      if (a.tracks.isEmpty || a.album == null) {
-        return 'Pick an album and at least one track from your ${service.title} '
-            'library before importing.';
-      }
     case ServiceKey.radarr:
       // Radarr only needs a movieId; match.id > 0 is sufficient.
       break;
@@ -100,6 +91,5 @@ String? libraryGuardError(ServiceKey service, ManualImportFixAssignment a) {
 String _libraryTabLabel(ServiceKey service) => switch (service) {
   ServiceKey.radarr => 'Movies',
   ServiceKey.sonarr => 'Series',
-  ServiceKey.lidarr => 'Music',
   _ => 'Library',
 };

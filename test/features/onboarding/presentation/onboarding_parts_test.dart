@@ -212,25 +212,6 @@ void main() {
       handle.dispose();
     });
 
-    testWidgets('never offers to add what is there, nor Readarr', (
-      tester,
-    ) async {
-      await pumpClose(
-        tester,
-        answering: ['Lidarr'],
-        setUp: {ServiceKey.lidarr},
-      );
-      expect(
-        find.textContaining('Lidarr and the rest can be added'),
-        findsNothing,
-      );
-      expect(find.textContaining('Readarr'), findsNothing);
-      expect(
-        find.textContaining('${ServiceKey.values.first.title} and the rest'),
-        findsOneWidget,
-      );
-    });
-
     test('says names the way a sentence does', () {
       expect(OnboardingClose.sayNames(['Seerr']), 'Seerr');
       expect(OnboardingClose.sayNames(['Seerr', 'Radarr']), 'Seerr and Radarr');
@@ -265,38 +246,6 @@ void main() {
         _host(OnboardingStart(onPick: onPick, onBack: onBack ?? () {})),
       );
     }
-
-    testWidgets('hands the screen the service whose row was tapped', (
-      tester,
-    ) async {
-      final picked = <ServiceKey>[];
-      await pumpStart(tester, onPick: picked.add);
-
-      await tester.tap(find.text('Seerr'));
-      await tester.tap(find.text('Prowlarr'));
-      await tester.tap(find.text('Set up Lidarr'));
-
-      expect(picked, [
-        ServiceKey.seerr,
-        ServiceKey.prowlarr,
-        ServiceKey.lidarr,
-      ]);
-    });
-
-    testWidgets('puts the two that know the others first, and says what they '
-        'know', (tester) async {
-      await pumpStart(tester, onPick: (_) {});
-
-      final rows = tester
-          .widgetList<SettingsCard>(find.byType(SettingsCard))
-          .map((row) => row.title)
-          .toList();
-      expect(rows.take(2), ['Seerr', 'Prowlarr']);
-      expect(find.text(ServiceKey.seerr.knowsOthers!), findsOneWidget);
-      expect(find.text(ServiceKey.prowlarr.knowsOthers!), findsOneWidget);
-      // Every other row says what the service is for.
-      expect(find.text(ServiceKey.radarr.role), findsOneWidget);
-    });
 
     testWidgets('a service is listed once, however the registry groups it', (
       tester,

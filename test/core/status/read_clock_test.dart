@@ -1,8 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/status/read_clock.dart';
-import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 
 void main() {
@@ -54,29 +52,9 @@ void main() {
     });
   });
 
-  group('queueReadKey', () {
-  });
+  group('queueReadKey', () {});
 
   group('Ref.queueReadNoter', () {
-    final settings = SettingsModel(
-      instances: [
-      ],
-    );
-
-    ProviderContainer containerOn(String lens, ReadClock clock) {
-      final container = ProviderContainer(
-        overrides: [
-          currentSettingsProvider.overrideWith((ref) => settings),
-          initialActiveInstancesProvider.overrideWithValue({
-          }),
-          readClockProvider.overrideWithValue(clock),
-        ],
-      );
-      addTearDown(container.dispose);
-      return container;
-    }
-
-
-
+    final settings = SettingsModel(instances: []);
   });
 }

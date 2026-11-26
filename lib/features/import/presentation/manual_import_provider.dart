@@ -1208,17 +1208,11 @@ class ManualImportFlowNotifier extends Notifier<ManualImportFlowState> {
     ).getEpisodes(seriesId: seriesId, seasonNumber: seasonNumber);
   }
 
-  Future<List<ManualImportAlbum>> getAlbums(int artistId) async {
-    final service = state.service;
-    if (service != ServiceKey.lidarr) return const [];
-    return _api(service!).getAlbums(artistId);
-  }
+  /// Albums are Lidarr's, and this fork has no Lidarr.
+  Future<List<ManualImportAlbum>> getAlbums(int artistId) async => const [];
 
-  Future<List<ManualImportTrack>> getTracks(int albumId) async {
-    final service = state.service;
-    if (service != ServiceKey.lidarr) return const [];
-    return _api(service!).getTracks(albumId: albumId);
-  }
+  /// Tracks are Lidarr's, and this fork has no Lidarr.
+  Future<List<ManualImportTrack>> getTracks(int albumId) async => const [];
 
   /// Posts the selected files as one `ManualImport` command.
   ///
@@ -1350,7 +1344,6 @@ ManualImportFixAssignment _assignmentForItem(
   final matchPayload = switch (service) {
     ServiceKey.radarr => item.movie ?? const <String, dynamic>{},
     ServiceKey.sonarr => item.series ?? const <String, dynamic>{},
-    ServiceKey.lidarr => item.artist ?? const <String, dynamic>{},
     _ => const <String, dynamic>{},
   };
   final episodes = service == ServiceKey.sonarr
@@ -1362,23 +1355,15 @@ ManualImportFixAssignment _assignmentForItem(
   final episode = service == ServiceKey.sonarr && item.episodes.isNotEmpty
       ? ManualImportEpisode.fromJson(item.episodes.first)
       : null;
-  final tracks = service == ServiceKey.lidarr
-      ? item.tracks
-            .map(ManualImportTrack.fromJson)
-            .where((item) => item.id > 0)
-            .toList(growable: false)
-      : const <ManualImportTrack>[];
-  final track = service == ServiceKey.lidarr && item.tracks.isNotEmpty
-      ? ManualImportTrack.fromJson(item.tracks.first)
-      : null;
+  // Tracks and albums are Lidarr's, and this fork has no Lidarr.
+  const tracks = <ManualImportTrack>[];
+  const ManualImportTrack? track = null;
 
   return ManualImportFixAssignment(
     match: ManualImportLookupResult.fromJson(service, matchPayload),
     episode: episode,
     episodes: episodes,
-    album: service == ServiceKey.lidarr && item.album != null
-        ? ManualImportAlbum.fromJson(item.album!)
-        : null,
+    album: null,
     track: track,
     tracks: tracks,
   );

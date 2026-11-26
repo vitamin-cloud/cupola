@@ -120,68 +120,7 @@ void main() {
     expect(StreamPlayer.fladder.line, 'Opens its page');
   });
 
-  group('Emby\'s players', () {
-    test('the app takes the server and the item, one spelling a platform', () {
-      expect(
-        StreamPlayer.emby
-            .link(itemId: '15', serverId: 'srv1', platform: TargetPlatform.iOS)
-            .toString(),
-        'emby://items?serverId=srv1&itemId=15',
-      );
-      expect(
-        StreamPlayer.emby
-            .link(
-              itemId: '15',
-              serverId: 'srv1',
-              platform: TargetPlatform.android,
-            )
-            .toString(),
-        'emby://items/srv1/15',
-      );
-    });
-
-    test('the app is not offered without the server id, or off a phone', () {
-      for (final serverId in [null, '']) {
-        expect(
-          StreamPlayer.emby.link(
-            itemId: '15',
-            serverId: serverId,
-            platform: TargetPlatform.iOS,
-          ),
-          isNull,
-        );
-      }
-      expect(
-        StreamPlayer.emby.link(
-          itemId: '15',
-          serverId: 'srv1',
-          platform: TargetPlatform.macOS,
-        ),
-        isNull,
-      );
-      expect(StreamPlayer.emby.platforms, {
-        TargetPlatform.iOS,
-        TargetPlatform.android,
-      });
-    });
-
-    test('the browser opens the link it was given, on every platform', () {
-      expect(StreamPlayer.embyWeb.link(itemId: 'x', webUrl: webUrl), webUrl);
-      expect(
-        StreamPlayer.embyWeb.platforms,
-        containsAll(TargetPlatform.values),
-      );
-      expect(StreamPlayer.embyWeb.scheme, isNull);
-      expect(StreamPlayer.embyWeb.probe, isNull);
-      expect(StreamPlayer.emby.probe, Uri.parse('emby://'));
-    });
-
-    test('names and lines', () {
-      expect(StreamPlayer.emby.label, 'Emby');
-      expect(StreamPlayer.embyWeb.label, 'Emby in the browser');
-      expect(StreamPlayer.embyWeb.line, 'In your browser');
-    });
-  });
+  group('Emby\'s players', () {});
 
   group('whose players are whose', () {
     test('Jellyfin keeps its three apps and the browser, in that order', () {
@@ -191,17 +130,6 @@ void main() {
         StreamPlayer.fladder,
         StreamPlayer.web,
       ]);
-    });
-
-    test('Emby has its app and the browser, and no Jellyfin player', () {
-      expect(StreamPlayer.of(ServiceKey.emby), [
-        StreamPlayer.emby,
-        StreamPlayer.embyWeb,
-      ]);
-    });
-
-    test('Plex has none: the browser link alone', () {
-      expect(StreamPlayer.of(ServiceKey.plex), isEmpty);
     });
 
     test('every player belongs to exactly the server that lists it', () {
@@ -218,17 +146,6 @@ void main() {
       expect(listed.toSet(), StreamPlayer.values.toSet());
       expect(listed, hasLength(StreamPlayer.values.length));
       expect(StreamPlayer.values.map((p) => p.name), isNot(contains('infuse')));
-    });
-
-    test('exactly one browser per server that has players', () {
-      for (final service in [ServiceKey.jellyfin, ServiceKey.emby]) {
-        expect(
-          StreamPlayer.of(service).where((p) => p.isBrowser),
-          hasLength(1),
-          reason: service.name,
-        );
-        expect(StreamPlayer.of(service).last.isBrowser, isTrue);
-      }
     });
   });
 

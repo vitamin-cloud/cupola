@@ -10,7 +10,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/features/movies/presentation/movies_screen.dart';
-import 'package:cupola/features/readarr/presentation/readarr_library_screen.dart';
 import 'package:cupola/features/series/presentation/series_screen.dart';
 
 import '../../../test_helpers/profiles/profiles.dart';
@@ -102,32 +101,6 @@ void main() {
     final edits = _writes(harness, WorldIds.sonarr);
     expect(edits.single.path, '/api/v3/series/editor');
     expect((edits.single.json as Map)['monitorNewItems'], 'none');
-
-    await harness.unmount(tester);
-  });
-
-  testWidgets('Authors: Remove is one DELETE per author, and the wall reads '
-      'again without them', (tester) async {
-    final harness = await _open(
-      tester,
-      Profiles.p1.withConnection(WorldConnections.readarr),
-      const ReadarrLibraryScreen(),
-    );
-    expect(find.text('Jules Verne'), findsOneWidget);
-
-    await _selectAll(tester, harness);
-    await tester.tap(find.byKey(const ValueKey('library-selection-remove')));
-    await harness.settle(tester);
-    expect(find.text('Remove 1 author from Readarr?'), findsOneWidget);
-    await tester.tap(find.textContaining('Remove 1 author').last);
-    await harness.settle(tester);
-
-    final removed = _writes(harness, WorldConnections.readarr.id);
-    expect(removed, hasLength(1));
-    expect(removed.single.method, 'DELETE');
-    expect(removed.single.path, '/api/v1/author/1');
-    expect(find.text('Removed 1 author from Readarr'), findsOneWidget);
-    expect(find.text('Jules Verne'), findsNothing);
 
     await harness.unmount(tester);
   });

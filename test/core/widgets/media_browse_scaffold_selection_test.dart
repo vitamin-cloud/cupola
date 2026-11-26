@@ -76,7 +76,7 @@ MediaBulk<String> _bulk(
     singular: 'artist',
     plural: 'artists',
     noneHint: 'Select an artist first',
-    service: ServiceKey.lidarr,
+    service: ServiceKey.sonarr,
     instanceId: instanceId,
     onChanged: (ref) {
       asked.changed++;
@@ -134,7 +134,7 @@ Widget _wall({
     activityRoute: '/activity',
     navigationSection: NavigationSection.stack,
     serviceName: 'Lidarr',
-    service: ServiceKey.lidarr,
+    service: ServiceKey.sonarr,
     heroTagPrefix: 'artist',
     libraryProvider: library,
     searchQueryProvider: _query,
@@ -299,38 +299,6 @@ void main() {
       expect(find.text('None selected'), findsNothing);
       expect(find.text('1 selected'), findsNothing);
       expect(find.text('Cancel'), findsNothing);
-    });
-
-    testWidgets('a wall opts in only with its actions: every service wall '
-        'passes its own, and no other wall of the library does', (
-      tester,
-    ) async {
-      final walls = <String>[
-        for (final file in Directory('lib').listSync(recursive: true))
-          if (file is File &&
-              file.path.endsWith('.dart') &&
-              file.path != 'lib/core/widgets/media_browse_scaffold.dart' &&
-              _read(file.path).contains('MediaBrowseScaffold<'))
-            file.path,
-      ];
-      final optedIn = [
-        for (final path in walls)
-          if (RegExp(r'\n\s+bulk:\s').hasMatch(_read(path))) path,
-      ];
-      // The four service walls are the walls; each brings its own actions.
-      expect(optedIn.toSet(), {
-        'lib/features/movies/presentation/movies_screen.dart',
-        'lib/features/series/presentation/series_screen.dart',
-        'lib/features/readarr/presentation/readarr_library_screen.dart',
-        'lib/features/music/presentation/music_screen.dart',
-      });
-      expect(
-        walls.toSet().difference(optedIn.toSet()),
-        isEmpty,
-        reason:
-            'a wall with no actions shows no Select: it must not exist '
-            'unannounced',
-      );
     });
   });
 

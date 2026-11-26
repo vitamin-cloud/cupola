@@ -13,11 +13,6 @@ import 'package:cupola/features/media/domain/media_reading.dart';
 import 'package:cupola/features/media/domain/media_rows.dart';
 import 'package:cupola/features/media/presentation/media_page.dart';
 import 'package:cupola/features/media/presentation/media_sources_provider.dart';
-import 'package:cupola/features/music/domain/lidarr_queue_snapshots.dart';
-import 'package:cupola/features/music/domain/models/lidarr_artist.dart';
-import 'package:cupola/features/music/presentation/artist_page.dart';
-import 'package:cupola/features/music/presentation/artist_page_providers.dart';
-import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -39,8 +34,6 @@ final _instances = [
   _instance(ServiceKey.radarr, 'radarr-4k', '4K'),
   _instance(ServiceKey.sonarr, 'sonarr', 'TV'),
   _instance(ServiceKey.sonarr, 'sonarr-anime', 'Anime'),
-  _instance(ServiceKey.lidarr, 'lidarr', 'Music'),
-  _instance(ServiceKey.lidarr, 'lidarr-vinyl', 'Vinyl'),
 ];
 
 /// Where the wizard was asked to open, as the router received it.
@@ -144,37 +137,6 @@ void main() {
       expect(_opened?.queryParameters, containsPair('service', 'radarr'));
       expect(_opened?.queryParameters, containsPair('targetId', '42'));
       expect(_opened?.queryParameters, containsPair('i', 'radarr-4k'));
-    });
-
-    testWidgets('Lidarr, from the artist\'s actions', (tester) async {
-      await _pump(
-        tester,
-        const ArtistPage(artistId: 9, instanceId: 'lidarr-vinyl'),
-        overrides: [
-          lidarrArtistProvider.overrideWith(
-            (ref, item) async => LidarrArtist.fromJson({
-              'id': 9,
-              'artistName': 'Tears of Steel',
-              'path': '/music/Tears of Steel',
-            }),
-          ),
-          lidarrArtistAlbumsProvider.overrideWith((ref, item) async => []),
-          lidarrQueueSnapshotsForProvider.overrideWith(
-            (ref, instanceId) async => LidarrQueueSnapshots.empty,
-          ),
-        ],
-      );
-
-      await tester.tap(
-        find.bySemanticsLabel('More actions for Tears of Steel'),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Import files'));
-      await tester.pumpAndSettle();
-
-      expect(_opened?.queryParameters['service'], 'lidarr');
-      expect(_opened?.queryParameters['targetId'], '9');
-      expect(_opened?.queryParameters['i'], 'lidarr-vinyl');
     });
   });
 }

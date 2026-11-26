@@ -1,9 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:cupola/core/app_identity.dart';
 import 'package:cupola/core/network/redirect_guard.dart';
-import 'package:cupola/features/plex/data/plex_client.dart'
-    show kPlexProduct, kPlexProductVersion;
+
+/// The product plex.tv files this client under, and its version. Plex as a
+/// server is gone from this fork; signing in to Seerr with Plex is not.
+const String kPlexProduct = kAppName;
+const String kPlexProductVersion = kAppVersion;
 
 /// plex.tv, for the one thing Cupola asks of it: a PIN a person approves on
 /// app.plex.tv, so their Plex token can be handed to Seerr.

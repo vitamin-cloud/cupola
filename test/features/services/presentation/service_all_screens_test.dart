@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/features/discover/data/seerr_service.dart';
+import 'package:cupola/features/discover/presentation/discover_provider.dart';
 import 'package:cupola/features/discover/domain/models/seerr_request.dart';
 import 'package:cupola/features/services/presentation/service_all_screens.dart';
-import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 
 import '../../../test_helpers/fake_services.dart';
@@ -175,12 +175,10 @@ List<Override> _providerOverrides({SeerrService? seerr}) {
         radarrApiKey: 'key',
         sonarrUrl: 'http://sonarr.local:8989',
         sonarrApiKey: 'key',
-        lidarrUrl: 'http://lidarr.local:8686',
-        lidarrApiKey: 'key',
       ),
     ),
     if (seerr != null) seerrServiceProvider.overrideWithValue(seerr),
-    servicesRequestsProvider.overrideWith(
+    requestsProvider.overrideWith(
       (ref) async => const [
         SeerrRequest(
           id: 1,

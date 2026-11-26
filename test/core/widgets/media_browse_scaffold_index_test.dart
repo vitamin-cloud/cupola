@@ -14,7 +14,6 @@ import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/connection_access.dart';
-import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 
 final _query = StateProvider<String>((ref) => '');
@@ -63,7 +62,6 @@ Widget _wall(
         activityRoute: '/activity',
         navigationSection: NavigationSection.stack,
         serviceName: 'Lidarr',
-        service: ServiceKey.lidarr,
         heroTagPrefix: 'wall',
         libraryProvider: library,
         searchQueryProvider: _query,

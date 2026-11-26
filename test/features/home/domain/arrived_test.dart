@@ -97,20 +97,6 @@ void main() {
         'Cupertino',
       ]);
     });
-
-    test('an album is one card, whatever its tracks', () {
-      final cards = arrivedOf([
-        for (final hours in [1, 2])
-          _import(
-            'Sintel (Anniversary Edition)',
-            service: ServiceKey.lidarr,
-            ago: Duration(hours: hours),
-            unitId: 12,
-            instanceId: 'lidarr',
-          ),
-      ], since: _since);
-      expect(cards, hasLength(1));
-    });
   });
 
   group('the line under the name', () {

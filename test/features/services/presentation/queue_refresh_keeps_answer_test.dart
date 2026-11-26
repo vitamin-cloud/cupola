@@ -107,42 +107,6 @@ void main() {
     expect(second.seasonEntry(1, 2), isNotNull);
     expect(second.byEpisode.entriesById.keys.toSet(), episodes);
   });
-
-  test('Lidarr keeps the artist and the album of the last answer', () async {
-    final (:container, :refuse) = await _start(
-      WorldIds.lidarr,
-      '/api/v1/queue',
-      answer: (_) => NetworkReply.json({
-        'page': 1,
-        'pageSize': 200,
-        'totalRecords': 1,
-        'records': const [
-          {
-            'id': 1,
-            'artistId': 1,
-            'albumId': 4,
-            'title': 'Sintel (Anniversary Edition)',
-            'status': 'downloading',
-            'trackedDownloadState': 'downloading',
-            'size': 300000000,
-            'sizeleft': 120000000,
-          },
-        ],
-      }),
-    );
-    final family = lidarrQueueSnapshotsForProvider(WorldIds.lidarr);
-    final first = await container.read(family.future);
-    expect(first.byAlbum.entryFor(4)?.pipeline, MediaPipeline.downloading);
-
-    refuse();
-    container.invalidate(family);
-    final second = await container.read(family.future);
-
-    expect(second.byArtist.isStale, isTrue);
-    expect(second.byAlbum.isStale, isTrue);
-    expect(second.byArtist.entryFor(1)?.pipeline, MediaPipeline.downloading);
-    expect(second.byAlbum.entryFor(4)?.pipeline, MediaPipeline.downloading);
-  });
 }
 
 /// P1 with [path] on [serverId] answered by the world, or by [answer], until

@@ -109,6 +109,5 @@ Future<bool> removeDownload(
 
 ServiceType _typeOf(ServiceKey service) => switch (service) {
   ServiceKey.sonarr => ServiceType.series,
-  ServiceKey.lidarr => ServiceType.music,
   _ => ServiceType.movies,
 };

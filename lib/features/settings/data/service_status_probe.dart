@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cupola/core/api/api_client.dart';
-import 'package:cupola/core/utils/dynamic_map_utils.dart';
 import 'package:cupola/features/settings/domain/probe_identity.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
@@ -31,8 +30,5 @@ Future<String?> readServiceStatus(
 /// say `version` (or `appVersion`), and a body without one names none.
 String? statusVersionOf(ServiceKey service, Object? data) {
   if (data is! Map) return null;
-  if (service == ServiceKey.bazarr) {
-    return stringOrNull(mapOrNull(data['data'])?['bazarr_version']);
-  }
   return (data['version'] ?? data['appVersion'])?.toString();
 }

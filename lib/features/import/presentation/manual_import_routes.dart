@@ -1,6 +1,3 @@
-import 'package:flutter/widgets.dart';
-import 'package:go_router/go_router.dart';
-
 import 'package:cupola/features/settings/domain/service_key.dart';
 
 const manualImportPathPrefix = '/import';
@@ -64,25 +61,6 @@ String manualImportLocation(
       if (instanceId != null && instanceId.isNotEmpty) 'i': instanceId,
     },
   ).toString();
-}
-
-VoidCallback? openManualImportCallback(
-  BuildContext context,
-  ServiceKey service,
-  int targetId, {
-  String? instanceId,
-}) {
-  if (targetId <= 0) return null;
-  return () => context.push(
-    manualImportLocation(
-      manualImportBrowsePath,
-      service,
-      targetId: targetId,
-      // The detail screen already knows which connection it is reading; a
-      // wizard opened from it must not re-resolve that through the lens.
-      instanceId: instanceId,
-    ),
-  );
 }
 
 /// Derives a browsable folder from a queue item's `outputPath`.

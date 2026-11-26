@@ -5,10 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/movies/presentation/movies_provider.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
-import 'package:cupola/features/music/presentation/music_provider.dart';
-import 'package:cupola/features/readarr/data/readarr_service.dart';
-import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/series/presentation/series_provider.dart';
 
@@ -48,18 +44,6 @@ void main() {
           service: (api) =>
               sonarrServiceProvider.overrideWith((ref) => SonarrService(api)),
           read: (c) => c.read(seriesProvider.future),
-        ),
-        (
-          name: 'Lidarr',
-          service: (api) =>
-              lidarrServiceProvider.overrideWith((ref) => LidarrService(api)),
-          read: (c) => c.read(musicProvider.future),
-        ),
-        (
-          name: 'Readarr',
-          service: (api) =>
-              readarrServiceProvider.overrideWith((ref) => ReadarrService(api)),
-          read: (c) => c.read(readarrAuthorsProvider.future),
         ),
       ];
 

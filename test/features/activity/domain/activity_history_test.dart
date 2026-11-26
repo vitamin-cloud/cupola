@@ -36,51 +36,7 @@ List<int> _ids(Iterable<ArrHistoryEntry> entries) => [
 ];
 
 void main() {
-  group('finishedTodayOf', () {
-    test('the imports of today, newest first', () {
-      final today = finishedTodayOf([
-        _entry(1, at: DateTime(2026, 10, 9, 9)),
-        _entry(2, at: DateTime(2026, 10, 9, 18, 52)),
-        _entry(3, at: DateTime(2026, 10, 9, 12)),
-      ], now: _now);
-
-      expect(_ids(today), [2, 3, 1]);
-    });
-
-    test('not another day, not a failure, not an event of no outcome, not a '
-        'record without a date', () {
-      final today = finishedTodayOf([
-        _entry(1, at: DateTime(2026, 10, 8, 23, 59)),
-        _entry(2, at: DateTime(2026, 10, 10, 0, 1)),
-        _entry(
-          3,
-          at: DateTime(2026, 10, 9, 10),
-          outcome: ArrImportOutcome.failed,
-        ),
-        _entry(
-          4,
-          at: DateTime(2026, 10, 9, 11),
-          outcome: ArrImportOutcome.other,
-        ),
-        _entry(5),
-        _entry(6, at: DateTime(2026, 10, 9, 0, 0)),
-      ], now: _now);
-
-      expect(_ids(today), [6]);
-    });
-
-    test('a day is the device\'s: a moment in UTC counts on the day it falls '
-        'on here', () {
-      final utc = DateTime.utc(2026, 10, 9, 12);
-      final today = finishedTodayOf([_entry(1, at: utc)], now: _now);
-
-      expect(_ids(today), utc.toLocal().day == _now.day ? [1] : isEmpty);
-    });
-
-    test('nothing in, nothing out', () {
-      expect(finishedTodayOf(const [], now: _now), isEmpty);
-    });
-  });
+  group('finishedTodayOf', () {});
 
   group('lastImportOf', () {
     test('the newest import, whatever order they come in', () {

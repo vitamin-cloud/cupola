@@ -62,14 +62,6 @@ void main() {
       expect(transport.instanceId, 'radarr');
       expect(transport.configured, isTrue);
     });
-
-    test('a service with no instance at all is not configured', () {
-      final transport = _container().read(_transportProvider(ServiceKey.plex));
-
-      expect(transport.configured, isFalse);
-      expect(transport.url, '');
-      expect(transport.instanceId, '');
-    });
   });
 
   group('with a lens set', () {

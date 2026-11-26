@@ -95,8 +95,7 @@ Future<void> playWith(
 }
 
 /// The browser player of [service]: the one a server with no apps opens.
-StreamPlayer _browserOf(ServiceKey service) =>
-    service == ServiceKey.emby ? StreamPlayer.embyWeb : StreamPlayer.web;
+StreamPlayer _browserOf(ServiceKey service) => StreamPlayer.web;
 
 /// Opens [link] in [player]'s app. A failure says so once.
 Future<void> _open(

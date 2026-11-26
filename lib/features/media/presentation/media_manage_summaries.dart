@@ -13,17 +13,13 @@ import 'package:cupola/features/settings/domain/service_instance.dart';
 /// - Files & quality: `2 files · 1080p Bluray, 2160p Remux`.
 /// - History: when each copy was imported, `Imported Sat 12 Sep · Radarr · 4K
 ///   Fri 2 Oct`.
-/// - Subtitles: Bazarr's languages, `EN · IT · DE wanted`; null without a
-///   Bazarr that follows a copy, and the section is left out.
 /// - Search releases: the connections a search can go to.
-({String files, String history, String? subtitles, String search})?
-mediaManageSummaries(
+({String files, String history, String search})? mediaManageSummaries(
   List<MediaRow> rows, {
   required String Function(ServiceInstance connection) title,
 }) {
   final copies =
       <({ServiceInstance connection, String? quality, DateTime? added})>[];
-  String? subtitles;
   for (final row in rows) {
     if (row case MediaConnectionRow(
       :final connection,
@@ -41,17 +37,6 @@ mediaManageSummaries(
           // A series' files are per episode: the section reads them on
           // opening.
           copies.add((connection: connection, quality: null, added: null));
-        case MediaBazarrCopy(:final movie?):
-          final present = movie.presentLanguages
-              .map((language) => (language.code2 ?? '').toUpperCase())
-              .where((code) => code.isNotEmpty);
-          final missing = movie.missingLanguages
-              .map((language) => (language.code2 ?? '').toUpperCase())
-              .where((code) => code.isNotEmpty);
-          subtitles = [
-            ...present,
-            if (missing.isNotEmpty) '${missing.join(dotSeparator)} wanted',
-          ].join(dotSeparator);
       }
     }
   }
@@ -83,7 +68,6 @@ mediaManageSummaries(
         : copies.length == 1 || sameDay
         ? 'Imported ${formatShortDate(copies.first.added!.toIso8601String())}'
         : 'Imported ${imported.join(dotSeparator)}',
-    subtitles: subtitles,
     search: names.length <= 1
         ? names.join()
         : '${names.sublist(0, names.length - 1).join(', ')} and ${names.last}',

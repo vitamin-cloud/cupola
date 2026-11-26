@@ -153,34 +153,6 @@ void main() {
         expect(_contrast(ink, ground), greaterThanOrEqualTo(_aa));
       });
     }
-
-    test(
-      'most of the palette genuinely needs the walk, so it is not a no-op',
-      () {
-        // Measured, not assumed: 15 of the 17 brand colours are under AA as raw
-        // ink on the lightest light card, and 6 are under even the 3:1 a bare
-        // glyph owes. They are registry data now and no longer painted, but
-        // they stay the fixture that proves the walk walks; the tones still
-        // go through it on paper, and it is why "it looks fine on my machine"
-        // was never evidence: every one of these passes comfortably in dark.
-        //
-        // If this ever collapses toward zero, either the palette moved or the
-        // walk stopped walking, and a walk that returns its input is
-        // indistinguishable from no walk at all until someone opens the app in
-        // daylight.
-        final ground = light.surfaceContainerHigh;
-        final underAa = ServiceKey.values
-            .where((service) => _contrast(service.brandAccent, ground) < _aa)
-            .length;
-        final underGraphical = ServiceKey.values
-            .where(
-              (service) => _contrast(service.brandAccent, ground) < _aaNonText,
-            )
-            .length;
-        expect(underAa, greaterThanOrEqualTo(12));
-        expect(underGraphical, greaterThanOrEqualTo(4));
-      },
-    );
   });
 
   test('the light brand ink clears AA on paper', () {

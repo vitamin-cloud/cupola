@@ -18,59 +18,10 @@ KnockAnswer _answer(
 bool _answers(ServiceKey service, KnockAnswer answer) =>
     knockPlanOf(service, 'http://nas.lan:1234')!.answers(answer);
 
-/// A captive portal's page, or a gateway's sign-in, answered in a service's
-/// place: never the service.
-final _portal = _answer(
-  200,
-  '<html><body><form action="/login">Hotel Wi-Fi</form></body></html>',
-);
-
 void main() {
   useRealNetwork();
 
   group('what proves the service, as the lab answers', () {
-    test('an arr and Bazarr: a key-less ping that says OK', () {
-      for (final service in [
-        ServiceKey.radarr,
-        ServiceKey.sonarr,
-        ServiceKey.lidarr,
-        ServiceKey.readarr,
-        ServiceKey.prowlarr,
-        ServiceKey.bazarr,
-      ]) {
-        expect(_answers(service, _answer(200, '{"status": "OK"}')), isTrue);
-        expect(_answers(service, _answer(401, '{"status": "OK"}')), isFalse);
-      }
-    });
-
-
-    test(
-      'Emby and Jellyfin answer one route and are told apart by its body',
-      () {
-        // Recorded from real servers: Emby 4.10 sends no `ProductName` and a
-        // `LocalAddresses` list; Jellyfin sends `ProductName` and a single
-        // `LocalAddress`. The Jellyfin plan knocks at the root, the Emby plan
-        // under `/emby`, and neither takes the other's answer.
-        final emby = File(
-          'test/fixtures/emby/system_info_public.json',
-        ).readAsStringSync();
-        final jellyfin = File(
-          'test/fixtures/jellyfin/system_info_public.json',
-        ).readAsStringSync();
-
-        expect(
-          knockPlanOf(ServiceKey.emby, 'http://nas.lan:8096')!.path,
-          '/emby/System/Info/Public',
-        );
-        expect(_answers(ServiceKey.emby, _answer(200, emby)), isTrue);
-        expect(_answers(ServiceKey.emby, _answer(200, jellyfin)), isFalse);
-        expect(_answers(ServiceKey.jellyfin, _answer(200, jellyfin)), isTrue);
-        expect(_answers(ServiceKey.jellyfin, _answer(200, emby)), isFalse);
-        expect(_answers(ServiceKey.emby, _answer(401, emby)), isFalse);
-      },
-    );
-
-
     test('qBittorrent: its version, or Forbidden to a caller signed out', () {
       expect(_answers(ServiceKey.qbittorrent, _answer(200, 'v5.0.4')), isTrue);
       expect(
@@ -82,9 +33,6 @@ void main() {
         isFalse,
       );
     });
-
-
-
 
     test('Dockge: its own page names it', () {
       expect(
@@ -120,18 +68,6 @@ void main() {
 
     test('TrueNAS is knocked by opening a connection to its port', () {
       expect(knockPlanOf(ServiceKey.truenas, 'https://nas.lan'), isNull);
-    });
-
-    test('a captive portal or a sign-in page is no service but Unraid', () {
-      for (final service in ServiceKey.values) {
-        final plan = knockPlanOf(service, 'http://nas.lan:1234');
-        if (plan == null) continue;
-        expect(
-          plan.answers(_portal),
-          service == ServiceKey.unraid,
-          reason: '$service',
-        );
-      }
     });
   });
 

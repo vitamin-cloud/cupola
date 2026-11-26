@@ -11,26 +11,6 @@ void main() {
   const refused = ClassifiedFailure(ServiceFailureReason.unauthorized);
 
   group('merge', () {
-    test('a service is answered only when every read of it answered', () {
-      final merged = SourceCoverage.merge([
-        SourceCoverage.answeredBy(ServiceKey.radarr),
-        SourceCoverage.answeredBy(ServiceKey.lidarr),
-        SourceCoverage.failure(ServiceKey.lidarr, silent),
-        SourceCoverage.answeredBy(ServiceKey.sonarr),
-        SourceCoverage.pendingOf([ServiceKey.sonarr, ServiceKey.dockge]),
-      ]);
-
-      expect(merged.answered, {const CoverageSource(ServiceKey.radarr)});
-      expect(merged.failed, {
-        const CoverageSource(ServiceKey.lidarr):
-            ServiceFailureReason.unreachable,
-      });
-      expect(merged.pending, {
-        const CoverageSource(ServiceKey.sonarr),
-        const CoverageSource(ServiceKey.dockge),
-      });
-    });
-
     test('two connections of one service each keep their own answer', () {
       // The 4K Radarr did not answer. The HD one did, and its share of the
       // figure stands: keyed on the service alone, the 4K's silence took the
@@ -127,43 +107,6 @@ void main() {
   });
 
   group('the note under a partial total', () {
-
-    test('counts past two names', () {
-      final coverage = SourceCoverage.merge([
-        SourceCoverage.answeredBy(ServiceKey.radarr),
-        for (final service in const [
-          ServiceKey.sonarr,
-          ServiceKey.lidarr,
-          ServiceKey.prowlarr,
-          ServiceKey.dockge,
-        ])
-          SourceCoverage.failure(service, silent),
-      ]);
-
-      expect(
-        coverageNote(coverage),
-        'Not in the total: Sonarr, Lidarr and 2 others',
-      );
-    });
-
-    test('the cap is per kind of failure, as it always was', () {
-      final coverage = SourceCoverage.merge([
-        SourceCoverage.answeredBy(ServiceKey.radarr),
-        for (final service in const [
-          ServiceKey.sonarr,
-          ServiceKey.lidarr,
-          ServiceKey.prowlarr,
-        ])
-          SourceCoverage.failure(service, silent),
-        SourceCoverage.failure(ServiceKey.qbittorrent, refused),
-      ]);
-
-      expect(
-        coverageNote(coverage),
-        'Not in the total: Sonarr, Lidarr, qBittorrent and 1 other',
-      );
-    });
-
     test('is absent when the total is whole, or when there is no total', () {
       expect(
         coverageNote(SourceCoverage.answeredBy(ServiceKey.radarr)),
@@ -201,51 +144,6 @@ void main() {
 
   group('equal faults are grouped', () {
     const slow = ClassifiedFailure(ServiceFailureReason.timeout);
-
-    test('in one sentence, named as the silent ones are', () {
-      // Eight services behind one stuck host: the lab paused, 13/10.
-      final coverage = SourceCoverage.merge([
-        for (final service in const [
-          ServiceKey.radarr,
-          ServiceKey.sonarr,
-          ServiceKey.lidarr,
-          ServiceKey.readarr,
-          ServiceKey.qbittorrent,
-        ])
-          SourceCoverage.failure(service, slow),
-      ]);
-      expect(
-        coverageFailureSentence(coverage),
-        'Radarr, Sonarr and 6 others were reached but did not reply in time.',
-      );
-    });
-
-    test('two of a kind are both named', () {
-      final coverage = SourceCoverage.merge([
-        SourceCoverage.failure(ServiceKey.jellyfin, slow),
-        SourceCoverage.failure(ServiceKey.plex, slow),
-      ]);
-      expect(
-        coverageFailureSentence(coverage),
-        'Jellyfin and Plex were reached but did not reply in time.',
-      );
-    });
-
-    test('silence first, then each kind of fault once', () {
-      final coverage = SourceCoverage.merge([
-        SourceCoverage.failure(ServiceKey.radarr, refused),
-        SourceCoverage.failure(ServiceKey.sonarr, slow),
-        SourceCoverage.failure(ServiceKey.lidarr, refused),
-        SourceCoverage.failure(ServiceKey.readarr, silent),
-        SourceCoverage.failure(ServiceKey.prowlarr, slow),
-      ]);
-      expect(
-        coverageFailureSentence(coverage),
-        'Readarr did not answer. Radarr and Lidarr answered but refused their '
-        'keys. Sonarr and Prowlarr were reached but did not reply in time.',
-      );
-    });
-
 
     test('a fault that cannot be said of many says each', () {
       const gateway = ClassifiedFailure(ServiceFailureReason.accessGateway);

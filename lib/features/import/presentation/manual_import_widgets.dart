@@ -24,7 +24,6 @@ extension ManualImportServiceCopy on ServiceKey {
     return switch (this) {
       ServiceKey.radarr => 'Movies',
       ServiceKey.sonarr => 'Series',
-      ServiceKey.lidarr => 'Music',
       _ => 'Requests',
     };
   }
@@ -33,7 +32,6 @@ extension ManualImportServiceCopy on ServiceKey {
     return switch (this) {
       ServiceKey.radarr => 'Manual import movies',
       ServiceKey.sonarr => 'Manual import series',
-      ServiceKey.lidarr => 'Manual import music',
       _ => 'Manual import requests',
     };
   }

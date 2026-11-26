@@ -32,30 +32,6 @@ class HomeStackGrid extends ConsumerStatefulWidget {
 /// The service a Home tile opened last, for its glow.
 final homeLastOpenedProvider = StateProvider<ServiceKey?>((ref) => null);
 
-/// The logo each tile draws: the open-source dashboard-icons set
-/// (homarr-labs/dashboard-icons), in `assets/brand/services`.
-String serviceLogoAsset(ServiceKey service) =>
-    'assets/brand/services/${service.name}.png';
-
-/// Each service's brand colour, for its glow: read off its logo, and the
-/// remote's own for Jellyfin.
-Color serviceBrandColor(ServiceKey service) => switch (service) {
-  ServiceKey.seerr => const Color(0xFF836FE6),
-  ServiceKey.radarr => const Color(0xFFF5B61C),
-  ServiceKey.sonarr => const Color(0xFF00B4E2),
-  ServiceKey.lidarr => const Color(0xFF00D879),
-  ServiceKey.bazarr => const Color(0xFFDCE4F5),
-  ServiceKey.prowlarr => const Color(0xFFE55C05),
-  ServiceKey.readarr => const Color(0xFFD82828),
-  ServiceKey.qbittorrent => const Color(0xFF4487D8),
-  ServiceKey.truenas => const Color(0xFF00A0DF),
-  ServiceKey.dockge => const Color(0xFF7DC6FA),
-  ServiceKey.unraid => const Color(0xFFF44C19),
-  ServiceKey.jellyfin => const Color(0xFF8C63D9),
-  ServiceKey.plex => const Color(0xFFE5A00D),
-  ServiceKey.emby => const Color(0xFF56D84D),
-};
-
 const _text = Color(0xFFF5F7FF);
 const _text2 = Color(0xFFAEB6D6);
 

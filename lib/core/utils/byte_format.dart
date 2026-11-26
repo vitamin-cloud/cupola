@@ -66,15 +66,6 @@ String formatBytes(num bytes) => _format(bytes.toDouble(), '');
 String formatBytesPerSecond(num bytesPerSecond) =>
     _format(bytesPerSecond.toDouble(), '/s');
 
-/// Renders a size reported in whole megabytes: SABnzbd's `mbleft`/`mb` and
-/// NZBGet's `*SizeMB` fields, which is how both APIs report queue sizes.
-String formatMegabytes(num megabytes) =>
-    formatBytes(megabytes.toDouble() * _kib * _kib);
-
-/// Renders a rate reported in kilobytes per second: SABnzbd's `kbpersec`.
-String formatKilobytesPerSecond(num kilobytesPerSecond) =>
-    formatBytesPerSecond(kilobytesPerSecond.toDouble() * _kib);
-
 /// Renders [done] against [total] with the unit written once, on the **total's**
 /// unit: `1.0 of 4.0 GB`, `120 of 152 GB`, `0.4 of 4.0 GB`, `300 of 512 B`.
 ///

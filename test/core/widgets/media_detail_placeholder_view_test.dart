@@ -329,26 +329,5 @@ void main() {
       );
       handle.dispose();
     });
-
-    testWidgets('an accessibility reading size scrolls instead of clipping', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _wrap(
-          MediaDetailPlaceholderView.error(
-            error: const ServiceNotConfigured(ServiceKey.lidarr),
-            serviceName: 'Lidarr',
-            accent: Colors.pink,
-          ),
-          textScale: 3.0,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // The page owns the viewport: the leaf state grows past it inside a
-      // scroll view rather than painting an overflow stripe.
-      expect(tester.takeException(), isNull);
-      expect(find.byType(SingleChildScrollView), findsOneWidget);
-    });
   });
 }

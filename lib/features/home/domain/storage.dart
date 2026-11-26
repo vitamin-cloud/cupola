@@ -12,12 +12,10 @@ import 'package:flutter/foundation.dart';
 import 'package:cupola/core/utils/byte_format.dart';
 import 'package:cupola/core/utils/dot_separator.dart';
 import 'package:cupola/core/utils/percent_format.dart';
-import 'package:cupola/core/utils/unit_space.dart';
 import 'package:cupola/features/services/presentation/dashboard_sections.dart'
     show askedAgo;
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/truenas/domain/models/pool.dart';
-import 'package:cupola/features/unraid/domain/models/unraid_models.dart';
 
 /// How many pools the slab draws.
 const storagePoolLimit = 4;
@@ -106,34 +104,6 @@ StoragePool storagePoolOfTrueNas(
   );
 }
 
-/// The Unraid array of connection [instanceId].
-StoragePool storagePoolOfUnraid(
-  UnraidArray array, {
-  required String instanceId,
-}) {
-  final state = array.state.trim().toUpperCase();
-  final troubled = [
-    for (final disk in array.drives)
-      if (disk.flagged || disk.warm) disk,
-  ];
-  return StoragePool(
-    service: ServiceKey.unraid,
-    instanceId: instanceId,
-    name: 'Array',
-    healthy: state == 'STARTED' && troubled.isEmpty,
-    state: switch (state) {
-      'STARTED' => troubled.isEmpty ? 'Healthy' : 'Started',
-      'STOPPED' => 'Stopped',
-      '' || 'UNKNOWN' => 'State unknown',
-      _ => _sentenceCase(state),
-    },
-    usedFraction: array.usedFraction,
-    usedBytes: array.usedBytes,
-    totalBytes: array.totalBytes,
-    disks: [for (final disk in troubled) _unraidDisk(disk)],
-  );
-}
-
 String _zfsDisk(TrueNasVdevMember disk) {
   final name = 'Disk ${disk.name}';
   final errors = disk.errors ?? 0;
@@ -145,19 +115,6 @@ String _zfsDisk(TrueNasVdevMember disk) {
     'REMOVED' => '$name was removed',
     _ when errors > 0 =>
       '$name reports $errors ${errors == 1 ? 'error' : 'errors'}',
-    _ => '$name needs a look',
-  };
-}
-
-String _unraidDisk(UnraidDisk disk) {
-  final status = disk.status.trim().toUpperCase();
-  final name = _slotName(disk.name);
-  if (!disk.flagged) return '$name is at ${withUnit(disk.temp ?? 0, '°C')}';
-  return switch (status) {
-    'DISK_DSBL' || 'DISK_DSBL_NEW' => '$name is disabled',
-    'DISK_NP_MISSING' || 'DISK_NP_DSBL' => '$name is missing',
-    'DISK_INVALID' => '$name is not valid',
-    'DISK_WRONG' => '$name is not the disk the array expects',
     _ => '$name needs a look',
   };
 }
@@ -176,16 +133,4 @@ String? _scanLine(TrueNasPool pool, {required DateTime now}) {
     return 'scrubbed ${askedAgo(ended, now: now)}';
   }
   return null;
-}
-
-/// `Disk 3`, `Parity 2`, `Cache`: Unraid's slot names (`disk3`), as words.
-String _slotName(String slot) {
-  final match = RegExp(r'^([a-zA-Z]+)(\d+)$').firstMatch(slot.trim());
-  if (match == null) return _sentenceCase(slot.trim());
-  return '${_sentenceCase(match.group(1)!)} ${match.group(2)}';
-}
-
-String _sentenceCase(String word) {
-  final lower = word.toLowerCase();
-  return lower.isEmpty ? lower : lower[0].toUpperCase() + lower.substring(1);
 }

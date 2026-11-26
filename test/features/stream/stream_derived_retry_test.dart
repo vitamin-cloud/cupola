@@ -3,9 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
-import 'package:cupola/features/plex/data/plex_client.dart';
-import 'package:cupola/features/plex/domain/models/plex_models.dart';
-import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/stream/domain/models/stream_item.dart';
 import 'package:cupola/features/stream/domain/models/stream_library.dart';
 import 'package:cupola/features/stream/domain/stream_server_client.dart';
@@ -42,32 +39,6 @@ class _DarkStreamServer implements StreamServerClient {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-class _DarkPlex implements PlexClient {
-  @override
-  Future<PlexServerCapabilities> getCapabilities() async => throw _refused('/');
-
-  @override
-  Future<List<StreamLibrary>> getLibraries({CancelToken? cancelToken}) async =>
-      throw _refused('/library/sections');
-
-  @override
-  Future<StreamItem?> getItem(
-    String itemId, {
-    String? viewerId,
-    CancelToken? cancelToken,
-  }) async => throw _refused('/library/metadata/$itemId');
-
-  @override
-  Future<List<StreamItem>> getChildren(
-    String itemId, {
-    String? viewerId,
-    CancelToken? cancelToken,
-  }) async => throw _refused('/library/metadata/$itemId/children');
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
 void main() {
   // The sessions providers have carried `retry: noProviderRetry` since the
   // Stream board landed; every other read off the same client did not, and the
@@ -86,25 +57,6 @@ void main() {
       container.read(jellyfinLibrariesProvider.future),
       container.read(jellyfinItemProvider('42').future),
       container.read(jellyfinItemChildrenProvider('42').future),
-    ]) {
-      await expectLater(
-        future.timeout(const Duration(milliseconds: 300)),
-        throwsA(isA<DioException>()),
-      );
-    }
-  });
-
-  test('a dark Plex does the same', () async {
-    final container = ProviderContainer(
-      overrides: [plexClientProvider.overrideWithValue(_DarkPlex())],
-    );
-    addTearDown(container.dispose);
-
-    for (final future in [
-      container.read(plexCapabilitiesProvider.future),
-      container.read(plexLibrariesProvider.future),
-      container.read(plexItemProvider('42').future),
-      container.read(plexChildrenProvider('42').future),
     ]) {
       await expectLater(
         future.timeout(const Duration(milliseconds: 300)),

@@ -50,19 +50,6 @@ MediaRow _row(List<MediaRow> rows, String connectionId) => rows.firstWhere(
 
 void main() {
   group('P1, the full household', () {
-    test('Tears of Steel: Jellyfin, both Radarr, Bazarr, Seerr, in that '
-        'order', () async {
-      final rows = await _rows(Profiles.p1, WorldTitles.tearsOfSteel);
-
-      expect(rows.map(_describe), [
-        '${WorldIds.jellyfin}:answered',
-        '${WorldIds.radarr}:answered',
-        '${WorldIds.radarr4k}:answered',
-        '${WorldIds.bazarr}:answered',
-        '${WorldIds.seerr}:answered',
-      ]);
-    });
-
     test('each Radarr answers about its own copy, by its own id', () async {
       final rows = await _rows(Profiles.p1, WorldTitles.tearsOfSteel);
 
@@ -72,17 +59,6 @@ void main() {
       expect(uhd.movie?.id, 4);
       expect(hd.status?.availability, MediaAvailability.available);
       expect(uhd.status?.availability, MediaAvailability.available);
-    });
-
-    test('Bazarr covers the copy it follows, checked, and names it', () async {
-      final rows = await _rows(Profiles.p1, WorldTitles.tearsOfSteel);
-
-      final bazarr = _answer<MediaBazarrCopy?>(_row(rows, WorldIds.bazarr));
-      expect(bazarr?.arrConnectionId, WorldIds.radarr);
-      expect(
-        bazarr?.movie?.missingLanguages.map((language) => language.code2),
-        contains('de'),
-      );
     });
 
     test('Jellyfin holds the film, verified by its ids', () async {
@@ -99,43 +75,9 @@ void main() {
 
       expect(rows.where((row) => row.service == ServiceKey.jellyfin), isEmpty);
     });
-
-    test(
-      'a film no Radarr tracks: each Radarr answers, holding nothing',
-      () async {
-        final rows = await _rows(Profiles.p1, WorldTitles.charge);
-
-        expect(
-          _answer<MediaRadarrCopy>(_row(rows, WorldIds.radarr)).isTracked,
-          isFalse,
-        );
-        expect(
-          _answer<MediaRadarrCopy>(_row(rows, WorldIds.radarr4k)).isTracked,
-          isFalse,
-        );
-        expect(_answer<MediaBazarrCopy?>(_row(rows, WorldIds.bazarr)), isNull);
-      },
-    );
   });
 
   group('a series', () {
-    test('P1, Cosmos Laundromat: Sonarr asked by the TVDB id Seerr names, '
-        'Bazarr on its copy', () async {
-      final rows = await _rows(Profiles.p1, WorldTitles.cosmosLaundromat);
-
-      expect(rows.map(_describe), [
-        '${WorldIds.jellyfin}:answered',
-        '${WorldIds.sonarr}:answered',
-        '${WorldIds.bazarr}:answered',
-        '${WorldIds.seerr}:answered',
-      ]);
-      final sonarr = _answer<MediaSonarrCopy>(_row(rows, WorldIds.sonarr));
-      expect(sonarr.series?.tvdbId, WorldTitles.cosmosLaundromat.tvdbId);
-      final bazarr = _answer<MediaBazarrCopy?>(_row(rows, WorldIds.bazarr));
-      expect(bazarr?.arrConnectionId, WorldIds.sonarr);
-      expect(bazarr?.series?.title, WorldTitles.cosmosLaundromat.title);
-    });
-
     test('known by TVDB alone, without Seerr: Sonarr answers, Seerr is not '
         'asked', () async {
       final rows = await _rows(

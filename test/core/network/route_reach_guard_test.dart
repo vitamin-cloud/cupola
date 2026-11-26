@@ -64,10 +64,6 @@ void main() {
     );
   });
 
-  test('every exception still matches a read', () {
-    expect(_exceptions.keys.where((site) => !reads.containsKey(site)), isEmpty);
-  });
-
   test('every client built off a transport is told when it may not ask', () {
     // Away from home, a connection with no address away is not asked: the
     // transport says so (`onlyAtHome`), and the client it builds refuses
@@ -296,12 +292,6 @@ const _exceptions = <String, ({int count, String reason})>{
         'it arrives with, before anything is written. Nothing here reaches '
         'it.',
   ),
-  'lib/features/prowlarr/domain/prowlarr_known_application.dart  .url': (
-    count: 1,
-    reason:
-        'The Prowlarr a found application was read from, named in the '
-        'candidate by its saved address.',
-  ),
   'lib/features/dockge/presentation/dockge_provider.dart  .url': (
     count: 1,
     reason:
@@ -328,12 +318,6 @@ const _exceptions = <String, ({int count, String reason})>{
         'What a last drawing is valid for: the server, by the address it is '
         'saved with. The route moving reaches the same one, and its pictures '
         'draw at the address in use (resolveStoredImage).',
-  ),
-  'lib/features/search/presentation/global_search_provider.dart  pinForUrl(': (
-    count: 1,
-    reason:
-        'The stamp the fan-out is rebuilt on: both addresses with their pins. '
-        'Each leg watches its own route for where it asks.',
   ),
 
   // === Shown: a host in a sentence, the connection by its address ==========
@@ -426,13 +410,6 @@ const _exceptions = <String, ({int count, String reason})>{
         'labels it derives for siblings and the hosts it lists them by, and '
         'the saved address a Tracearr owner\'s session is compared with, so '
         'a connection moved to another host does not carry the bearer there.',
-  ),
-  'lib/features/release_search/presentation/release_search_entry.dart  .access': (
-    count: 1,
-    reason:
-        'The settings screen names the connections behind a gateway so it can '
-        'warn about background search; the search itself goes through the '
-        'route.',
   ),
   'lib/features/settings/presentation/service_settings_screen.dart  .access': (
     count: 3,

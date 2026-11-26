@@ -1,9 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
 
-import 'package:cupola/features/emby/presentation/emby_provider.dart';
 import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
-import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/stream/domain/models/stream_item.dart';
 import 'package:cupola/features/stream/domain/models/stream_library.dart';
@@ -52,24 +50,6 @@ final StreamBackend _jellyfinBackend = (
   children: (id) => jellyfinItemChildrenProvider(id),
 );
 
-final StreamBackend _embyBackend = (
-  lensClient: embyServerProvider,
-  clientFor: (id) => embyClientForProvider(id),
-  sessions: embySessionsProvider,
-  libraries: embyLibrariesProvider,
-  item: (id) => embyItemProvider(id),
-  children: (id) => embyItemChildrenProvider(id),
-);
-
-final StreamBackend _plexBackend = (
-  lensClient: plexServerProvider,
-  clientFor: (id) => plexClientForProvider(id),
-  sessions: plexSessionsProvider,
-  libraries: plexLibrariesProvider,
-  item: (id) => plexItemProvider(id),
-  children: (id) => plexChildrenProvider(id),
-);
-
 /// The backend of [service], a media server.
 ///
 /// Throws [UnsupportedError] naming the service for anything that is not one,
@@ -84,8 +64,6 @@ StreamBackend streamBackendOf(ServiceKey service) {
   }
   return switch (service) {
     ServiceKey.jellyfin => _jellyfinBackend,
-    ServiceKey.plex => _plexBackend,
-    ServiceKey.emby => _embyBackend,
     _ => throw UnsupportedError('${service.name} has no stream backend'),
   };
 }

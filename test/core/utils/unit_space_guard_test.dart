@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/core/utils/byte_format.dart';
 import 'package:cupola/core/utils/sample_age.dart';
 import 'package:cupola/core/utils/unit_space.dart';
 
@@ -136,28 +135,6 @@ final k = '404s';
     );
   });
 
-  test('byte_format.dart prints the no-break space, whatever the unit', () {
-    // It builds its unit from a ladder at run time, which no scan of its
-    // literals can see: hold it by what it prints.
-    final printed = <String>[
-      formatBytes(0),
-      formatBytes(512),
-      formatBytes(1536),
-      formatBytes(4700000000),
-      formatBytes(152 * 1024 * 1024 * 1024),
-      formatBytesPerSecond(4404019),
-      formatBytesPerSecond(120 * 1024 * 1024),
-      formatMegabytes(798),
-      formatKilobytesPerSecond(512),
-      formatBytesOfTotal(1024 * 1024 * 1024, 4 * 1024 * 1024 * 1024),
-      formatBytesOfTotal(300, 512),
-    ];
-    for (final text in printed) {
-      expect(text, matches(_figureUnitSpaced), reason: text);
-      expect(text, isNot(matches(_plainSpaced)), reason: text);
-    }
-  });
-
   test('the age formatters print it too', () {
     expect(formatDurationAge(const Duration(minutes: 12)), '12\u00A0min ago');
     expect(formatDurationAge(const Duration(hours: 2)), '2\u00A0h ago');
@@ -225,9 +202,6 @@ const _unit =
 /// A figure (a digit, or an interpolation) and one plain space before a unit
 /// symbol: the shape the rule forbids.
 final _plainSpaced = RegExp('[0-9$copyHole] $_unit(?![A-Za-z0-9])');
-
-/// A figure and a no-break space before a unit symbol: the shape it asks for.
-final _figureUnitSpaced = RegExp('[0-9]\u00A0$_unit');
 
 /// A figure (a digit, or an interpolation) straight against a time unit symbol:
 /// the compact spelling the brand book's vocabulary replaces.

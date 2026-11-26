@@ -9,11 +9,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/widgets/service_offline_state.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client.dart';
-import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/connection_unanswered.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
-import '../test_helpers/settings_scope.dart';
 import 'catalog.dart';
 
 DioException _status(int code) => DioException(
@@ -35,12 +33,7 @@ const _access = AccessGatewayAnswer(
 void main() {
   catalogCard(
     'ServiceOfflineState',
-    overrides: () async => [
-      currentSettingsProvider.overrideWith(
-        (ref) =>
-            settingsWithServices(const [ServiceKey.radarr, ServiceKey.plex]),
-      ),
-    ],
+    overrides: () async => [],
     scenes: [
       CatalogScene(
         'ServiceOfflineState(since:, onOpenSettings:) · did not answer: the '
@@ -57,19 +50,6 @@ void main() {
         'ServiceOfflineState · no first-failure time known, span dropped: '
         'Retry only, no onOpenSettings',
         (_) => ServiceOfflineState(serviceName: 'Transmission', onRetry: () {}),
-        width: 320,
-      ),
-      CatalogScene(
-        'ServiceOfflineState.failure · connection refused: red glyph, '
-        'the lens host, the connection form\'s sentence, Retry and Settings',
-        (_) => ServiceOfflineState.failure(
-          service: ServiceKey.plex,
-          error: DioException.connectionError(
-            requestOptions: RequestOptions(path: '/status/sessions'),
-            reason: 'Connection refused',
-          ),
-          onRetry: () {},
-        ),
         width: 320,
       ),
       CatalogScene(

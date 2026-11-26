@@ -44,21 +44,6 @@ import '../../../test_helpers/fake_services.dart';
 /// the routes each may reach.
 void main() {
   group('NavTab.barFor', () {
-    test('the operator has the control room, the requester has her '
-        'requests', () {
-      expect(NavTab.barFor(Audience.operator), [
-        NavTab.home,
-        NavTab.discover,
-        NavTab.activity,
-        NavTab.stack,
-      ]);
-      expect(NavTab.barFor(Audience.requester), [
-        NavTab.home,
-        NavTab.discover,
-        NavTab.requests,
-      ]);
-    });
-
     test('Settings is in no bar', () {
       for (final audience in Audience.values) {
         expect(NavTab.barFor(audience), isNot(contains(NavTab.settings)));

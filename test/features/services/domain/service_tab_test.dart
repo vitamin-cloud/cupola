@@ -72,19 +72,5 @@ void main() {
       }
       expect(ServiceTab.fromSegment('not-a-tab'), isNull);
     });
-
-
-    test('the four arrs share one bar, exactly', () {
-      // Same record types in the same order, so a user who has learned Radarr
-      // has learned Sonarr.
-      final radarr = tabsFor(ServiceKey.radarr);
-      for (final service in [
-        ServiceKey.sonarr,
-        ServiceKey.lidarr,
-        ServiceKey.readarr,
-      ]) {
-        expect(tabsFor(service), radarr, reason: service.name);
-      }
-    });
   });
 }

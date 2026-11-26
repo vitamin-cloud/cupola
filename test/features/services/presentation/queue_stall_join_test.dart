@@ -46,8 +46,6 @@ void main() {
     expect(row.warning, isNull);
   });
 
-
-
   test('an import the arr refuses is never overruled', () {
     final row = join(
       arr(fault: InFlightFault.needsImport),

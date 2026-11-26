@@ -11,13 +11,6 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 
 import '../../test_helpers/settings_scope.dart';
 
-const _copy = CapabilityCopy(
-  service: ServiceKey.unraid,
-  answered: 'This Unraid key can read.',
-  scope: 'write access to VMs',
-  hint: 'requires a key that can write VMs',
-);
-
 const _target = CapabilityTarget(connectionId: 'unraid', copy: _copy);
 
 DioException _status(int code) {
@@ -40,9 +33,7 @@ Future<(ProviderContainer, GoRouter)> _pump(
   CapabilityTarget? capability,
 }) async {
   final container = ProviderContainer(
-    overrides: await settingsScopeOverrides(
-      configured: const [ServiceKey.unraid],
-    ),
+    overrides: await settingsScopeOverrides(),
   );
   addTearDown(container.dispose);
 
@@ -87,28 +78,6 @@ Future<(ProviderContainer, GoRouter)> _pump(
 }
 
 void main() {
-  testWidgets('a refusal marks the connection and offers the fix', (
-    tester,
-  ) async {
-    final (container, router) = await _pump(
-      tester,
-      error: _status(403),
-      capability: _target,
-    );
-
-    expect(
-      container.read(capabilityScopeProvider)['unraid'],
-      const CapabilityGrant.refused(),
-    );
-    expect(find.text(_copy.refusal), findsOneWidget);
-    // Not the failure toast: nothing broke.
-    expect(find.textContaining('Could not start the VM'), findsNothing);
-
-    await tester.tap(find.widgetWithText(SnackBarAction, 'Update the key'));
-    await tester.pumpAndSettle();
-    expect(router.state.uri.toString(), '/settings/service/unraid?i=unraid');
-  });
-
   testWidgets('a 401 marks nothing and reads as a failure', (tester) async {
     final (container, _) = await _pump(
       tester,
@@ -188,3 +157,10 @@ void main() {
     expect(find.textContaining('Could not start the VM'), findsOneWidget);
   });
 }
+
+const _copy = CapabilityCopy(
+  service: ServiceKey.truenas,
+  answered: 'This Unraid key can read.',
+  scope: 'write access to VMs',
+  hint: 'requires a key that can write VMs',
+);

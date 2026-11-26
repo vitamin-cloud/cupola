@@ -7,8 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/status/media_status.dart';
-import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/settings/domain/service_only_at_home.dart';
 
 DioException _badResponse(int code) => DioException(
   requestOptions: RequestOptions(path: '/'),
@@ -451,28 +449,7 @@ void main() {
     });
   });
 
-  group('looksUnauthorizedMessage', () {
-    test('matches the wording SABnzbd and Unraid actually use', () {
-      for (final message in [
-        'API Key Incorrect',
-        'Unauthorized',
-        'Forbidden',
-        'Access denied',
-        'Not logged in',
-      ]) {
-        expect(
-          looksUnauthorizedMessage(message),
-          isTrue,
-          reason: '"$message" should read as an auth failure',
-        );
-      }
-    });
-
-    test('does not claim auth failure for unrelated errors', () {
-      expect(looksUnauthorizedMessage('Queue is empty'), isFalse);
-      expect(looksUnauthorizedMessage('Disk full'), isFalse);
-    });
-  });
+  group('looksUnauthorizedMessage', () {});
 
   group('reasonForStatusCode', () {
     test('maps the statuses the UI can act on', () {
@@ -584,13 +561,6 @@ void main() {
       expect(failureRemedy(reason), 'Add an address away');
       // Nothing was asked, and asking again from here asks nothing.
       expect(failureRetryHelps(reason), isFalse);
-    });
-
-    test('is what the transport throws, read by its reason', () {
-      expect(
-        classifyConnectionFailure(const ServiceOnlyAtHome(ServiceKey.lidarr)),
-        ServiceFailureReason.onlyAtHome,
-      );
     });
   });
 

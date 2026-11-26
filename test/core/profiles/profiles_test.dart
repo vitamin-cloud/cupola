@@ -7,7 +7,6 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/features/discover/domain/seerr_permission.dart';
-import 'package:cupola/features/discover/domain/seerr_server_facts.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
@@ -40,31 +39,6 @@ void main() {
   });
 
   group('the inventory table', () {
-    test('P1 is the full household: twelve connections, six not set up', () {
-      final p1 = Profiles.p1;
-      expect(p1.connections, hasLength(12));
-      for (final service in const [
-        ServiceKey.plex,
-        ServiceKey.readarr,
-        ServiceKey.unraid,
-      ]) {
-        expect(p1.settings.isServiceConfigured(service), isFalse);
-      }
-      expect(p1.connectionsOf(ServiceKey.radarr).map((c) => c.id), [
-        WorldIds.radarr,
-        WorldIds.radarr4k,
-      ]);
-      expect(
-        p1.cases,
-        containsAll([
-          ConfigCase.severalInstances,
-          ConfigCase.notSetUp,
-          ConfigCase.matchNotVerified,
-        ]),
-      );
-      expect(p1.unverifiedMatches, isNotEmpty);
-    });
-
     test('P2 is Anna, signed in to Seerr with her own local account', () {
       final p2 = Profiles.p2;
       expect(p2.connections.map((c) => c.service), [ServiceKey.seerr]);
@@ -82,18 +56,6 @@ void main() {
         Profiles.p2WithJellyfin.connection(WorldIds.seerr).seerrAccount,
         same(account),
       );
-    });
-
-    test('P2-J and P2-P are Anna through Jellyfin and through Plex', () {
-      final viaJellyfin = Profiles.p2ViaJellyfin.connection(WorldIds.seerr);
-      final viaPlex = Profiles.p2ViaPlex.connection(WorldIds.seerr);
-
-      expect(viaJellyfin.seerrAccount?.kind, WorldSeerrUserType.jellyfin);
-      expect(viaJellyfin.seerrRelease, SeerrRelease.seerr);
-      expect(viaPlex.seerrAccount?.kind, WorldSeerrUserType.plex);
-      expect(viaPlex.seerrMediaServer, SeerrMediaServer.plex);
-      // Cupola has no Plex connection: Plex is only Seerr's.
-      expect(Profiles.p2ViaPlex.has(ServiceKey.plex), isFalse);
     });
 
     test("P9 is P1 with a friend's Seerr, where the operator requests", () {
@@ -121,7 +83,6 @@ void main() {
       });
     });
 
-
     test('P5 knows Radarr and Sonarr only through Seerr', () {
       final p5 = Profiles.p5;
       expect(p5.has(ServiceKey.radarr), isFalse);
@@ -131,36 +92,6 @@ void main() {
         ServiceKey.sonarr,
       });
       expect(p5.cases, contains(ConfigCase.knownThroughAnother));
-    });
-
-    test('P6 has two Radarr and two Sonarr, told apart by id and label', () {
-      final p6 = Profiles.p6;
-      final radarr = p6.connectionsOf(ServiceKey.radarr);
-      final sonarr = p6.connectionsOf(ServiceKey.sonarr);
-
-      expect(radarr.map((c) => c.id), [WorldIds.radarr, WorldIds.radarr4k]);
-      expect(sonarr.map((c) => c.id), [WorldIds.sonarr, WorldIds.sonarrAnime]);
-      expect(radarr.map((c) => c.instance.label), ['', '4K']);
-      expect(sonarr.map((c) => c.instance.label), ['', 'Anime']);
-      expect(p6.settings.hasMultipleInstances(ServiceKey.radarr), isTrue);
-      expect(p6.settings.hasMultipleInstances(ServiceKey.sonarr), isTrue);
-      expect(
-        p6.settings.connectionTitle(WorldIds.radarr4k, ServiceKey.radarr),
-        'Radarr\u00A0· 4K',
-      );
-      expect(p6.has(ServiceKey.plex), isTrue);
-      expect(p6.has(ServiceKey.jellyfin), isFalse);
-      expect(p6.bazarrFollows, {ServiceKey.radarr});
-      final seerrRadarr = p6.seerrKnows.where(
-        (s) => s.service == ServiceKey.radarr,
-      );
-      // The third, the archive, is a second standard server Cupola has no
-      // connection for: what the approve sheet's server pills choose from.
-      expect(seerrRadarr.map((s) => (s.is4k, s.isDefault)), [
-        (false, true),
-        (true, true),
-        (false, false),
-      ]);
     });
 
     test('P7 is P1 degraded and away', () {
@@ -300,6 +231,5 @@ void main() {
         isNotNull,
       );
     });
-
   });
 }

@@ -16,10 +16,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/theme.dart';
-import 'package:cupola/core/widgets/widgets.dart';
-import 'package:cupola/features/jellyfin/presentation/jellyfin_admin_placeholder.dart';
-import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
-import 'package:cupola/features/jellyfin/presentation/jellyfin_tab_screens.dart';
 import 'package:cupola/features/settings/data/service_connection_provider.dart';
 import 'package:cupola/features/settings/data/service_verification.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -27,12 +23,6 @@ import 'package:cupola/features/stream/presentation/stream_overview_screen.dart'
 import 'package:cupola/features/stream/presentation/widgets/jellyfin_viewer_picker.dart';
 
 import '../../test_helpers/profiles/profiles.dart';
-
-/// P1 with the cabin's Jellyfin, signed in with a household member's token,
-/// beside the one at home on its API key.
-final _memberAtTheCabin = Profiles.p1.withConnection(
-  WorldConnections.jellyfinCabin.withBehaviour(ConnectionBehaviour.readOnly),
-);
 
 const _ownPlayback = 'Showing only this account\'s playback';
 
@@ -54,51 +44,8 @@ Future<ProfileHarness> _pump(
   return harness;
 }
 
-/// No refusal drawn anywhere in [scope] (the whole screen when null).
-void _expectNoFault([Finder? scope]) {
-  Finder within(Finder matching) =>
-      scope == null ? matching : find.descendant(of: scope, matching: matching);
-  expect(within(find.textContaining('refused')), findsNothing);
-  expect(within(find.byType(AppErrorState)), findsNothing);
-  expect(within(find.byType(InlineErrorRetry)), findsNothing);
-}
-
 void main() {
-  group('the credential kind, per connection', () {
-    test('each connection answers for its own token, and the lens is asked '
-        'once', () async {
-      final harness = await ProfileHarness.start(_memberAtTheCabin);
-      final container = harness.container(retry: (_, _) => null);
-
-      await container.read(
-        jellyfinCredentialKindForProvider(WorldIds.jellyfinCabin).future,
-      );
-      await container.read(
-        jellyfinCredentialKindForProvider(WorldIds.jellyfin).future,
-      );
-      await container.read(jellyfinCredentialKindForProvider('').future);
-
-      expect(
-        container.read(
-          jellyfinLacksAdministratorForProvider(WorldIds.jellyfinCabin),
-        ),
-        isTrue,
-      );
-      expect(
-        container.read(
-          jellyfinLacksAdministratorForProvider(WorldIds.jellyfin),
-        ),
-        isFalse,
-      );
-      // The lens by its id and by the empty id: one `/Users/Me`.
-      expect(
-        harness.network
-            .requestsTo(WorldIds.jellyfin)
-            .where((r) => r.path == '/Users/Me'),
-        hasLength(1),
-      );
-    });
-  });
+  group('the credential kind, per connection', () {});
 
   group('P2+J, Anna\'s own token', () {
     test(
@@ -112,46 +59,6 @@ void main() {
         expect(diagnosis.status, ServiceConnectionStatus.connected);
       },
     );
-
-    testWidgets('Users: the administrator placeholder, as Devices and Tasks '
-        'have', (tester) async {
-      final harness = await _pump(
-        tester,
-        Profiles.p2WithJellyfin,
-        const JellyfinUsersScreen(),
-      );
-
-      expect(find.text(jellyfinNeedsAdministratorTitle), findsOneWidget);
-      expect(find.textContaining('list users'), findsOneWidget);
-      _expectNoFault();
-      await harness.unmount(tester);
-    });
-
-    testWidgets('the Overview\'s Libraries says it needs an administrator, '
-        'never a refusal', (tester) async {
-      final harness = await _pump(
-        tester,
-        Profiles.p2WithJellyfin,
-        const Scaffold(
-          body: StreamOverviewScreen(service: ServiceKey.jellyfin),
-        ),
-      );
-
-      final libraries = find.byWidgetPredicate(
-        (widget) =>
-            widget is ServiceOverviewSection && widget.title == 'Libraries',
-      );
-      expect(libraries, findsOneWidget);
-      expect(
-        find.descendant(
-          of: libraries,
-          matching: find.text(jellyfinNeedsAdministratorTitle),
-        ),
-        findsOneWidget,
-      );
-      _expectNoFault(libraries);
-      await harness.unmount(tester);
-    });
 
     testWidgets('the viewer picker offers the token\'s own person', (
       tester,

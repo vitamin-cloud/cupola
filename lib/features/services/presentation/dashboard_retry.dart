@@ -24,7 +24,6 @@ import 'package:cupola/features/discover/presentation/library_calendar_provider.
 import 'package:cupola/features/dockge/presentation/dockge_provider.dart';
 import 'package:cupola/features/home/data/resume.dart';
 import 'package:cupola/features/home/data/storage.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client_provider.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_provider.dart';
 import 'package:cupola/features/services/domain/dashboard_decision.dart';
@@ -54,22 +53,11 @@ List<ProviderOrFamily> dashboardSourcesOf(ServiceKey service) =>
         issueCountProvider,
         latestOpenIssuesProvider,
       ],
-      // The status list *is* the failing-indexer list; the indexers name them.
-      ServiceKey.prowlarr => [
-        prowlarrIndexerStatusProvider,
-        prowlarrIndexersProvider,
-      ],
       ServiceKey.dockge => [dockgeStackListProvider],
       ServiceKey.radarr ||
       ServiceKey.sonarr ||
-      ServiceKey.lidarr ||
-      ServiceKey.readarr ||
-      ServiceKey.bazarr ||
       ServiceKey.truenas ||
-      ServiceKey.unraid ||
-      ServiceKey.jellyfin ||
-      ServiceKey.plex ||
-      ServiceKey.emby => const [],
+      ServiceKey.jellyfin => const [],
     };
 
 /// Asks [services] again, everywhere the Dashboard shows them: the probe of
@@ -144,7 +132,7 @@ void retryDashboardServices(WidgetRef ref, Iterable<ServiceKey> services) {
     ref.invalidate(calendarSourceProvider);
     ref.invalidate(libraryCalendarProvider);
   }
-  if (asked.contains(ServiceKey.truenas) || asked.contains(ServiceKey.unraid)) {
+  if (asked.contains(ServiceKey.truenas)) {
     ref.invalidate(homeStorageProvider);
   }
   if (asked.any((service) => service.isMediaServer)) {
@@ -153,15 +141,7 @@ void retryDashboardServices(WidgetRef ref, Iterable<ServiceKey> services) {
 }
 
 /// The \*arrs whose history Recently added and Arrived read.
-const _historyServices = {
-  ServiceKey.radarr,
-  ServiceKey.sonarr,
-  ServiceKey.lidarr,
-};
+const _historyServices = {ServiceKey.radarr, ServiceKey.sonarr};
 
 /// The libraries Arrived reads its week from.
-const _arrivalSources = {
-  ServiceKey.radarr,
-  ServiceKey.sonarr,
-  ServiceKey.lidarr,
-};
+const _arrivalSources = {ServiceKey.radarr, ServiceKey.sonarr};

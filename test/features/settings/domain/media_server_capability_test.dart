@@ -6,38 +6,6 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 /// Jellyfin and Plex read these, and the lists below are what they walk.
 void main() {
   group('the media server capabilities', () {
-    // A tripwire, on purpose: every other test here walks the lists the
-    // capabilities derive, so a wrong capability would shrink what they check
-    // without failing. A new media server edits this table.
-    test('the capabilities, service by service', () {
-      expect(mediaServers, [
-        ServiceKey.jellyfin,
-        ServiceKey.plex,
-        ServiceKey.emby,
-      ]);
-      // Tracearr gives sessions without being a media server: its own arm of
-      // the session plumbing reads it, and it never reaches a backend.
-      expect(sessionServices, [
-        ServiceKey.jellyfin,
-        ServiceKey.plex,
-        ServiceKey.emby,
-      ]);
-      expect(ServiceKey.values.where((s) => s.speaksMediaBrowser), [
-        ServiceKey.jellyfin,
-        ServiceKey.emby,
-      ]);
-      expect(ServiceKey.values.where((s) => s.needsViewerSelection), [
-        ServiceKey.jellyfin,
-        ServiceKey.emby,
-      ]);
-      expect(ServiceKey.values.where((s) => s.mountsConnectionInView), [
-        ServiceKey.jellyfin,
-        ServiceKey.plex,
-        ServiceKey.emby,
-      ]);
-    });
-
-
     test('the media servers are the services that answer isMediaServer', () {
       expect(mediaServers, ServiceKey.values.where((s) => s.isMediaServer));
       expect(mediaServers, isNotEmpty);
@@ -53,8 +21,7 @@ void main() {
         'media server, and only Tracearr beside them', () {
       expect(sessionServices, ServiceKey.values.where((s) => s.givesSessions));
       expect(sessionServices, containsAll(mediaServers));
-      expect(sessionServices.where((s) => !s.isMediaServer), [
-      ]);
+      expect(sessionServices.where((s) => !s.isMediaServer), []);
     });
 
     test('what speaks the MediaBrowser API is a media server that picks a '

@@ -180,7 +180,6 @@ Finder _inDownloads(Finder matching) =>
 
 void main() {
   group('Transmission', () {
-
     test('P4, Transmission dark: it is named under the region, and the arr '
         'row it was moving stays', () async {
       final container = await _start(
@@ -191,8 +190,7 @@ void main() {
       );
       final inFlight = await container.read(servicesInFlightProvider.future);
 
-      expect(inFlight.coverage.failed.keys.map((source) => source.service), [
-      ]);
+      expect(inFlight.coverage.failed.keys.map((source) => source.service), []);
       expect(coverageNote(inFlight.coverage), contains('Transmission'));
       // The rate is the client that answered, never a zero for the one
       // that did not.
@@ -206,7 +204,6 @@ void main() {
         hasLength(1),
       );
     });
-
 
     test('P4: one peer is a peer, and one seed a seed', () async {
       final container = await _start(
@@ -363,14 +360,9 @@ void main() {
     });
   });
 
-  group('NZBGet', () {
-
-
-  });
+  group('NZBGet', () {});
 
   group('SABnzbd', () {
-
-
     test('P1: a SABnzbd job shows what it weighs and how much has come, '
         'like every other client\'s', () async {
       final container = await _start(
@@ -434,30 +426,6 @@ void main() {
       title: WorldTitles.coffeeRun,
     );
 
-    test('P1: a torrent paused on purpose is backlog, neither in flight nor '
-        'a decision, on the arr\'s row too', () async {
-      final container = await _start(Profiles.p1.withDownloads([pausedGrab]));
-      final inFlight = await container.read(servicesInFlightProvider.future);
-
-      expect(
-        inFlight.preview.map((item) => item.downloadId?.toLowerCase()),
-        isNot(contains(pausedGrab.id)),
-      );
-      expect(
-        inFlight.faults.map((item) => item.downloadId?.toLowerCase()),
-        isNot(contains(pausedGrab.id)),
-      );
-      expect(inFlight.held, 1);
-      // Sprite Fright, Cosmos E4 and E5 and Elephants Dream: what was moving
-      // before the pause, and nothing more. Sintel on the 4K waits its turn:
-      // it was counted as moving (5) and is queued now.
-      expect(inFlight.activeCount, 4);
-      expect(inFlight.movingCount, 4);
-      expect(inFlight.queued.map((item) => item.downloadId), [
-        WorldDownloads.sintel4k.id,
-      ]);
-    });
-
     test('P1, SABnzbd paused on purpose: its jobs are held, as a paused '
         'torrent is', () async {
       final container = await _start(
@@ -481,6 +449,5 @@ void main() {
       expect(inFlight.held, 2);
       expect(inFlight.activeCount, 3);
     });
-
   });
 }

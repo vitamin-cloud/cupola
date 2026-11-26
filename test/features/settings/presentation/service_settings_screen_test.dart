@@ -99,12 +99,6 @@ void main() {
       expect(apiKeyField.controller?.text, 'radarr-key');
     });
 
-    testWidgets('renders the service icon in the header', (tester) async {
-      await _pumpServiceSettings(tester, service: ServiceKey.lidarr);
-
-      expect(find.byIcon(ServiceKey.lidarr.icon), findsOneWidget);
-    });
-
     testWidgets('validates that the server URL is required', (tester) async {
       await _pumpServiceSettings(tester, service: ServiceKey.radarr);
 
@@ -156,14 +150,6 @@ void main() {
       // whole mitigation.
       await tester.pump(const Duration(seconds: 60));
       expect(clipboardText, isEmpty);
-    });
-
-    testWidgets('Plex\'s field names its token, not a key', (tester) async {
-      await _pumpServiceSettings(tester, service: ServiceKey.plex);
-
-      expect(find.byTooltip('Copy Plex token'), findsOneWidget);
-      expect(find.byTooltip('Show Plex token'), findsOneWidget);
-      expect(find.byTooltip('Copy API key'), findsNothing);
     });
 
     testWidgets('a host that can hide the clip is used instead of a plain copy', (

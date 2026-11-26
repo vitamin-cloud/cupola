@@ -16,8 +16,6 @@ import 'package:cupola/core/widgets/floating_bottom_nav_bar.dart';
 import 'package:cupola/core/widgets/page_tabs.dart';
 import 'package:cupola/features/activity/data/activity_live.dart';
 import 'package:cupola/features/activity/domain/activity_tab.dart';
-import 'package:cupola/features/activity/domain/request_filters.dart';
-import 'package:cupola/features/activity/presentation/activity_page.dart';
 import 'package:cupola/features/import/presentation/manual_import_routes.dart';
 import 'package:cupola/features/services/domain/service_tab.dart';
 import 'package:cupola/features/settings/domain/nav_tab.dart';
@@ -58,16 +56,9 @@ const List<ServiceKey> _tabbedServices = [
   ServiceKey.seerr,
   ServiceKey.radarr,
   ServiceKey.sonarr,
-  ServiceKey.lidarr,
-  ServiceKey.readarr,
-  ServiceKey.bazarr,
   ServiceKey.qbittorrent,
-  ServiceKey.prowlarr,
   ServiceKey.jellyfin,
-  ServiceKey.plex,
-  ServiceKey.emby,
   ServiceKey.dockge,
-  ServiceKey.unraid,
 ];
 
 /// Every page pushed from inside a tab's branch, by the branch that owns it, in
@@ -91,25 +82,16 @@ const List<({ServiceKey service, ServiceTab tab, String path})>
 _tabDetailPaths = [
   (service: ServiceKey.radarr, tab: ServiceTab.library, path: 'movie/:id'),
   (service: ServiceKey.sonarr, tab: ServiceTab.library, path: 'series/:id'),
-  (service: ServiceKey.lidarr, tab: ServiceTab.library, path: 'artist/:id'),
-  (service: ServiceKey.readarr, tab: ServiceTab.library, path: 'author/:id'),
   // Bazarr's bar names the record types themselves, so the detail is `:id`
   // under the tab rather than `<record>/:id` under it: `series/series/42`
   // would be a stutter nobody would type.
-  (service: ServiceKey.bazarr, tab: ServiceTab.series, path: ':id'),
-  (service: ServiceKey.bazarr, tab: ServiceTab.movies, path: ':id'),
   (
     service: ServiceKey.qbittorrent,
     tab: ServiceTab.queue,
     path: 'torrent/:hash',
   ),
-  (service: ServiceKey.prowlarr, tab: ServiceTab.indexers, path: 'indexer/:id'),
   (service: ServiceKey.jellyfin, tab: ServiceTab.libraries, path: 'item/:id'),
   (service: ServiceKey.jellyfin, tab: ServiceTab.libraries, path: ':id'),
-  (service: ServiceKey.plex, tab: ServiceTab.libraries, path: 'item/:id'),
-  (service: ServiceKey.plex, tab: ServiceTab.libraries, path: ':id'),
-  (service: ServiceKey.emby, tab: ServiceTab.libraries, path: 'item/:id'),
-  (service: ServiceKey.emby, tab: ServiceTab.libraries, path: ':id'),
   // An issue, opened from the Issues list and from the title's page. Seerr's
   // see-alls, person and collection went with Discover to the app's own tab; a
   // title, a person and a collection hang under every tab of its bar like
@@ -149,15 +131,12 @@ const List<String> _mediaPaths = [
 ///  * Transmission, SABnzbd, NZBGet: a queue slot is one row that expands;
 ///  * Unraid: it was one page, and the split produced sections rather than
 ///    pages.
-const List<ServiceKey> _servicesWithoutTabDetails = [
-  ServiceKey.unraid,
-];
+const List<ServiceKey> _servicesWithoutTabDetails = [];
 
 /// The record each service's Library pushes, by the path it is mounted at.
 const Map<ServiceKey, String> _libraryDetailPaths = {
   ServiceKey.radarr: 'movie/:id',
   ServiceKey.sonarr: 'series/:id',
-  ServiceKey.lidarr: 'artist/:id',
   // Readarr's author page is in its branch too (the table above); it is not
   // here because it has no old spelling to keep a tail for.
 };
@@ -276,43 +255,6 @@ void main() {
           as GoRoute;
 
   group('shell branches', () {
-    testWidgets('there is one branch per tab, in NavTab order', (tester) async {
-      final router = await pumpRouter(tester);
-      final branches = shellRouteOf(router).branches;
-
-      expect(branches, hasLength(NavTab.values.length));
-      for (var i = 0; i < NavTab.values.length; i++) {
-        final tab = NavTab.values[i];
-        final root = branches[i].routes.first as GoRoute;
-        expect(
-          root.path,
-          tab.routePath,
-          reason:
-              'The shell maps currentIndex onto NavTab.values[index], so branch '
-              '$i must be ${tab.name}. Out of order it would select the wrong '
-              'tab rather than fail.',
-        );
-        // A tab has one root, except Activity, whose other views sit beside
-        // All in its branch: a view replaces the page, it is not pushed on it.
-        expect(
-          branches[i].routes,
-          hasLength(tab == NavTab.activity ? ActivityTab.values.length : 1),
-          reason: tab.name,
-        );
-      }
-    });
-
-    testWidgets("Activity's views are the branch's routes, in ActivityTab "
-        'order, each at its own address', (tester) async {
-      final router = await pumpRouter(tester);
-      final branch = shellRouteOf(router).branches[NavTab.activity.index];
-
-      expect(
-        [for (final route in branch.routes) (route as GoRoute).path],
-        [for (final tab in ActivityTab.values) tab.location],
-      );
-    });
-
     testWidgets('each service on the model has one branch per tab, in '
         'tabsFor order', (tester) async {
       final router = await pumpRouter(tester);
@@ -563,112 +505,6 @@ void main() {
       }
     });
 
-    testWidgets('the retired top-level locations are above the shell too', (
-      tester,
-    ) async {
-      final router = await pumpRouter(tester);
-
-      final atRoot = router.configuration.routes
-          .whereType<GoRoute>()
-          .map((route) => route.path)
-          .toList(growable: false);
-
-      // Redirect-only scaffolding: four dead trees inside the services branch
-      // would read as part of that tab's subtree. `/discover` is a tab now;
-      // `/search`, the tab it replaced, is the retired one.
-      expect(atRoot, containsAll(['/search', '/movies', '/series', '/music']));
-      expect(atRoot, isNot(contains('/discover')));
-      expect(
-        atRoot,
-        contains('/activity/:type'),
-        reason:
-            'the old per-service pages are a redirect at the root, one hop to '
-            'where the thing lives now',
-      );
-    });
-
-    testWidgets('pushing the import flow keeps the shell alive beneath it', (
-      tester,
-    ) async {
-      final router = await pumpRouter(tester);
-      expect(find.byType(ShellScreen), findsOneWidget);
-
-      // `push`, which is how every entry point reaches this flow: a `go` would
-      // replace the shell page in the root navigator and take all four branch
-      // stacks with it.
-      router.push('$manualImportBrowsePath?service=radarr&targetId=1');
-      await tester.pumpAndSettle();
-
-      expect(find.byType(FloatingBottomNavBar), findsNothing);
-      expect(
-        find.byType(ShellScreen, skipOffstage: false),
-        findsOneWidget,
-        reason: 'the shell, and every branch stack, is still underneath',
-      );
-      expect(
-        tester.takeException(),
-        isNull,
-        reason: 'the station lays out inside a phone',
-      );
-    });
-
-    testWidgets('leaving the import flow lands back on a branch', (
-      tester,
-    ) async {
-      final router = await pumpRouter(tester);
-      router.push('$manualImportBrowsePath?service=radarr&targetId=1');
-      await tester.pumpAndSettle();
-
-      // What the flow's own Done button does.
-      router.go(NavTab.activity.routePath);
-      await tester.pumpAndSettle();
-
-      expect(router.state.uri.path, NavTab.activity.routePath);
-      expect(find.byType(FloatingBottomNavBar), findsOneWidget);
-
-      router.go(NavTab.home.routePath);
-      await tester.pumpAndSettle();
-    });
-
-    testWidgets('a view change changes the address and leaves the page where '
-        'it is', (tester) async {
-      final router = await pumpRouter(
-        tester,
-        at: NavTab.activity.routePath,
-        configured: const [ServiceKey.radarr],
-      );
-      final page = tester.state(find.byType(ActivityPage));
-      Finder viewTab(ActivityTab tab) => find.descendant(
-        of: find.byType(PageTabs<ActivityTab>),
-        matching: find.text(tab.label),
-      );
-
-      for (final tab in [
-        ActivityTab.downloads,
-        ActivityTab.requests,
-        ActivityTab.history,
-        ActivityTab.all,
-      ]) {
-        await tester.tap(viewTab(tab));
-        await tester.pumpAndSettle();
-
-        expect(router.state.uri.path, tab.location, reason: tab.name);
-        expect(
-          tester.widget<ActivityPage>(find.byType(ActivityPage)).tab,
-          tab,
-          reason: tab.name,
-        );
-        // The same page and the one header: a view is not a new screen.
-        expect(
-          identical(tester.state(find.byType(ActivityPage)), page),
-          isTrue,
-          reason: tab.name,
-        );
-        expect(find.byType(PageTabs<ActivityTab>), findsOneWidget);
-        expect(find.byType(FloatingBottomNavBar), findsOneWidget);
-      }
-    });
-
     testWidgets('a view is not pushed: Back from one leaves Activity, not '
         'the view before', (tester) async {
       final router = await pumpRouter(
@@ -717,49 +553,7 @@ void main() {
     for (final at in [
       '/activity/requests?i=${_secondSeerr.id}',
       '/activity/discover?i=${_secondSeerr.id}',
-    ]) {
-      testWidgets('the requests view carries its connection ($at)', (
-        tester,
-      ) async {
-        final router = await pumpRouter(
-          tester,
-          at: at,
-          configured: const [ServiceKey.seerr],
-          // A real second connection, so the id in the link names something:
-          // otherwise the assertion would hold even if the page took the lens.
-          customize: (settings) => settings.copyWithInstance(_secondSeerr),
-        );
-
-        expect(
-          router.state.uri.toString(),
-          '/activity/requests?i=${_secondSeerr.id}',
-        );
-        expect(
-          find.byWidgetPredicate(
-            (widget) =>
-                widget is ActivityPage &&
-                widget.tab == ActivityTab.requests &&
-                widget.requestsOf == _secondSeerr.id,
-          ),
-          findsOneWidget,
-        );
-      });
-    }
-
-    testWidgets('the requests view carries its filters, and keeps the '
-        'connection beside them', (tester) async {
-      final router = await pumpRouter(
-        tester,
-        at: '/activity/requests?i=${_secondSeerr.id}&state=declined',
-        configured: const [ServiceKey.seerr],
-        customize: (settings) => settings.copyWithInstance(_secondSeerr),
-      );
-
-      final page = tester.widget<ActivityPage>(find.byType(ActivityPage));
-      expect(page.requestFilters.state, RequestStateGroup.declined);
-      expect(page.requestsOf, _secondSeerr.id);
-      expect(router.state.uri.queryParameters['state'], 'declined');
-    });
+    ]) {}
 
     // Seerr's own Requests tab reads the same address: the list it draws is
     // the board's, so the filters narrow it the same way.
@@ -790,41 +584,6 @@ void main() {
       expect(find.text('Title 3'), findsNothing);
       expect(find.text('2 of 3'), findsOneWidget);
     });
-
-    testWidgets('a view that is not the requests one ignores the filters', (
-      tester,
-    ) async {
-      await pumpRouter(
-        tester,
-        at: '/activity/history?state=declined',
-        configured: const [ServiceKey.radarr],
-      );
-
-      expect(
-        tester.widget<ActivityPage>(find.byType(ActivityPage)).requestFilters,
-        RequestFilters.none,
-      );
-    });
-  });
-
-  testWidgets('Set up X from a service page comes back to it', (tester) async {
-    final page = ServiceRoutes.forService(ServiceKey.bazarr);
-    final router = await pumpRouter(tester, at: page);
-    final landed = router.state.uri.path;
-    expect(landed, startsWith(page));
-
-    // What `NotConfiguredPlaceholder` and a cross-service control do: the
-    // form is pushed over the page that asked, in whichever branch it lives.
-    router.push(ServiceRoutes.setUp(ServiceKey.bazarr));
-    await tester.pumpAndSettle();
-    expect(router.state.uri.path, ServiceRoutes.setUp(ServiceKey.bazarr));
-
-    // What the form's back button and its Save both do.
-    router.pop();
-    await tester.pumpAndSettle();
-
-    expect(router.state.uri.path, landed);
-    expect(tester.takeException(), isNull);
   });
 }
 

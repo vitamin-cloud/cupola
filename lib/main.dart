@@ -37,7 +37,6 @@ import 'package:cupola/features/outside/data/outside_background.dart';
 import 'package:cupola/features/outside/data/outside_keeper.dart';
 import 'package:cupola/features/release_search/data/release_search_bootstrap.dart';
 import 'package:cupola/features/settings/data/route_probe.dart';
-import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/data/settings_service.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 import 'package:cupola/features/shell/domain/startup_failure.dart';
@@ -214,8 +213,6 @@ Future<void> _forgetKeysAndStart() async {
 /// One entry per family, because each licence names its own copyright holder:
 /// a single merged entry would credit the wrong authors for two of the three.
 const Map<String, String> bundledFontLicenses = {
-  'Bricolage Grotesque': 'assets/fonts/BricolageGrotesque-OFL.txt',
-  'Onest': 'assets/fonts/Onest-OFL.txt',
   'Geist Mono': 'assets/fonts/GeistMono-OFL.txt',
   // This fork's face (Apache-2.0, not OFL).
   'Roboto': 'assets/fonts/roboto/LICENSE.txt',
@@ -247,7 +244,6 @@ class CupolaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    final themeMode = ref.watch(themeModeProvider);
     // Each Seerr account's permissions, read again at start and when the
     // app comes back with them stale.
     ref.watch(seerrAccountKeeperProvider);
@@ -271,9 +267,9 @@ class CupolaApp extends ConsumerWidget {
     // See AppTheme.darkTheme.
     return MaterialApp.router(
       title: kAppName,
-      theme: AppTheme.lightTheme(),
-      darkTheme: AppTheme.darkTheme(),
-      themeMode: themeMode,
+      // Dark only.
+      theme: AppTheme.darkTheme(),
+      themeMode: ThemeMode.dark,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
       // Leading is tightened at the top of the ramp (the display roles sit at

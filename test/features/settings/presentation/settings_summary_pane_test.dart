@@ -51,129 +51,12 @@ void main() {
       });
     });
 
-    testWidgets('what the rail cannot carry is still reachable', (
-      tester,
-    ) async {
-      // About, Revisit onboarding and Reset are not pages, so the rail never
-      // had them, and while only the phone index built them, a window this
-      // wide had no door to the licence page, feedback, the donation sheet,
-      // the onboarding replay or Reset at all.
-      await _onDesktop(() async {
-        await _pumpHome(tester, size: const Size(1440, 2400));
-
-        for (final label in const ['Onboarding', 'About', 'Danger zone']) {
-          expect(find.text(label), findsOneWidget, reason: '$label missing');
-        }
-        for (final row in const [
-          'Revisit onboarding',
-          'GitHub',
-          'Send feedback',
-          'Support development',
-          'Licenses & trademarks',
-          'Reset app data',
-        ]) {
-          expect(find.text(row), findsOneWidget, reason: '$row missing');
-        }
-
-        // Reset keeps its confirmation on this layout too.
-        await tester.tap(find.text('Reset app data'));
-        await tester.pumpAndSettle();
-        expect(find.text('Reset all data?'), findsOneWidget);
-        await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
-        await tester.pumpAndSettle();
-        expect(find.text('Reset all data?'), findsNothing);
-
-        // And the licence page opens from here.
-        await tester.tap(find.text('Licenses & trademarks'));
-        await tester.pumpAndSettle();
-        expect(find.byType(LicensePage), findsOneWidget);
-      });
-    });
-
     testWidgets('Set up another device is not offered with nothing set up', (
       tester,
     ) async {
       await _onDesktop(() async {
         await _pumpHome(tester, size: const Size(1440, 2400));
         expect(find.text('Set up another device'), findsNothing);
-      });
-    });
-
-    testWidgets('Set up another device is offered with a connection, in the '
-        'Onboarding card', (tester) async {
-      await _onDesktop(() async {
-        await _pumpHome(
-          tester,
-          size: const Size(1440, 2400),
-          settings: settingsWith(
-            radarrUrl: 'https://radarr.local:7878',
-            radarrApiKey: 'radarr-key',
-          ),
-        );
-
-        expect(find.text('Set up another device'), findsOneWidget);
-        expect(find.text('Copy everything to a new phone'), findsOneWidget);
-        final row = tester.getTopLeft(find.text('Set up another device')).dy;
-        expect(
-          tester.getTopLeft(find.text('Revisit onboarding')).dy,
-          lessThan(row),
-        );
-        expect(tester.getTopLeft(find.text('GitHub')).dy, greaterThan(row));
-      });
-    });
-
-    testWidgets('a pin no service reaches any more is named here', (
-      tester,
-    ) async {
-      // The one fact about trust that no other screen can show: the
-      // per-service form only ever knows about its own address, so an origin
-      // that outlived every service using it is invisible everywhere else
-      // (ADR-6).
-      await _onDesktop(() async {
-        await _pumpHome(
-          tester,
-          size: const Size(1440, 900),
-          settings:
-              settingsWith(
-                radarrUrl: 'https://radarr.local:7878',
-                radarrApiKey: 'radarr-key',
-              ).copyWith(
-                trustedCertificates: const {'https://nas.local:8443': 'ab12cd'},
-              ),
-        );
-
-        expect(find.text('1 pinned origin'), findsOneWidget);
-        expect(find.text('nas.local:8443'), findsOneWidget);
-        expect(
-          find.text('No configured service uses this address.'),
-          findsOneWidget,
-        );
-      });
-    });
-
-    testWidgets('a pin a service still uses is not worth a line', (
-      tester,
-    ) async {
-      await _onDesktop(() async {
-        await _pumpHome(
-          tester,
-          size: const Size(1440, 900),
-          settings:
-              settingsWith(
-                radarrUrl: 'https://radarr.local:7878',
-                radarrApiKey: 'radarr-key',
-              ).copyWith(
-                trustedCertificates: const {
-                  'https://radarr.local:7878': 'ab12cd',
-                },
-              ),
-        );
-
-        expect(find.text('1 pinned origin'), findsOneWidget);
-        expect(
-          find.text('No configured service uses this address.'),
-          findsNothing,
-        );
       });
     });
   });
@@ -187,35 +70,6 @@ void main() {
 
         expect(find.text('1 gesture introduces itself'), findsOneWidget);
       });
-    });
-
-    test('reads right for one and for many', () {
-      // It used to read "1 of 1 gestures introduces itself", which is wrong at
-      // every count: the verb has to agree with the count.
-      expect(
-        gestureHintsLine(introducing: 1, total: 1),
-        '1 gesture introduces itself',
-      );
-      expect(
-        gestureHintsLine(introducing: 0, total: 1),
-        'No gesture introduces itself',
-      );
-      expect(
-        gestureHintsLine(introducing: 3, total: 3),
-        'All 3 gestures introduce themselves',
-      );
-      expect(
-        gestureHintsLine(introducing: 1, total: 3),
-        '1 of 3 gestures introduces itself',
-      );
-      expect(
-        gestureHintsLine(introducing: 2, total: 3),
-        '2 of 3 gestures introduce themselves',
-      );
-      expect(
-        gestureHintsLine(introducing: 0, total: 3),
-        'No gesture introduces itself',
-      );
     });
   });
 

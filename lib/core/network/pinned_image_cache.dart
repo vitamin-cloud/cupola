@@ -119,14 +119,6 @@ PinnedImageCache? _guardedDefaultCache;
 /// scope's name inside [separateImageCaches].
 String _keyPrefix = '';
 
-/// Test-only: retires every memoised cache so one test cannot see another's.
-@visibleForTesting
-void resetPinnedImageCaches() {
-  for (final cache in _forgetCaches()) {
-    unawaited(_retire(cache));
-  }
-}
-
 /// Gives every image from here on stores of their own, named after [scope],
 /// until the returned call ends it.
 ///
@@ -247,4 +239,12 @@ Future<void> _retire(PinnedImageCache cache, {bool empty = true}) async {
 String pinnedImageCacheKey(String origin, String fingerprint) {
   final digest = sha256.convert(utf8.encode('$origin\x00$fingerprint'));
   return 'cupola_pinned_${digest.toString().substring(0, 32)}';
+}
+
+/// Test-only: retires every memoised cache so one test cannot see another's.
+@visibleForTesting
+void resetPinnedImageCaches() {
+  for (final cache in _forgetCaches()) {
+    unawaited(_retire(cache));
+  }
 }

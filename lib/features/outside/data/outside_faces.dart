@@ -28,7 +28,6 @@ import 'package:cupola/features/outside/domain/outside_snapshot.dart';
 import 'package:cupola/features/requests/domain/my_requests.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart'
     show ServiceQueueItem, ServicesInFlight;
-import 'package:cupola/features/settings/domain/service_key.dart';
 
 /// Gives a picture its file name beside the snapshot, and asks the run to
 /// fetch it; null for no picture, or one the run will not keep.
@@ -165,10 +164,8 @@ String? _eventRoute(CalendarEvent event) => switch (event.target) {
     from: ServiceRoutes.home,
     focus: connectionId,
   ),
-  CalendarShelfTarget(:final service, :final connectionId, :final id) =>
-    service == ServiceKey.readarr
-        ? ServiceRoutes.readarrAuthor(id, instanceId: connectionId)
-        : ServiceRoutes.lidarrArtist(id, instanceId: connectionId),
+  // No artist or author shelves in this fork (no Lidarr, no Readarr).
+  CalendarShelfTarget() => null,
   null => null,
 };
 

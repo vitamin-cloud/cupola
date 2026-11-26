@@ -99,21 +99,6 @@ abstract final class WorldConnections {
     WorldHosts.sonarrAnime,
     label: 'Anime',
   );
-  static final lidarr = _api(
-    WorldIds.lidarr,
-    ServiceKey.lidarr,
-    WorldHosts.lidarr,
-  );
-  static final bazarr = _api(
-    WorldIds.bazarr,
-    ServiceKey.bazarr,
-    WorldHosts.bazarr,
-  );
-  static final prowlarr = _api(
-    WorldIds.prowlarr,
-    ServiceKey.prowlarr,
-    WorldHosts.prowlarr,
-  );
   static final qbittorrent = _login(
     WorldIds.qbittorrent,
     ServiceKey.qbittorrent,
@@ -129,16 +114,6 @@ abstract final class WorldConnections {
     ServiceKey.dockge,
     WorldHosts.dockge,
   );
-  static final plex = _api(WorldIds.plex, ServiceKey.plex, WorldHosts.plex);
-
-  /// Emby on `tower`, World B's media server: the household's titles again,
-  /// watched through the operator.
-  static final emby = _api(
-    WorldIds.emby,
-    ServiceKey.emby,
-    WorldHosts.emby,
-    viewerId: EmbyFake.operatorId,
-  );
 
   /// The cabin's Jellyfin, named by the user: in no profile, for a test that
   /// adds it with `ConfigProfile.withConnection` beside the unnamed one at
@@ -151,15 +126,6 @@ abstract final class WorldConnections {
     viewerId: JellyfinFake.operatorId,
   );
 
-  /// The cabin's Plex, named by the user: in no profile, for a test that adds
-  /// it beside the unnamed one at home: two of the other media server.
-  static final plexCabin = _api(
-    WorldIds.plexCabin,
-    ServiceKey.plex,
-    WorldHosts.plexCabin,
-    label: 'Cabin',
-  );
-
   /// The cabin's Seerr, named by the user: in no profile, for a test that
   /// adds it beside the unnamed one at home: two Seerr, each answering for
   /// its own requests.
@@ -170,16 +136,6 @@ abstract final class WorldConnections {
     label: 'Cabin',
   );
 
-  /// A second Lidarr, for the vinyl rips: in no profile, for a test that
-  /// adds it. It numbers its artists from one like the first, so the same id
-  /// names a different artist on each.
-  static final lidarrVinyl = _api(
-    WorldIds.lidarrVinyl,
-    ServiceKey.lidarr,
-    WorldHosts.lidarrVinyl,
-    label: 'Vinyl',
-  );
-
   /// Sara's Seerr, outside the household, where the operator has an account
   /// of his own with REQUEST only: P9's second Seerr. Labelled with her name.
   static final seerrFriend = _api(
@@ -188,16 +144,6 @@ abstract final class WorldConnections {
     WorldHosts.seerrFriend,
     label: WorldPeople.friend,
   ).withSeerrAccount(WorldSeerrUsers.operatorAtFriend);
-
-  /// A second Prowlarr, on `tower`, named by the user: in no profile, for a
-  /// test that adds it beside the first. It numbers its indexers from one
-  /// like the first, so the same id names an indexer on each.
-  static final prowlarrTower = _api(
-    WorldIds.prowlarrTower,
-    ServiceKey.prowlarr,
-    WorldHosts.prowlarrTower,
-    label: 'Tower',
-  );
 
   /// A second Dockge, on `tower`, named by the user: in no profile. It runs
   /// the same three stacks as the first, `immich` exited on each.
@@ -214,12 +160,6 @@ abstract final class WorldConnections {
 
   // World B, on `tower`: in no profile, for a test that adds one with
   // `ConfigProfile.withConnection`: the NPM and Unraid read-only cases.
-  static final readarr = _api(
-    'readarr',
-    ServiceKey.readarr,
-    WorldHosts.readarr,
-  );
-  static final unraid = _api('unraid', ServiceKey.unraid, WorldHosts.unraid);
 }
 
 SeerrKnownServer _knows(
@@ -279,9 +219,6 @@ abstract final class Profiles {
       WorldConnections.radarr,
       WorldConnections.radarr4k,
       WorldConnections.sonarr,
-      WorldConnections.lidarr,
-      WorldConnections.bazarr,
-      WorldConnections.prowlarr,
       WorldConnections.qbittorrent,
       WorldConnections.truenas,
       WorldConnections.dockge,
@@ -440,8 +377,6 @@ abstract final class Profiles {
     connections: [
       WorldConnections.radarr,
       WorldConnections.sonarr,
-      WorldConnections.lidarr,
-      WorldConnections.prowlarr,
       WorldConnections.qbittorrent,
     ],
   );
@@ -495,12 +430,10 @@ abstract final class Profiles {
     },
     connections: [
       WorldConnections.seerr,
-      WorldConnections.plex.withBehaviour(ConnectionBehaviour.readOnly),
       WorldConnections.radarr,
       WorldConnections.radarr4k,
       WorldConnections.sonarr,
       WorldConnections.sonarrAnime,
-      WorldConnections.bazarr,
       WorldConnections.qbittorrent,
     ],
     seerrKnows: [

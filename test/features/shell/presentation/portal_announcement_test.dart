@@ -1,11 +1,5 @@
-
-import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/features/services/domain/service_summary.dart';
-import 'package:cupola/features/services/presentation/services_provider.dart';
-import 'package:cupola/features/settings/domain/service_instance.dart';
-import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/shell/presentation/portal_announcement.dart';
 
 void main() {
@@ -56,46 +50,5 @@ void main() {
     });
   });
 
-  group('the census', () {
-  });
-}
-
-const _instances = [
-  ServiceInstance(
-    id: 'radarr',
-    service: ServiceKey.radarr,
-    label: '4K',
-    url: 'https://four-k.lan:7878',
-    credential: 'k',
-  ),
-  ServiceInstance(
-    id: 'radarr-hd',
-    service: ServiceKey.radarr,
-    label: 'HD',
-    url: 'https://hd.lan:7879',
-    credential: 'k',
-  ),
-  ServiceInstance(
-    id: 'sonarr',
-    service: ServiceKey.sonarr,
-    url: 'https://tv.lan:8989',
-    credential: 'k',
-  ),
-  // A slot with no address: the settings screen shows it, the floor does not.
-  ServiceInstance(id: 'lidarr', service: ServiceKey.lidarr),
-];
-
-Override _answers(String id, ServiceSummaryStatus status) {
-  final instance = _instances.firstWhere((instance) => instance.id == id);
-  return instanceSummaryProvider((
-    service: instance.service,
-    instanceId: id,
-  )).overrideWith(
-    (ref) async => ServiceSummary(
-      service: instance.service,
-      status: status,
-      host: 'somewhere',
-      version: '5.0',
-    ),
-  );
+  group('the census', () {});
 }

@@ -100,9 +100,7 @@ Color _glyphColor(WidgetTester tester) => tester
     .color!;
 
 void main() {
-  group('ServiceOfflineState', () {
-
-  });
+  group('ServiceOfflineState', () {});
 
   group('ServiceOfflineState.failure', () {
     testWidgets('a server that did not answer: red, its address, Retry and '

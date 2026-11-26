@@ -21,7 +21,6 @@ import 'package:cupola/features/settings/data/connection_reach_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/connection_address.dart';
 import 'package:cupola/features/settings/domain/nav_tab.dart';
-import 'package:cupola/features/settings/domain/regions.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 import 'package:cupola/features/settings/presentation/widgets/settings_app_rows.dart';
 import 'package:cupola/features/settings/presentation/widgets/requester_settings_rows.dart';
@@ -154,12 +153,7 @@ class SettingsHomeScreen extends ConsumerWidget {
       const SettingsSectionLabel('General'),
       const SizedBox(height: AppSpacing.sm),
       SettingsGroupCard(
-        children: [
-          _regionRow(context, settings),
-          _appearanceRow(context, settings),
-          const SettingsHomeRow(),
-          const SettingsNotificationsRow(),
-        ],
+        children: [const SettingsHomeRow(), const SettingsNotificationsRow()],
       ),
       const SizedBox(height: AppSpacing.xl),
       const SettingsSectionLabel('About'),
@@ -172,24 +166,6 @@ class SettingsHomeScreen extends ConsumerWidget {
       const SettingsSignature(),
     ];
   }
-
-  Widget _regionRow(BuildContext context, SettingsModel settings) =>
-      SettingsCard.grouped(
-        leading: const Icon(Icons.language_rounded),
-        title: 'Region',
-        subtitle: _formatRegionLabel(settings.region),
-        semanticHint: 'opens the region picker',
-        onTap: () => context.push('/settings/region'),
-      );
-
-  Widget _appearanceRow(BuildContext context, SettingsModel settings) =>
-      SettingsCard.grouped(
-        leading: const Icon(Icons.palette_rounded),
-        title: 'Appearance',
-        subtitle: settings.themeMode.label,
-        semanticHint: 'opens the appearance picker',
-        onTap: () => context.push('/settings/appearance'),
-      );
 
   List<Widget> _buildGeneralSection(
     BuildContext context,
@@ -205,17 +181,8 @@ class SettingsHomeScreen extends ConsumerWidget {
           // verdict, and Region wore `AppColors.success` while Send feedback
           // wore the amber this system reserves for a fault. A preference has
           // no state to report.
-          _regionRow(context, settings),
-          _appearanceRow(context, settings),
           const SettingsBackgroundRow(),
           const SettingsNotificationsRow(),
-          SettingsCard.grouped(
-            leading: const Icon(Icons.travel_explore_rounded),
-            title: 'Background search',
-            subtitle: 'How long to wait, and how many at once',
-            semanticHint: 'opens background release search settings',
-            onTap: () => context.push('/settings/background-search'),
-          ),
           // Shared with the window's summary pane: see settings_app_rows.dart.
           const SettingsRevisitOnboardingRow(),
           if (SettingsAnotherDeviceRow.offeredFor(settings))
@@ -230,12 +197,6 @@ class SettingsHomeScreen extends ConsumerWidget {
   // (settings_app_rows.dart): they are not pages, so the rail cannot carry
   // them, and while only this index built them a wide window had no door to
   // the licence page, feedback, the donation sheet or Reset.
-
-  String _formatRegionLabel(String region) {
-    final normalizedRegion = SettingsModel.normalizeRegion(region);
-    final regionName = commonRegions[normalizedRegion] ?? normalizedRegion;
-    return '$regionName ($normalizedRegion)';
-  }
 }
 
 /// The line under Settings' name: how many services are set up, how many are

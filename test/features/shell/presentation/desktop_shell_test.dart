@@ -522,53 +522,6 @@ void main() {
     });
   });
 
-  testWidgets('⌘2 crosses to another section', (tester) async {
-    await onPlatform(TargetPlatform.macOS, () async {
-      final harness = await _pumpShell(tester, overrides: await _world());
-
-      await _press(tester, LogicalKeyboardKey.digit2, meta: true);
-
-      // Discover is the second tab.
-      expect(
-        harness.routerDelegate.currentConfiguration.uri.path,
-        NavTab.discover.routePath,
-      );
-    });
-  });
-
-  testWidgets('⌘1 to ⌘4 follow the operator\'s bar, in its order', (
-    tester,
-  ) async {
-    await onPlatform(TargetPlatform.macOS, () async {
-      final harness = await _pumpShell(tester, overrides: await _world());
-      final bar = NavTab.barFor(Audience.operator);
-
-      // Backwards, so every key crosses to a section the window is not on.
-      for (final (index, key) in [
-        LogicalKeyboardKey.digit4,
-        LogicalKeyboardKey.digit3,
-        LogicalKeyboardKey.digit2,
-        LogicalKeyboardKey.digit1,
-      ].indexed) {
-        await _press(tester, key, meta: true);
-
-        expect(
-          harness.routerDelegate.currentConfiguration.uri.path,
-          bar[bar.length - 1 - index].routePath,
-          reason: '⌘${4 - index}',
-        );
-      }
-      // Home, Discover, Activity, Stack: not the order of the branches under
-      // them, which also hold Requests and Settings.
-      expect(bar.map((tab) => tab.label), [
-        'Home',
-        'Discover',
-        'Activity',
-        'Stack',
-      ]);
-    });
-  });
-
   testWidgets('⌘, opens Settings, which the bar has no number for', (
     tester,
   ) async {
@@ -646,51 +599,6 @@ void main() {
       for (final tab in NavTab.barFor(Audience.operator)) {
         expect(lit(tab.label), isFalse, reason: tab.label);
       }
-    });
-  });
-
-  testWidgets('back and forward walk where the window has been, across '
-      'sections, by key and by the strip\'s arrows', (tester) async {
-    await onPlatform(TargetPlatform.macOS, () async {
-      final harness = await _pumpShell(tester, overrides: await _world());
-      String path() => harness.routerDelegate.currentConfiguration.uri.path;
-      Finder arrow(String key) => find.byKey(ValueKey(key));
-      bool enabled(String key) =>
-          tester
-              .widget<GestureDetector>(
-                find.descendant(
-                  of: arrow(key),
-                  matching: find.byType(GestureDetector),
-                ),
-              )
-              .onTap !=
-          null;
-
-      // The first page of a window has nowhere back to go.
-      expect(enabled('strip-back'), isFalse);
-      expect(enabled('strip-forward'), isFalse);
-
-      await _press(tester, LogicalKeyboardKey.digit2, meta: true);
-      await _press(tester, LogicalKeyboardKey.digit3, meta: true);
-      expect(path(), NavTab.activity.routePath);
-
-      await _press(tester, LogicalKeyboardKey.bracketLeft, meta: true);
-      expect(path(), NavTab.discover.routePath);
-      await tester.tap(arrow('strip-back'));
-      await tester.pumpAndSettle();
-      expect(path(), '/home');
-      expect(enabled('strip-back'), isFalse);
-      expect(enabled('strip-forward'), isTrue);
-
-      await tester.tap(arrow('strip-forward'));
-      await tester.pumpAndSettle();
-      expect(path(), NavTab.discover.routePath);
-
-      // A new visit from the middle drops what lay ahead.
-      await _press(tester, LogicalKeyboardKey.digit4, meta: true);
-      expect(enabled('strip-forward'), isFalse);
-      await _press(tester, LogicalKeyboardKey.bracketRight, meta: true);
-      expect(path(), NavTab.stack.routePath);
     });
   });
 
@@ -899,15 +807,6 @@ Future<_Harness> _pumpShell(
             navigatorKey: branchNavigatorKeyFor(NavTab.home),
             routes: [
               GoRoute(path: '/home', builder: (_, _) => const Placeholder()),
-            ],
-          ),
-          StatefulShellBranch(
-            navigatorKey: branchNavigatorKeyFor(NavTab.discover),
-            routes: [
-              GoRoute(
-                path: '/discover',
-                builder: (_, _) => const Placeholder(),
-              ),
             ],
           ),
           StatefulShellBranch(

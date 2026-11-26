@@ -5,18 +5,11 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:cupola/core/providers/provider_retry.dart';
 import 'package:cupola/core/utils/search_results_loader.dart';
-import 'package:cupola/core/widgets/media_find.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/series/domain/models/sonarr_series.dart';
 
 /// Provider for the current search query in Series section.
 final seriesSearchQueryProvider = StateProvider<String>((ref) => '');
-
-/// Where the Series wall's search looks: its library, or Sonarr. Back to the
-/// library when the field is emptied.
-final seriesFindScopeProvider = StateProvider<MediaFindScope>(
-  (ref) => MediaFindScope.library,
-);
 
 /// Provider for search results in Series section.
 ///

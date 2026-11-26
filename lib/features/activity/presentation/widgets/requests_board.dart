@@ -18,7 +18,6 @@ import 'package:cupola/core/widgets/not_configured_placeholder.dart';
 import 'package:cupola/core/widgets/selection_pills.dart';
 import 'package:cupola/core/widgets/status_badge.dart';
 import 'package:cupola/features/activity/data/household_requests.dart';
-import 'package:cupola/features/activity/domain/activity_tab.dart';
 import 'package:cupola/features/activity/domain/request_filters.dart';
 import 'package:cupola/features/activity/presentation/widgets/activity_download_row.dart';
 import 'package:cupola/features/activity/presentation/widgets/activity_section.dart';
@@ -489,7 +488,7 @@ class _OnlyLine extends StatelessWidget {
           ),
         ),
         TextButton(
-          onPressed: () => context.go(ActivityTab.requests.location),
+          onPressed: () => context.go(ServiceRoutes.seerrRequests),
           child: const Text('Show every Seerr'),
         ),
       ],

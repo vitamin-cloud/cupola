@@ -17,24 +17,9 @@ const _page = '<!DOCTYPE html><html><body>Welcome to nginx!</body></html>';
 final Map<ServiceKey, Object?> _genuine = {
   ServiceKey.radarr: {'appName': 'Radarr', 'version': '5.26.2.10099'},
   ServiceKey.sonarr: {'appName': 'Sonarr', 'version': '4.0.15.2941'},
-  ServiceKey.lidarr: {'appName': 'Lidarr', 'version': '2.13.3.4711'},
-  ServiceKey.readarr: {'appName': 'Readarr', 'version': '0.4.18.2805'},
-  ServiceKey.prowlarr: {'appName': 'Prowlarr', 'version': '2.0.5.5160'},
   ServiceKey.seerr: {'version': '2.7.3', 'commitTag': 'v2.7.3'},
-  ServiceKey.bazarr: {
-    'data': {'bazarr_version': '1.5.1'},
-  },
   ServiceKey.jellyfin: _fixture('jellyfin/system_info_public.json'),
-  ServiceKey.plex: _fixture('plex/identity.json'),
-  ServiceKey.emby: _fixture('emby/system_info_public.json'),
   ServiceKey.qbittorrent: 'v5.1.2',
-  ServiceKey.unraid: {
-    'data': {
-      'info': {
-        'os': {'release': '7.1.4'},
-      },
-    },
-  },
   ServiceKey.truenas: {'version': 'TrueNAS-SCALE-25.04.2'},
   ServiceKey.dockge: '1.5.0',
 };
@@ -78,24 +63,6 @@ void main() {
       }
     });
 
-    test('an arr on another arr\'s port is that arr', () {
-      final identity = identifyProbeAnswer(
-        ServiceKey.radarr,
-        _genuine[ServiceKey.sonarr],
-      );
-
-      expect(identity, isA<ProbeOtherService>());
-      expect((identity as ProbeOtherService).service, ServiceKey.sonarr);
-      // Named by appName whatever the address was for.
-      expect(
-        identifyProbeAnswer(ServiceKey.bazarr, {
-          'appName': 'Prowlarr',
-          'version': '2.0.5',
-        }),
-        _otherService(ServiceKey.prowlarr),
-      );
-    });
-
     test('an arr nobody knows is not this service', () {
       expect(
         identifyProbeAnswer(ServiceKey.radarr, {
@@ -112,25 +79,6 @@ void main() {
         ProbeIdentity.matches,
       );
     });
-
-    test('a field merely absent gets the benefit of the doubt', () {
-      final olderBuilds = <ServiceKey, Object?>{
-        ServiceKey.radarr: {'version': '3.2.2'},
-        ServiceKey.seerr: {'version': '1.33.2'},
-        ServiceKey.bazarr: {'data': <String, Object?>{}},
-        ServiceKey.jellyfin: {'Version': '10.8.13', 'Id': 'abc'},
-        ServiceKey.plex: {'MediaContainer': <String, Object?>{}},
-        ServiceKey.qbittorrent: '',
-      };
-      for (final MapEntry(key: service, value: body) in olderBuilds.entries) {
-        expect(
-          identifyProbeAnswer(service, body),
-          ProbeIdentity.matches,
-          reason: service.title,
-        );
-      }
-    });
-
   });
 
   group('Jellyfin and Emby, which answer the same route', () {
@@ -141,163 +89,9 @@ void main() {
     final emby = _fixture('emby/system_info_public.json');
     final embyInfo = _fixture('emby/system_info.json');
     final jellyfin = _fixture('jellyfin/system_info_public.json');
-
-    test('an Emby on a Jellyfin\'s address is named as Emby', () {
-      expect(
-        identifyProbeAnswer(ServiceKey.jellyfin, emby),
-        _otherService(ServiceKey.emby),
-      );
-      expect(
-        identifyProbeAnswer(ServiceKey.jellyfin, embyInfo),
-        _otherService(ServiceKey.emby),
-      );
-    });
-
-    test('a Jellyfin on an Emby\'s address is named as Jellyfin', () {
-      expect(
-        identifyProbeAnswer(ServiceKey.emby, jellyfin),
-        _otherService(ServiceKey.jellyfin),
-      );
-    });
-
-    test('each recognises its own, public info and full info alike', () {
-      expect(identifyProbeAnswer(ServiceKey.emby, emby), ProbeIdentity.matches);
-      expect(
-        identifyProbeAnswer(ServiceKey.emby, embyInfo),
-        ProbeIdentity.matches,
-      );
-      expect(
-        identifyProbeAnswer(ServiceKey.jellyfin, jellyfin),
-        ProbeIdentity.matches,
-      );
-    });
-
-    test('an empty LocalAddresses list is still the proof', () {
-      // A server with no address of its own to advertise: the common case,
-      // and the one the lab's Emby is.
-      expect(
-        identifyProbeAnswer(ServiceKey.jellyfin, {
-          'LocalAddresses': <String>[],
-          'Version': '4.10.2.0',
-        }),
-        _otherService(ServiceKey.emby),
-      );
-    });
-
-    test('a product name, when there is one, decides', () {
-      expect(
-        identifyProbeAnswer(ServiceKey.emby, {
-          'ProductName': 'Emby Server',
-          'Version': '4.8.0',
-        }),
-        ProbeIdentity.matches,
-      );
-      expect(
-        identifyProbeAnswer(ServiceKey.jellyfin, {
-          'ProductName': 'Emby Server',
-          'Version': '4.8.0',
-        }),
-        _otherService(ServiceKey.emby),
-      );
-      expect(
-        identifyProbeAnswer(ServiceKey.emby, {
-          'ProductName': 'Jellyfin Server',
-          'Version': '10.11.0',
-        }),
-        _otherService(ServiceKey.jellyfin),
-      );
-      // Named, and not either: not this.
-      expect(
-        identifyProbeAnswer(ServiceKey.emby, {'ProductName': 'Plex Media'}),
-        ProbeIdentity.notThisService,
-      );
-      expect(
-        identifyProbeAnswer(ServiceKey.jellyfin, {'ProductName': 'Plex Media'}),
-        ProbeIdentity.notThisService,
-      );
-    });
-
-    test('a Jellyfin that names no product is told by its own fields', () {
-      // An older Jellyfin: no `ProductName`, but its single `LocalAddress`.
-      expect(
-        identifyProbeAnswer(ServiceKey.emby, {
-          'LocalAddress': 'http://192.0.2.24:8096',
-          'Version': '10.8.13',
-          'Id': 'abc',
-        }),
-        _otherService(ServiceKey.jellyfin),
-      );
-    });
-
-    test(
-      'a body that is ambiguous gets the benefit of the doubt, both ways',
-      () {
-        // Nothing in it says which: never fail a genuine server over a field a
-        // build or a proxy left out. Each service accepts it.
-        const bare = {'Version': '10.8.13', 'Id': 'abc'};
-        expect(
-          identifyProbeAnswer(ServiceKey.jellyfin, bare),
-          ProbeIdentity.matches,
-        );
-        expect(
-          identifyProbeAnswer(ServiceKey.emby, bare),
-          ProbeIdentity.matches,
-        );
-      },
-    );
-
-    test('a body with neither shape is neither server', () {
-      for (final body in <Object?>[
-        {'status': 'ok'},
-        {'LocalAddresses': 'not a list', 'message': 'hi'},
-        _page,
-        [1, 2],
-      ]) {
-        expect(
-          identifyProbeAnswer(ServiceKey.emby, body),
-          ProbeIdentity.notThisService,
-          reason: '$body',
-        );
-        expect(
-          identifyProbeAnswer(ServiceKey.jellyfin, body),
-          ProbeIdentity.notThisService,
-          reason: '$body',
-        );
-      }
-    });
-
-    test('the sentence names who answered, as for any other service', () {
-      expect(
-        connectionFailureDetail(
-          WrongServiceAnswer(
-            ServiceKey.jellyfin,
-            const ProbeIdentity.otherService(ServiceKey.emby),
-            url: 'http://nas.home.arpa:8096',
-          ),
-        ),
-        'Emby answered at nas.home.arpa:8096, not Jellyfin.',
-      );
-      expect(
-        connectionFailureDetail(
-          WrongServiceAnswer(
-            ServiceKey.emby,
-            const ProbeIdentity.otherService(ServiceKey.jellyfin),
-            url: 'http://nas.home.arpa:8096',
-          ),
-        ),
-        'Jellyfin answered at nas.home.arpa:8096, not Emby.',
-      );
-    });
-
-    test('Emby\'s /emby is the API\'s prefix, not a path to suggest', () {
-      expect(conventionalBasePath(ServiceKey.emby), isNull);
-    });
   });
 
-  group('Tracearr health, whatever state it is in', () {
-
-
-  });
+  group('Tracearr health, whatever state it is in', () {});
 
   group('WrongServiceAnswer', () {
     test('another service says who answered where', () {
@@ -345,17 +139,6 @@ void main() {
           url: 'https://example.com/movies',
         ).failureDetail,
         "Something answered at example.com, but it isn't Radarr.",
-      );
-    });
-
-    test('no path hint for a service that is not put under one', () {
-      expect(
-        WrongServiceAnswer(
-          ServiceKey.plex,
-          ProbeIdentity.notThisService,
-          url: 'http://nas.home.arpa:32400',
-        ).failureDetail,
-        "Something answered at nas.home.arpa:32400, but it isn't Plex.",
       );
     });
 
@@ -434,10 +217,3 @@ void main() {
     });
   });
 }
-
-/// An [identifyProbeAnswer] result naming [service].
-Matcher _otherService(ServiceKey service) => isA<ProbeOtherService>().having(
-  (identity) => identity.service,
-  'service',
-  service,
-);

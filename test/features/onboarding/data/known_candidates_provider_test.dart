@@ -130,38 +130,6 @@ void main() {
     });
   });
 
-  group('Prowlarr', () {
-    ConfigProfile prowlarrOnly() => Profiles.p4
-        .without(ServiceKey.radarr)
-        .without(ServiceKey.sonarr)
-        .without(ServiceKey.lidarr);
-
-    test('each application it knows, none with a key', () async {
-      final (harness, container) = await start(prowlarrOnly());
-
-      final candidates = await known(container, WorldIds.prowlarr);
-
-      expect(
-        [for (final c in candidates) (c.service, c.displayName)],
-        [
-          (ServiceKey.radarr, 'Radarr'),
-          (ServiceKey.radarr, 'Radarr 4K'),
-          (ServiceKey.sonarr, 'Sonarr'),
-          (ServiceKey.lidarr, 'Lidarr'),
-        ],
-      );
-      expect(candidates.every((c) => !c.hasKey), isTrue);
-      expect(
-        {for (final c in candidates) c.source.connectionId},
-        {WorldIds.prowlarr},
-      );
-      expect([
-        for (final request in harness.network.requestsTo(WorldIds.prowlarr))
-          request.path,
-      ], contains('/api/v1/applications'));
-    });
-  });
-
   group('one server listed twice', () {
     ConnectionCandidate radarr(String name, {String? key}) =>
         ConnectionCandidate(
@@ -243,15 +211,6 @@ void main() {
       expect([for (final c in candidates) c.displayName], ['Sonarr']);
     });
 
-    test('Prowlarr gives no key: the address it reports, or proposes, is '
-        'enough', () async {
-      final (_, container) = await start(Profiles.p1.withDockerHostnames());
-
-      // Radarr, Radarr 4K, Sonarr and Lidarr are all connected in P1: each is
-      // either at its reported address or at the one proposed for it.
-      expect(await known(container, WorldIds.prowlarr), isEmpty);
-    });
-
     test('a connection that is a form half filled matches nothing', () async {
       final (_, container) = await start(Profiles.p5);
       final settings = container.read(currentSettingsProvider);
@@ -327,44 +286,5 @@ void main() {
     });
   });
 
-  group('everything known, for Set up next and Connections', () {
-    test('Seerr first, then Prowlarr, each server once', () async {
-      final (_, container) = await start(
-        Profiles.p5.withConnection(WorldConnections.prowlarr),
-      );
-
-      final found = await container.read(foundCandidatesProvider.future);
-
-      expect(
-        [for (final c in found) (c.displayName, c.source.service)],
-        [
-          ('Radarr', ServiceKey.seerr),
-          ('Sonarr', ServiceKey.seerr),
-          ('Radarr 4K', ServiceKey.prowlarr),
-          ('Lidarr', ServiceKey.prowlarr),
-        ],
-      );
-      // Seerr's listing is the one kept, because it brings the key.
-      expect(found.first.hasKey, isTrue);
-    });
-
-    test(
-      'a source that does not answer leaves out its own lines only',
-      () async {
-        final (_, container) = await start(
-          Profiles.p5
-              .withConnection(WorldConnections.prowlarr)
-              .withBehaviour(WorldIds.seerr, ConnectionBehaviour.didNotAnswer),
-        );
-
-        final found = await container.read(foundCandidatesProvider.future);
-
-        expect(
-          {for (final c in found) c.source.service},
-          {ServiceKey.prowlarr},
-        );
-        expect(found, isNotEmpty);
-      },
-    );
-  });
+  group('everything known, for Set up next and Connections', () {});
 }

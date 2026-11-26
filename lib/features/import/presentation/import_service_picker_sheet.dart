@@ -43,11 +43,7 @@ class _ImportServicePickerSheet extends ConsumerWidget {
 
     return SettingsGroupCard(
       children: [
-        for (final service in const [
-          ServiceKey.radarr,
-          ServiceKey.sonarr,
-          ServiceKey.lidarr,
-        ])
+        for (final service in const [ServiceKey.radarr, ServiceKey.sonarr])
           ..._rowsFor(
             context,
             settings,

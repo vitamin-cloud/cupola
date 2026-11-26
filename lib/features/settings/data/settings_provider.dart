@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cupola/core/api/api_client.dart';
@@ -41,10 +40,6 @@ final currentSettingsProvider = Provider<SettingsModel>((ref) {
 
 final regionProvider = Provider<String>((ref) {
   return ref.watch(currentSettingsProvider).region;
-});
-
-final themeModeProvider = Provider<ThemeMode>((ref) {
-  return ref.watch(currentSettingsProvider).resolvedThemeMode;
 });
 
 /// The settings fields that decide which server an [ApiClient] talks to and

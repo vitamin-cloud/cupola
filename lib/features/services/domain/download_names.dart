@@ -20,11 +20,7 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 
 /// The arrs a name can be put to, in the order they are asked when nothing
 /// says which.
-const List<ServiceKey> parsingArrs = [
-  ServiceKey.radarr,
-  ServiceKey.sonarr,
-  ServiceKey.lidarr,
-];
+const List<ServiceKey> parsingArrs = [ServiceKey.radarr, ServiceKey.sonarr];
 
 /// The arr a download client's category points at, or null when it points
 /// at none.
@@ -44,9 +40,6 @@ ServiceKey? arrForClientCategory(String? category) {
       value.contains('series') ||
       value.contains('show')) {
     return ServiceKey.sonarr;
-  }
-  if (value.contains('lidarr') || value.contains('music')) {
-    return ServiceKey.lidarr;
   }
   return null;
 }
@@ -68,7 +61,6 @@ MediaNames? namesFromParse(
   final (title, source) = switch (arr) {
     ServiceKey.radarr => _radarrTitle(answer),
     ServiceKey.sonarr => _sonarrTitle(answer),
-    ServiceKey.lidarr => _lidarrTitle(answer),
     _ => (null, MediaTitleSource.raw),
   };
   final clean = title?.trim();
@@ -111,26 +103,6 @@ MediaNames? namesFromParse(
   final parsedSeries = stringOrNull(parsed?['seriesTitle']);
   return (
     parsedSeries == null ? null : joinDisplayParts([parsedSeries, code]),
-    MediaTitleSource.parser,
-  );
-}
-
-(String?, MediaTitleSource) _lidarrTitle(Map<String, dynamic> answer) {
-  final artist = stringOrNull(mapOrNull(answer['artist'])?['artistName']);
-  final albums = answer['albums'];
-  final album = albums is List && albums.isNotEmpty
-      ? stringOrNull(mapOrNull(albums.first)?['title'])
-      : null;
-  if (artist != null || album != null) {
-    return (joinDisplayParts([album, artist]), MediaTitleSource.library);
-  }
-  final parsed = mapOrNull(answer['parsedAlbumInfo']);
-  final parsedAlbum = stringOrNull(parsed?['albumTitle']);
-  final parsedArtist = stringOrNull(parsed?['artistName']);
-  return (
-    parsedAlbum == null && parsedArtist == null
-        ? null
-        : joinDisplayParts([parsedAlbum, parsedArtist]),
     MediaTitleSource.parser,
   );
 }

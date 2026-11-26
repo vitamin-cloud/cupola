@@ -297,25 +297,6 @@ void main() {
       expect(find.text('Breaking Bad'), findsOneWidget);
     });
 
-    testWidgets('renders music with artist subtitle', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: WantedItemTile(
-              item: {
-                'title': 'Album Name',
-                'artist': {'artistName': 'Artist Name'},
-              },
-              serviceType: ServiceType.music,
-            ),
-          ),
-        ),
-      );
-
-      expect(find.text('Album Name'), findsOneWidget);
-      expect(find.text('Artist Name'), findsOneWidget);
-    });
-
     testWidgets('cutoff movie shows quality chip and size highlight', (
       tester,
     ) async {

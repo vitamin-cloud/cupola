@@ -48,11 +48,11 @@ Future<ProviderContainer> _pump(
         home: MediaQuery(
           data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
           child: MediaBrowseScaffold<String>(
-            title: 'Music',
-            searchHint: 'Artists and albums',
+            title: 'Series',
+            searchHint: 'Series',
             activityRoute: '/activity',
             navigationSection: NavigationSection.stack,
-            serviceName: 'Lidarr',
+            serviceName: 'Sonarr',
             heroTagPrefix: 'a',
             libraryProvider: _libraryProvider,
             searchQueryProvider: _queryProvider,
@@ -67,8 +67,8 @@ Future<ProviderContainer> _pump(
             imagesExtractor: (_) => null,
             idExtractor: (item) => item.hashCode,
             settingsSelector: (settings) => (
-              settings.urlFor(ServiceKey.lidarr),
-              settings.apiKeyFor(ServiceKey.lidarr),
+              settings.urlFor(ServiceKey.sonarr),
+              settings.apiKeyFor(ServiceKey.sonarr),
               const NoAccess(),
             ),
             onItemTap: (_, _, _) {},
@@ -106,7 +106,7 @@ void main() {
     expect(find.text('library:bjö'), findsOneWidget);
     expect(container.read(_queryProvider), '');
     expect(find.text('Your library'), findsOneWidget);
-    expect(find.text('Lidarr'), findsOneWidget);
+    expect(find.text('Sonarr'), findsOneWidget);
     // The wall is gone behind the results.
     expect(find.text('Alpha'), findsNothing);
 
@@ -115,10 +115,10 @@ void main() {
   });
 
   testWidgets('the second segment carries the connection name', (tester) async {
-    await _pump(tester, serviceLabel: 'Lidarr Hi-Fi');
+    await _pump(tester, serviceLabel: 'Sonarr Hi-Fi');
     await _type(tester, 'el');
 
-    expect(find.text('Lidarr Hi-Fi'), findsOneWidget);
+    expect(find.text('Sonarr Hi-Fi'), findsOneWidget);
   });
 
   testWidgets('switching scope keeps the text and hands the service the '
@@ -128,7 +128,7 @@ void main() {
 
     // Not yet through the debounce: the service would still ask for nothing.
     expect(container.read(_queryProvider), '');
-    await tester.tap(find.text('Lidarr'));
+    await tester.tap(find.text('Sonarr'));
     await tester.pump();
 
     expect(container.read(_scopeProvider), MediaFindScope.service);
@@ -166,7 +166,7 @@ void main() {
         hasTapAction: true,
       ),
     );
-    for (final label in ['Your library', 'Lidarr']) {
+    for (final label in ['Your library', 'Sonarr']) {
       final size = tester.getSize(
         find.ancestor(of: find.text(label), matching: find.byType(InkWell)),
       );
@@ -179,7 +179,7 @@ void main() {
       'the library', (tester) async {
     final container = await _pump(tester);
     await _type(tester, 'elbo');
-    await tester.tap(find.text('Lidarr'));
+    await tester.tap(find.text('Sonarr'));
     await tester.pump();
     expect(container.read(_scopeProvider), MediaFindScope.service);
 
@@ -197,7 +197,7 @@ void main() {
   ) async {
     final container = await _pump(tester);
     await _type(tester, 'elbo');
-    await tester.tap(find.text('Lidarr'));
+    await tester.tap(find.text('Sonarr'));
     await tester.pump();
 
     await tester.tap(find.byTooltip('Exit search'));
@@ -229,7 +229,7 @@ void main() {
   ) async {
     final container = await _pump(tester);
     await _type(tester, 'elbo');
-    await tester.tap(find.text('Lidarr'));
+    await tester.tap(find.text('Sonarr'));
     await tester.pump();
 
     container
@@ -243,7 +243,7 @@ void main() {
   });
 
   testWidgets('at 200% the segments fit without overflowing', (tester) async {
-    await _pump(tester, textScale: 2, serviceLabel: 'Lidarr Hi-Fi');
+    await _pump(tester, textScale: 2, serviceLabel: 'Sonarr Hi-Fi');
     await _type(tester, 'el');
 
     expect(tester.takeException(), isNull);
@@ -284,8 +284,8 @@ void main() {
             imagesExtractor: (_) => null,
             idExtractor: (item) => item.hashCode,
             settingsSelector: (settings) => (
-              settings.urlFor(ServiceKey.readarr),
-              settings.apiKeyFor(ServiceKey.readarr),
+              settings.urlFor(ServiceKey.radarr),
+              settings.apiKeyFor(ServiceKey.radarr),
               const NoAccess(),
             ),
             onItemTap: (_, _, _) {},

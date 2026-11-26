@@ -37,33 +37,12 @@ const _videoExtensions = {
   'STRM',
 };
 
-/// Extensions Lidarr imports.
-const _audioExtensions = {
-  'MP3',
-  'FLAC',
-  'M4A',
-  'M4B',
-  'OGG',
-  'OGA',
-  'OPUS',
-  'WAV',
-  'WMA',
-  'AAC',
-  'ALAC',
-  'APE',
-  'AIFF',
-  'AIF',
-  'WV',
-  'MKA',
-};
-
 /// Whether this file is the kind of media the service imports at all.
 bool manualImportIsSupportedFile(ServiceKey service, ManualImportItem item) {
   final extension = item.extension.toUpperCase();
   return switch (service) {
     ServiceKey.radarr ||
     ServiceKey.sonarr => _videoExtensions.contains(extension),
-    ServiceKey.lidarr => _audioExtensions.contains(extension),
     _ => true,
   };
 }
@@ -142,7 +121,6 @@ String manualImportUnsupportedReason(
   ManualImportItem item,
 ) {
   final kind = switch (service) {
-    ServiceKey.lidarr => 'an audio file',
     _ => 'a video file',
   };
   return 'Not $kind, ${service.title} cannot import ${item.extension} files.';
@@ -157,9 +135,6 @@ String manualImportGroupTitle(ServiceKey service, ManualImportItem item) {
   final title = switch (service) {
     ServiceKey.radarr => stringOrNull(item.movie?['title']),
     ServiceKey.sonarr => stringOrNull(item.series?['title']),
-    ServiceKey.lidarr =>
-      stringOrNull(item.artist?['artistName']) ??
-          stringOrNull(item.artist?['title']),
     _ => null,
   };
   final trimmed = title?.trim();
@@ -201,11 +176,6 @@ ManualImportIdentity manualImportIdentityFor(
     ServiceKey.sonarr => ManualImportIdentity(
       code: _episodeCode(item.episodes),
       title: _episodeTitles(item.episodes),
-      quality: quality,
-    ),
-    ServiceKey.lidarr => ManualImportIdentity(
-      code: _trackCode(item.tracks),
-      title: stringOrNull(item.album?['title']),
       quality: quality,
     ),
     _ => ManualImportIdentity(quality: quality),
@@ -251,7 +221,6 @@ int compareManualImportOrder(
 ) {
   final byPlace = switch (service) {
     ServiceKey.sonarr => _compareEpisodes(a.episodes, b.episodes),
-    ServiceKey.lidarr => _compareTracks(a, b),
     ServiceKey.radarr => _compareNumbers(
       intOrNull(a.movie?['year']),
       intOrNull(b.movie?['year']),
@@ -287,26 +256,6 @@ int _compareEpisodes(
   );
 }
 
-int _compareTracks(ManualImportItem a, ManualImportItem b) {
-  final byAlbum = (stringOrNull(a.album?['title']) ?? '')
-      .toLowerCase()
-      .compareTo((stringOrNull(b.album?['title']) ?? '').toLowerCase());
-  if (byAlbum != 0) return byAlbum;
-  return _compareNumbers(
-    _firstTrackNumber(a.tracks),
-    _firstTrackNumber(b.tracks),
-  );
-}
-
-int? _firstTrackNumber(List<Map<String, dynamic>> tracks) => tracks
-    .map(
-      (track) =>
-          intOrNull(track['trackNumber']) ??
-          intOrNull(track['absoluteTrackNumber']),
-    )
-    .whereType<int>()
-    .firstOrNull;
-
 String? _episodeTitles(List<Map<String, dynamic>> episodes) {
   final titles = episodes
       .map((episode) => stringOrNull(episode['title']))
@@ -316,20 +265,6 @@ String? _episodeTitles(List<Map<String, dynamic>> episodes) {
   if (titles.isEmpty) return null;
   if (titles.length <= 2) return titles.join(' + ');
   return '${titles.take(2).join(' + ')} +${titles.length - 2}';
-}
-
-String? _trackCode(List<Map<String, dynamic>> tracks) {
-  final numbers = tracks
-      .map(
-        (track) =>
-            intOrNull(track['trackNumber']) ??
-            intOrNull(track['absoluteTrackNumber']),
-      )
-      .whereType<int>()
-      .toList(growable: false);
-  if (numbers.isEmpty) return tracks.isEmpty ? null : '${tracks.length} tracks';
-  if (numbers.length == 1) return 'Track ${numbers.first}';
-  return 'Tracks ${numbers.first}–${numbers.last}';
 }
 
 /// Does this file match the user's filter text?

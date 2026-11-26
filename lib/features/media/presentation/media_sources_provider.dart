@@ -8,8 +8,6 @@ import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/providers/provider_retry.dart';
 import 'package:cupola/core/status/arr_queue_snapshot.dart';
 import 'package:cupola/core/utils/dynamic_map_utils.dart';
-import 'package:cupola/features/bazarr/domain/models/bazarr_models.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_provider.dart';
 import 'package:cupola/features/discover/data/seerr_accounts.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/discover/domain/seerr_numbering.dart';
@@ -307,137 +305,6 @@ Future<T?> _orNull<T>(Future<T?> Function() read) async {
   }
 }
 
-/// Whether [path], [title] and [year] Bazarr holds name the same copy as the
-/// arr's: the same path, or the same title and year.
-bool _sameCopy({
-  required String? bazarrPath,
-  required String? bazarrTitle,
-  required int? bazarrYear,
-  required String? path,
-  required String title,
-  required int year,
-}) {
-  if ((bazarrPath ?? '').isNotEmpty && bazarrPath == path) return true;
-  final normalised = normaliseStreamTitle(bazarrTitle);
-  return normalised != null &&
-      normalised == normaliseStreamTitle(title) &&
-      bazarrYear == year;
-}
-
-/// What Bazarr checks an arr's copy against: its id, and its path, or its
-/// title and year.
-typedef _ArrCopyFacts = ({int id, String? path, String title, int year});
-
-/// The arr copy at [source], as the facts Bazarr is checked against; null when
-/// that arr holds no copy. Its one `watch` runs before its first await.
-Future<_ArrCopyFacts?> _arrCopyFacts(Ref ref, MediaSource source) async {
-  if (source.key.isMovie) {
-    final movie = (await ref.watch(
-      mediaRadarrCopyProvider(source).future,
-    )).value.movie;
-    return movie == null
-        ? null
-        : (
-            id: movie.id,
-            path: movie.path,
-            title: movie.title,
-            year: movie.year,
-          );
-  }
-  final series = (await ref.watch(
-    mediaSonarrCopyProvider(source).future,
-  )).value.series;
-  return series == null
-      ? null
-      : (
-          id: series.id,
-          path: series.path,
-          title: series.title,
-          year: series.year,
-        );
-}
-
-/// What the Bazarr [MediaSource.connectionId] holds of the title: the one arr
-/// copy it follows, checked against that copy's path, or its title and year.
-///
-/// Bazarr follows one Radarr and one Sonarr and speaks in their ids, so every
-/// tracked copy is asked by its id and the answer verified; the first that
-/// matches is the copy Bazarr covers. A copy whose arr did not answer is
-/// skipped: it is the arr's failure, already on the arr's own row.
-final mediaBazarrCopyProvider = FutureProvider.autoDispose
-    .family<MediaAnswer<MediaBazarrCopy?>, MediaSource>((ref, source) async {
-      final bazarr = ref.watch(bazarrServiceForProvider(source.connectionId));
-      final key = source.key;
-      // Every arr's copy is subscribed before the first await (a ref used
-      // after one may belong to a build disposed meanwhile). The page's rows
-      // read the same copies, so this asks nothing more of the arrs. One that
-      // fails is awaited below or never: `ignore` keeps it from being an
-      // uncaught error when an earlier copy already matched.
-      final arrCopies = [
-        for (final arr in _configured(ref, _arrOf(key)))
-          (
-            arr: arr,
-            copy: _arrCopyFacts(ref, (key: key, connectionId: arr.id))
-              ..ignore(),
-          ),
-      ];
-      for (final (:arr, copy: copyRead) in arrCopies) {
-        // The arr's copy, or nothing to ask Bazarr about. The arr's failure is
-        // on its own row and skips the copy here; Bazarr's own fails this one.
-        final _ArrCopyFacts? copy;
-        try {
-          copy = await copyRead;
-        } catch (_) {
-          continue;
-        }
-        if (copy == null) continue;
-        if (key.isMovie) {
-          final followed = await bazarr.getMovieById(copy.id);
-          if (followed != null &&
-              _sameCopy(
-                bazarrPath: followed.path,
-                bazarrTitle: followed.title,
-                bazarrYear: followed.year,
-                path: copy.path,
-                title: copy.title,
-                year: copy.year,
-              )) {
-            return MediaAnswer(
-              MediaBazarrCopy(arrConnectionId: arr.id, movie: followed),
-              DateTime.now(),
-            );
-          }
-        } else {
-          final followed = await bazarr.getSeriesById(copy.id);
-          if (followed != null &&
-              _sameCopy(
-                bazarrPath: followed.path,
-                bazarrTitle: followed.title,
-                bazarrYear: followed.year,
-                path: copy.path,
-                title: copy.title,
-                year: copy.year,
-              )) {
-            List<BazarrEpisode>? episodes;
-            try {
-              episodes = await bazarr.getEpisodes(copy.id);
-            } catch (_) {
-              // The row counts what is wanted instead.
-            }
-            return MediaAnswer(
-              MediaBazarrCopy(
-                arrConnectionId: arr.id,
-                series: followed,
-                episodes: episodes,
-              ),
-              DateTime.now(),
-            );
-          }
-        }
-      }
-      return MediaAnswer<MediaBazarrCopy?>(null, DateTime.now());
-    }, retry: noProviderRetry);
-
 /// The "On your server" rows of a title, one per fact, in the page's order:
 /// the media servers, the arr copies (or Seerr's claims about them), Bazarr,
 /// Seerr.
@@ -539,17 +406,6 @@ final mediaRowsProvider = Provider.autoDispose.family<List<MediaRow>, MediaKey>(
     rows.addAll(claims);
     if (arrs.isEmpty && claims.isEmpty) rows.add(MediaNotSetUpRow(arr));
 
-    for (final connection in _configured(ref, ServiceKey.bazarr)) {
-      rows.add(
-        MediaConnectionRow<MediaBazarrCopy?>(
-          connection,
-          MediaReading.of(
-            ref.watch(mediaBazarrCopyProvider(sourceOf(connection))),
-          ),
-        ),
-      );
-    }
-
     for (final seerr in seerrReadings) {
       rows.add(
         MediaConnectionRow<MediaSeerrRecord>(seerr.connection, seerr.reading),
@@ -604,10 +460,6 @@ MediaServerThroughSeerrRow? _playerClaim(
     switch (facts.value?.mediaServer) {
       case SeerrMediaServer.jellyfin:
         server = ServiceKey.jellyfin;
-      case SeerrMediaServer.plex:
-        server = ServiceKey.plex;
-      case SeerrMediaServer.emby:
-        server = ServiceKey.emby;
       default:
         return null;
     }
@@ -748,8 +600,6 @@ void retryMediaRow(WidgetRef ref, MediaKey key, MediaRow row) {
       ref.invalidate(mediaRadarrCopyProvider(source));
     case ServiceKey.sonarr:
       ref.invalidate(mediaSonarrCopyProvider(source));
-    case ServiceKey.bazarr:
-      ref.invalidate(mediaBazarrCopyProvider(source));
     case ServiceKey.seerr:
       ref.invalidate(mediaSeerrRecordProvider(source));
     default:

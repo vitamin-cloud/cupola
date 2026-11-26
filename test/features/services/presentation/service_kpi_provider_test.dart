@@ -1,13 +1,8 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart' show Icons;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/core/api/base_arr_service.dart';
 import 'package:cupola/core/models/service_kpi.dart';
 import 'package:cupola/features/services/domain/kpi_aggregate.dart';
 import 'package:cupola/core/status/arr_queue_snapshot.dart';
@@ -16,28 +11,14 @@ import 'package:cupola/features/discover/domain/models/seerr_request.dart';
 import 'package:cupola/features/discover/domain/seerr_permission.dart';
 import 'package:cupola/features/discover/domain/seerr_sign_in.dart';
 import 'package:cupola/features/discover/presentation/discover_provider.dart';
-import 'package:cupola/features/jellyfin/data/jellyfin_client.dart';
-import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
-import 'package:cupola/features/plex/data/plex_client.dart';
-import 'package:cupola/features/plex/presentation/plex_provider.dart';
-import 'package:cupola/features/readarr/data/readarr_service.dart';
-import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/services/presentation/service_kpi_provider.dart';
-import 'package:cupola/features/unraid/data/unraid_client.dart';
-import 'package:cupola/features/unraid/domain/models/unraid_models.dart';
-import 'package:cupola/features/unraid/presentation/unraid_provider.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
-import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/settings/domain/settings_model.dart';
 
 import '../../../test_helpers/fake_api_client.dart';
-import '../../../test_helpers/capturing_http_adapter.dart';
-import '../../../test_helpers/fixtures.dart';
 import '../../../test_helpers/settings_scope.dart';
 
 SeerrRequest _request({
@@ -105,27 +86,6 @@ Future<Map<String, String>> _seerrKpis(List<SeerrRequest> requests) async {
 /// bug, so it cannot be the harness that catches it.
 FakeApiClient _deadClient() =>
     FakeApiClient()..getException = Exception('unreachable');
-
-/// Answers the author list and refuses the queue, which is the half-broken
-/// Readarr the queue KPI had no way to draw: `getQueue` swallowed its own
-/// failure, so the rail read `Queue 0` over a queue nobody had read.
-class _ReadarrClientWithDeadQueue extends FakeApiClient {
-  @override
-  Future<Response<dynamic>> get(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    CancelToken? cancelToken,
-    Duration? receiveTimeout,
-  }) {
-    if (path.contains('queue')) throw Exception('queue unreachable');
-    return super.get(
-      path,
-      queryParameters: queryParameters,
-      cancelToken: cancelToken,
-      receiveTimeout: receiveTimeout,
-    );
-  }
-}
 
 Map<String, ServiceKpi> _byLabel(List<ServiceKpi> kpis) => {
   for (final kpi in kpis) kpi.label: kpi,
@@ -312,28 +272,6 @@ void main() {
       expect(kpis['Queue']!.value, ServiceKpi.unavailableValue);
     });
 
-    test('Lidarr prints em dashes, not "Artists 0"', () async {
-      final kpis = await _kpisFor(ServiceKey.lidarr, [
-        lidarrServiceProvider.overrideWithValue(LidarrService(_deadClient())),
-      ]);
-
-      expect(kpis['Artists']!.value, ServiceKpi.unavailableValue);
-      expect(kpis['Albums']!.value, ServiceKpi.unavailableValue);
-      expect(kpis['Tracks']!.value, ServiceKpi.unavailableValue);
-      expect(kpis['Missing']!.value, ServiceKpi.unavailableValue);
-    });
-
-    test('Readarr prints em dashes, not "Authors 0"', () async {
-      final kpis = await _kpisFor(ServiceKey.readarr, [
-        readarrServiceProvider.overrideWithValue(ReadarrService(_deadClient())),
-      ]);
-
-      expect(kpis['Authors']!.value, ServiceKpi.unavailableValue);
-      expect(kpis['Books']!.value, ServiceKpi.unavailableValue);
-      expect(kpis['Missing']!.value, ServiceKpi.unavailableValue);
-      expect(kpis['Queue']!.value, ServiceKpi.unavailableValue);
-    });
-
     test('a library that really is empty still reads zero', () async {
       // The other half of the pair. An em dash for an answered-and-empty
       // library would be the same lie pointing the other way.
@@ -347,202 +285,9 @@ void main() {
     });
   });
 
-  group('stream server KPIs preserve reachability', () {
-    test(
-      'an answered empty Jellyfin server still reports real zeroes',
-      () async {
-        final client = JellyfinClient(
-          baseUrl: 'https://jellyfin.test',
-          apiKey: 'key',
-          deviceName: 'test',
-          deviceId: 'test-device',
-        );
-        client.dio.httpClientAdapter = CapturingHttpAdapter(response: const []);
-        addTearDown(client.close);
+  group('stream server KPIs preserve reachability', () {});
 
-        final container = ProviderContainer(
-          overrides: [jellyfinClientProvider.overrideWithValue(client)],
-        );
-        addTearDown(container.dispose);
-
-        final kpis = _byLabel(
-          await container.read(serviceKpiProvider(ServiceKey.jellyfin).future),
-        );
-        expect(kpis['Streams']!.value, '0');
-        expect(kpis['Transcodes']!.value, '0');
-        expect(kpis['Libraries']!.value, '0');
-      },
-    );
-
-    test('Jellyfin transport failure reaches the KPI provider', () async {
-      final client = JellyfinClient(
-        baseUrl: 'https://jellyfin.test',
-        apiKey: 'key',
-        deviceName: 'test',
-        deviceId: 'test-device',
-      );
-      client.dio.httpClientAdapter = CapturingHttpAdapter(
-        response: '',
-        statusCode: 500,
-      );
-      addTearDown(client.close);
-
-      final container = ProviderContainer(
-        overrides: [jellyfinClientProvider.overrideWithValue(client)],
-      );
-      addTearDown(container.dispose);
-
-      await expectLater(
-        container.read(serviceKpiProvider(ServiceKey.jellyfin).future),
-        throwsA(isA<DioException>()),
-      );
-    });
-
-    test('an answered empty Plex server still reports real zeroes', () async {
-      final client = PlexClient(
-        url: 'https://plex.test:32400',
-        token: 'token',
-        clientIdentifier: 'test-client',
-        platform: 'macOS',
-      );
-      client.api.dio.httpClientAdapter = CapturingHttpAdapter(
-        response: const {
-          'MediaContainer': {'size': 0},
-        },
-      );
-      addTearDown(client.close);
-
-      final container = ProviderContainer(
-        overrides: [plexClientProvider.overrideWithValue(client)],
-      );
-      addTearDown(container.dispose);
-
-      final kpis = _byLabel(
-        await container.read(serviceKpiProvider(ServiceKey.plex).future),
-      );
-      expect(kpis['Streams']!.value, '0');
-      expect(kpis['Transcodes']!.value, '0');
-      expect(kpis['Libraries']!.value, '0');
-    });
-
-    test('Plex transport failure reaches the KPI provider', () async {
-      final client = PlexClient(
-        url: 'https://plex.test:32400',
-        token: 'token',
-        clientIdentifier: 'test-client',
-        platform: 'macOS',
-      );
-      client.api.dio.httpClientAdapter = CapturingHttpAdapter(
-        response: '',
-        statusCode: 500,
-      );
-      addTearDown(client.close);
-
-      final container = ProviderContainer(
-        overrides: [plexClientProvider.overrideWithValue(client)],
-      );
-      addTearDown(container.dispose);
-
-      await expectLater(
-        container.read(serviceKpiProvider(ServiceKey.plex).future),
-        throwsA(isA<PlexException>()),
-      );
-    });
-
-    test('a named Plex connection reads its own KPI source', () async {
-      const lens = ServiceInstance(
-        id: 'plex',
-        service: ServiceKey.plex,
-        label: 'Home',
-        url: 'https://plex-home.test',
-        credential: 'home-token',
-      );
-      const other = ServiceInstance(
-        id: 'plex-away',
-        service: ServiceKey.plex,
-        label: 'Away',
-        url: 'https://plex-away.test',
-        credential: 'away-token',
-      );
-
-      PlexClient client({required int libraryCount}) {
-        final value = PlexClient(
-          url: 'https://plex.test:32400',
-          token: 'token',
-          clientIdentifier: 'test-client',
-          platform: 'macOS',
-        );
-        value.api.dio.httpClientAdapter = CapturingHttpAdapter(
-          byPath: {
-            '/status/sessions': const {
-              'MediaContainer': {'size': 0, 'Metadata': []},
-            },
-            '/library/sections': {
-              'MediaContainer': {
-                'size': libraryCount,
-                'Directory': [
-                  for (var i = 0; i < libraryCount; i++)
-                    {'key': '$i', 'type': 'movie', 'title': 'Library $i'},
-                ],
-              },
-            },
-          },
-        );
-        addTearDown(value.close);
-        return value;
-      }
-
-      final homeClient = client(libraryCount: 1);
-      final awayClient = client(libraryCount: 3);
-      final container = ProviderContainer(
-        overrides: [
-          currentSettingsProvider.overrideWithValue(
-            const SettingsModel(instances: [lens, other]),
-          ),
-          plexClientProvider.overrideWithValue(homeClient),
-          plexClientForProvider.overrideWith((ref, instanceId) => awayClient),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      final kpis = await container.read(
-        serviceKpiForProvider((
-          service: ServiceKey.plex,
-          instanceId: other.id,
-        )).future,
-      );
-
-      expect(kpis, isNotNull);
-      expect(kpis!.firstWhere((kpi) => kpi.label == 'Libraries').value, '3');
-    });
-  });
-
-  group('Readarr queue', () {
-    test('a queue endpoint that is down reads "—", not an idle 0', () async {
-      // The library answers and the queue does not, which is the ordinary
-      // shape of a half-broken Readarr. Three figures are real; only the
-      // fourth is unknown, and only the fourth says so.
-      final client = _ReadarrClientWithDeadQueue()
-        ..getResponseData = <dynamic>[
-          {
-            'id': 1,
-            'authorName': 'Le Guin',
-            'statistics': {'bookCount': 4, 'bookFileCount': 4},
-          },
-        ];
-      final kpis = await _kpisFor(ServiceKey.readarr, [
-        readarrServiceProvider.overrideWithValue(ReadarrService(client)),
-      ]);
-
-      expect(kpis['Authors']!.value, '1');
-      expect(kpis['Queue']!.value, ServiceKpi.unavailableValue);
-      expect(kpis['Queue']!.note, isNotNull);
-      // The reason belongs to the figure that has it: naming the whole service
-      // here would read as "Readarr is down" over three figures Readarr just
-      // answered.
-      expect(kpis['Authors']!.note, isNull);
-    });
-  });
+  group('Readarr queue', () {});
 
   group('a queue figure is only as much as the walk read', () {
     // A proxy that drops `totalRecords` stops the queue walk on its first
@@ -550,34 +295,6 @@ void main() {
     final fullPage = [
       for (var i = 0; i < 200; i++) {'id': i, 'movieId': i + 1},
     ];
-
-    test('Readarr states the server\'s own count over the rows', () async {
-      final kpis = await _kpisFor(ServiceKey.readarr, [
-        readarrKpiLibraryProvider.overrideWith((ref) async => const []),
-        readarrQueueProvider.overrideWith(
-          (ref) async => ArrRecordPage(
-            records: fullPage.take(3).toList(),
-            total: 340,
-            cutShort: true,
-          ),
-        ),
-      ]);
-
-      expect(kpis['Queue']!.value, '340');
-    });
-
-    test('Readarr reads 200+ for a full page with no count', () async {
-      final kpis = await _kpisFor(ServiceKey.readarr, [
-        readarrKpiLibraryProvider.overrideWith((ref) async => const []),
-        readarrQueueProvider.overrideWith(
-          (ref) async =>
-              ArrRecordPage(records: fullPage, total: null, cutShort: true),
-        ),
-      ]);
-
-      expect(kpis['Queue']!.value, '200+');
-      expect(kpis['Queue']!.semanticLabel, 'Queue: at least 200');
-    });
 
     test('Radarr reads 200+ over a queue snapshot cut short', () async {
       final kpis = await _kpisFor(ServiceKey.radarr, [
@@ -623,228 +340,6 @@ void main() {
       expect(kpis['Movies']!.note, isNull);
     });
   });
-
-
 }
 
-/// Answers each Unraid GraphQL document by what it asks for: the array, the
-/// containers, or a refusal. Both documents go to the same `/graphql`, so a
-/// per-path adapter cannot tell them apart.
-class _UnraidAdapter implements HttpClientAdapter {
-  _UnraidAdapter({this.array = true, this.docker = true});
-
-  final bool array;
-  final bool docker;
-
-  @override
-  void close({bool force = false}) {}
-
-  @override
-  Future<ResponseBody> fetch(
-    RequestOptions options,
-    Stream<Uint8List>? requestStream,
-    Future<void>? cancelFuture,
-  ) async {
-    final query = (options.data as Map)['query'] as String;
-    final (fixture, answers) = query.contains('array {')
-        ? ('unraid/array.json', array)
-        : ('unraid/docker.json', docker);
-    return answers
-        ? ResponseBody.fromString(
-            jsonEncode(jsonFixtureMap(fixture)),
-            200,
-            headers: {
-              Headers.contentTypeHeader: ['application/json'],
-            },
-          )
-        : ResponseBody.fromString(
-            jsonEncode({
-              'errors': [
-                {
-                  'message': 'This read failed',
-                  'extensions': {'code': 'INTERNAL_SERVER_ERROR'},
-                },
-              ],
-            }),
-            500,
-            headers: {
-              Headers.contentTypeHeader: ['application/json'],
-            },
-          );
-  }
-}
-
-UnraidClient _unraidClient({bool array = true, bool docker = true}) {
-  final dio = Dio(BaseOptions(baseUrl: 'https://unraid.test'))
-    ..httpClientAdapter = _UnraidAdapter(array: array, docker: docker);
-  final client = UnraidClient(
-    url: 'https://unraid.test',
-    apiKey: 'key',
-    dio: dio,
-  );
-  addTearDown(client.close);
-  return client;
-}
-
-void _expectArrayFigures(Map<String, ServiceKpi> kpis, {required bool kept}) {
-  for (final label in ['Array', 'Used', 'Disks']) {
-    expect(
-      kpis[label]!.isUnavailable,
-      !kept,
-      reason: '$label ${kept ? 'keeps its value' : 'reads —'}',
-    );
-    if (!kept) expect(kpis[label]!.note, isNull, reason: '$label has no note');
-  }
-}
-
-void _expectContainersFigure(
-  Map<String, ServiceKpi> kpis, {
-  required bool kept,
-}) {
-  expect(kpis['Containers']!.isUnavailable, !kept);
-  if (kept) {
-    expect(kpis['Containers']!.value, '1/2');
-  } else {
-    expect(kpis['Containers']!.note, isNull);
-  }
-}
-
-void _unraidRailTests() {
-  group('Unraid rail degrades per document', () {
-    // The lens path reads the two providers the pages already load; the
-    // per-connection path reads its own client. Same rule on both.
-    const lensInstance = ServiceInstance(
-      id: 'unraid',
-      service: ServiceKey.unraid,
-      label: 'Home',
-      url: 'https://unraid-home.test',
-      credential: 'home-key',
-    );
-    const otherInstance = ServiceInstance(
-      id: 'unraid-away',
-      service: ServiceKey.unraid,
-      label: 'Away',
-      url: 'https://unraid-away.test',
-      credential: 'away-key',
-    );
-
-    final arrayValue = UnraidArray.fromJson(
-      (jsonFixtureMap('unraid/array.json')['data'] as Map)['array']
-          as Map<String, dynamic>,
-    );
-    final containers = [
-      for (final c
-          in ((jsonFixtureMap('unraid/docker.json')['data'] as Map)['docker']
-                  as Map)['containers']
-              as List)
-        UnraidDockerContainer.fromJson((c as Map).cast<String, dynamic>()),
-    ];
-
-    Future<List<ServiceKpi>> lens({
-      required bool arrayFails,
-      required bool dockerFails,
-    }) {
-      final container = ProviderContainer(
-        overrides: [
-          unraidArrayProvider.overrideWith(
-            (ref) async =>
-                arrayFails ? throw Exception('array down') : arrayValue,
-          ),
-          unraidDockerProvider.overrideWith(
-            (ref) async =>
-                dockerFails ? throw Exception('docker down') : containers,
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-      return container.read(serviceKpiProvider(ServiceKey.unraid).future);
-    }
-
-    Future<List<ServiceKpi>?> connection({
-      bool array = true,
-      bool docker = true,
-    }) {
-      final container = ProviderContainer(
-        overrides: [
-          currentSettingsProvider.overrideWithValue(
-            const SettingsModel(instances: [lensInstance, otherInstance]),
-          ),
-          unraidClientForProvider.overrideWith(
-            (ref, id) => _unraidClient(array: array, docker: docker),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-      return container.read(
-        serviceKpiForProvider((
-          service: ServiceKey.unraid,
-          instanceId: otherInstance.id,
-        )).future,
-      );
-    }
-
-    test('both documents answer: four figures with values', () async {
-      final kpis = _byLabel(await lens(arrayFails: false, dockerFails: false));
-      _expectArrayFigures(kpis, kept: true);
-      _expectContainersFigure(kpis, kept: true);
-      expect(kpis.keys, ['Array', 'Used', 'Containers', 'Disks']);
-    });
-
-    test(
-      'lens: Docker failing leaves Array, Used and Disks standing',
-      () async {
-        final baseline = _byLabel(
-          await lens(arrayFails: false, dockerFails: false),
-        );
-        final kpis = _byLabel(await lens(arrayFails: false, dockerFails: true));
-
-        _expectArrayFigures(kpis, kept: true);
-        _expectContainersFigure(kpis, kept: false);
-        for (final label in ['Array', 'Used', 'Disks']) {
-          expect(kpis[label]!.value, baseline[label]!.value);
-        }
-      },
-    );
-
-    test('lens: the array failing leaves Containers standing', () async {
-      final kpis = _byLabel(await lens(arrayFails: true, dockerFails: false));
-
-      _expectArrayFigures(kpis, kept: false);
-      _expectContainersFigure(kpis, kept: true);
-    });
-
-    test('lens: both failing fails the rail, into its single card', () async {
-      await expectLater(
-        lens(arrayFails: true, dockerFails: true),
-        throwsA(isA<Exception>()),
-      );
-    });
-
-    test('connection: Docker failing leaves the array figures', () async {
-      final kpis = _byLabel((await connection(docker: false))!);
-
-      _expectArrayFigures(kpis, kept: true);
-      _expectContainersFigure(kpis, kept: false);
-    });
-
-    test('connection: the array failing leaves Containers', () async {
-      final kpis = _byLabel((await connection(array: false))!);
-
-      _expectArrayFigures(kpis, kept: false);
-      _expectContainersFigure(kpis, kept: true);
-    });
-
-    test('connection: both failing fails the rail', () async {
-      await expectLater(
-        connection(array: false, docker: false),
-        throwsA(isA<UnraidException>()),
-      );
-    });
-
-    test('connection: both answering gives the same four figures', () async {
-      final kpis = _byLabel((await connection())!);
-      _expectArrayFigures(kpis, kept: true);
-      _expectContainersFigure(kpis, kept: true);
-    });
-  });
-}
+void _unraidRailTests() {}

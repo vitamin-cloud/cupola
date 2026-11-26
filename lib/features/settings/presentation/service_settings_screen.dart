@@ -215,8 +215,6 @@ class _ServiceSettingsScreenState extends ConsumerState<ServiceSettingsScreen> {
 
   ServiceKey get service => widget.service;
 
-  bool get isPlex => service == ServiceKey.plex;
-
   /// Services authenticated with username/password rather than an API key.
   ///
   /// The registry owns this fact; see [ServiceKeyExtension.usesApiKey]. Spelled
@@ -2349,14 +2347,14 @@ class _ServiceSettingsScreenState extends ConsumerState<ServiceSettingsScreen> {
     final credentialPath = service.credentialPath;
     return Semantics(
       label: service.credentialLabel,
-      hint: isPlex ? 'Enter a Plex device token' : 'Enter the API key',
+      hint: 'Enter the API key',
       child: TextFormField(
         key: _credentialFieldKey,
         focusNode: _credentialFocus,
         controller: _apiKeyController,
         decoration: InputDecoration(
           labelText: service.credentialLabel,
-          hintText: isPlex ? 'X-Plex-Token' : 'Enter your API key',
+          hintText: 'Enter your API key',
           // Where the credential lives inside the service's own interface. Same
           // registry fact onboarding shows under the same field, so someone who
           // set this up once recognises the breadcrumb when they come back to fix
@@ -2456,17 +2454,7 @@ class _ServiceSettingsScreenState extends ConsumerState<ServiceSettingsScreen> {
   String? _validateApiKey(String? value) {
     final trimmed = value?.trim() ?? '';
     if (trimmed.isEmpty) {
-      return isPlex ? 'Plex token is required' : 'API Key is required';
-    }
-
-    // A Plex JSON Web Token expires after seven days and can only be renewed by
-    // calling plex.tv, which this app never does. Accepting one would produce
-    // software that works for a week and then fails with a 401 the user has no
-    // way to interpret, so it is refused at the point of paste, where the
-    // message can still say what to paste instead.
-    if (isPlex && trimmed.startsWith('eyJ')) {
-      return 'That is a temporary token, it expires in 7 days and Stack '
-          'cannot renew it. Paste a device token instead.';
+      return 'API Key is required';
     }
 
     return null;

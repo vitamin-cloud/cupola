@@ -41,7 +41,7 @@ enum StuckAction {
 typedef StuckActions = ({StuckAction primary, List<StuckAction> secondary});
 
 /// The arrs whose queue record a download can be dropped or removed through.
-const _arrs = {ServiceKey.radarr, ServiceKey.sonarr, ServiceKey.lidarr};
+const _arrs = {ServiceKey.radarr, ServiceKey.sonarr};
 
 /// Whether [item] is an arr's queue record, which the arr can drop, blocklist
 /// and remove: a transfer no arr asked for is only its client's.

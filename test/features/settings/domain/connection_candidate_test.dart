@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cupola/core/network/found_address.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/discover/domain/seerr_known_arr.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/settings/domain/connection_candidate.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
@@ -191,38 +190,5 @@ void main() {
     });
   });
 
-  group('from Prowlarr', () {
-    test('P1 on Docker: every arr Cupola connects to, without a key', () async {
-      final profile = Profiles.p1.withDockerHostnames();
-      final harness = await ProfileHarness.start(profile);
-      final apps = await harness
-          .container(retry: (_, _) => null)
-          .read(prowlarrServiceProvider)
-          .knownApplications();
-      final prowlarr = profile.connection(WorldIds.prowlarr).instance;
-
-      final candidates = [for (final a in apps) ?a.toCandidate(prowlarr)];
-
-      expect(
-        [
-          for (final c in candidates)
-            (c.service, c.displayName, c.proposal!.hostAndPort),
-        ],
-        [
-          (ServiceKey.radarr, 'Radarr', 'nas.home.arpa:7878'),
-          (ServiceKey.radarr, 'Radarr 4K', 'nas.home.arpa:7878'),
-          (ServiceKey.sonarr, 'Sonarr', 'nas.home.arpa:8989'),
-          (ServiceKey.lidarr, 'Lidarr', 'nas.home.arpa:8686'),
-        ],
-      );
-      expect(candidates.every((c) => !c.hasKey), isTrue);
-      expect(candidates.map((c) => c.source).toSet(), {
-        const CandidateSource(
-          service: ServiceKey.prowlarr,
-          connectionId: WorldIds.prowlarr,
-          url: WorldHosts.prowlarr,
-        ),
-      });
-    });
-  });
+  group('from Prowlarr', () {});
 }

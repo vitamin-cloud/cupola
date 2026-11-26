@@ -1,6 +1,6 @@
 import 'package:cupola/features/settings/domain/service_key.dart';
 
-enum ServiceType { movies, series, music, discover }
+enum ServiceType { movies, series, discover }
 
 /// Human-readable display titles for [ServiceType].
 extension ServiceTypeDisplay on ServiceType {
@@ -10,8 +10,6 @@ extension ServiceTypeDisplay on ServiceType {
         return 'Movies';
       case ServiceType.series:
         return 'Series';
-      case ServiceType.music:
-        return 'Music';
       case ServiceType.discover:
         return 'Requests';
     }
@@ -28,7 +26,6 @@ extension ServiceTypeDisplay on ServiceType {
   ServiceKey get service => switch (this) {
     ServiceType.movies => ServiceKey.radarr,
     ServiceType.series => ServiceKey.sonarr,
-    ServiceType.music => ServiceKey.lidarr,
     ServiceType.discover => ServiceKey.seerr,
   };
 }

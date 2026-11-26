@@ -906,7 +906,6 @@ class ConfigProfile {
   SettingsModel get settings => SettingsModel(
     instances: [for (final c in connections) c.instance],
     trustedCertificates: trustedCertificates,
-    region: 'IT',
     // What every install mints once: the identifier plex.tv is asked a PIN
     // with, and Plex knows Cupola by.
     plexClientId: worldPlexClientId,

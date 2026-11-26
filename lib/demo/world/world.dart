@@ -607,117 +607,6 @@ class WorldAlbum {
   final int tracks;
 }
 
-/// The music the testlab materialises: eight artists, one album each, so
-/// Lidarr's shelves and the artist page have something to draw.
-abstract final class WorldMusic {
-  static const all = <WorldArtist>[
-    WorldArtist(
-      key: 'daftPunk',
-      name: 'Daft Punk',
-      foreignArtistId: '056e4f3e-d505-4dad-8ec1-d04f521cbb56',
-      albums: [
-        WorldAlbum(
-          title: 'Discovery',
-          year: 2001,
-          foreignAlbumId: 'album-daft-punk-discovery',
-          tracks: 14,
-        ),
-      ],
-    ),
-    WorldArtist(
-      key: 'massiveAttack',
-      name: 'Massive Attack',
-      foreignArtistId: 'artist-massive-attack',
-      albums: [
-        WorldAlbum(
-          title: 'Mezzanine',
-          year: 1998,
-          foreignAlbumId: 'album-massive-attack-mezzanine',
-          tracks: 11,
-        ),
-      ],
-    ),
-    WorldArtist(
-      key: 'boardsOfCanada',
-      name: 'Boards of Canada',
-      foreignArtistId: 'artist-boards-of-canada',
-      albums: [
-        WorldAlbum(
-          title: 'Music Has the Right to Children',
-          year: 1998,
-          foreignAlbumId: 'album-boc-mhtrtc',
-          tracks: 18,
-        ),
-      ],
-    ),
-    WorldArtist(
-      key: 'aphexTwin',
-      name: 'Aphex Twin',
-      foreignArtistId: 'artist-aphex-twin',
-      albums: [
-        WorldAlbum(
-          title: 'Selected Ambient Works 85-92',
-          year: 1992,
-          foreignAlbumId: 'album-aphex-saw',
-          tracks: 13,
-        ),
-      ],
-    ),
-    WorldArtist(
-      key: 'bonobo',
-      name: 'Bonobo',
-      foreignArtistId: 'artist-bonobo',
-      albums: [
-        WorldAlbum(
-          title: 'Black Sands',
-          year: 2010,
-          foreignAlbumId: 'album-bonobo-black-sands',
-          tracks: 12,
-        ),
-      ],
-    ),
-    WorldArtist(
-      key: 'air',
-      name: 'Air',
-      foreignArtistId: 'artist-air',
-      albums: [
-        WorldAlbum(
-          title: 'Moon Safari',
-          year: 1998,
-          foreignAlbumId: 'album-air-moon-safari',
-          tracks: 10,
-        ),
-      ],
-    ),
-    WorldArtist(
-      key: 'portishead',
-      name: 'Portishead',
-      foreignArtistId: 'artist-portishead',
-      albums: [
-        WorldAlbum(
-          title: 'Dummy',
-          year: 1994,
-          foreignAlbumId: 'album-portishead-dummy',
-          tracks: 11,
-        ),
-      ],
-    ),
-    WorldArtist(
-      key: 'cinematicOrchestra',
-      name: 'The Cinematic Orchestra',
-      foreignArtistId: 'artist-cinematic-orchestra',
-      albums: [
-        WorldAlbum(
-          title: 'Ma Fleur',
-          year: 2007,
-          foreignAlbumId: 'album-cinematic-ma-fleur',
-          tracks: 11,
-        ),
-      ],
-    ),
-  ];
-}
-
 /// One author and its books, for Readarr's shelves.
 class WorldAuthor {
   const WorldAuthor({
@@ -743,83 +632,6 @@ class WorldBook {
   final String title;
   final int year;
   final String foreignBookId;
-}
-
-abstract final class WorldBooks {
-  static const all = <WorldAuthor>[
-    WorldAuthor(
-      key: 'verne',
-      name: 'Jules Verne',
-      foreignAuthorId: 'author-jules-verne',
-      books: [
-        WorldBook(
-          title: 'Twenty Thousand Leagues Under the Seas',
-          year: 1870,
-          foreignBookId: 'book-verne-20000',
-        ),
-      ],
-    ),
-    WorldAuthor(
-      key: 'wells',
-      name: 'H. G. Wells',
-      foreignAuthorId: 'author-hg-wells',
-      books: [
-        WorldBook(
-          title: 'The War of the Worlds',
-          year: 1898,
-          foreignBookId: 'book-wells-war',
-        ),
-      ],
-    ),
-    WorldAuthor(
-      key: 'shelley',
-      name: 'Mary Shelley',
-      foreignAuthorId: 'author-mary-shelley',
-      books: [
-        WorldBook(
-          title: 'Frankenstein',
-          year: 1818,
-          foreignBookId: 'book-shelley-frankenstein',
-        ),
-      ],
-    ),
-    WorldAuthor(
-      key: 'stoker',
-      name: 'Bram Stoker',
-      foreignAuthorId: 'author-bram-stoker',
-      books: [
-        WorldBook(
-          title: 'Dracula',
-          year: 1897,
-          foreignBookId: 'book-stoker-dracula',
-        ),
-      ],
-    ),
-    WorldAuthor(
-      key: 'doyle',
-      name: 'Arthur Conan Doyle',
-      foreignAuthorId: 'author-conan-doyle',
-      books: [
-        WorldBook(
-          title: 'The Hound of the Baskervilles',
-          year: 1902,
-          foreignBookId: 'book-doyle-hound',
-        ),
-      ],
-    ),
-    WorldAuthor(
-      key: 'austen',
-      name: 'Jane Austen',
-      foreignAuthorId: 'author-jane-austen',
-      books: [
-        WorldBook(
-          title: 'Pride and Prejudice',
-          year: 1813,
-          foreignBookId: 'book-austen-pride',
-        ),
-      ],
-    ),
-  ];
 }
 
 /// The people on the Seerr side.
@@ -1005,9 +817,9 @@ abstract final class WorldDownloads {
   );
 
   static const elephantsDream4k = WorldDownload(
-    id: 'SABnzbd_nzo_elephants4k',
+    id: 'c3e2f5d6a7b80919304b5c6d7e8f901234567811',
     release: 'Elephants.Dream.2006.2160p.UHD.BluRay',
-    client: 'sabnzbd',
+    client: 'qbittorrent',
     state: DownloadState.downloading,
     progress: 0.31,
     size: (9.4 * _gb) ~/ 1,
@@ -1018,9 +830,9 @@ abstract final class WorldDownloads {
   );
 
   static const sintel4k = WorldDownload(
-    id: 'SABnzbd_nzo_sintel4k',
+    id: 'c3e2f5d6a7b80919304b5c6d7e8f901234567812',
     release: 'Sintel.2010.2160p.UHD.BluRay',
-    client: 'sabnzbd',
+    client: 'qbittorrent',
     state: DownloadState.queued,
     progress: 0,
     size: (8.1 * _gb) ~/ 1,
@@ -1056,11 +868,11 @@ abstract final class WorldDownloads {
     size: (5.7 * _gb) ~/ 1,
   );
 
-  /// P4's second client: one Sonarr grab through Transmission.
+  /// P4's second download: one Sonarr grab.
   static const nightShiftTransmission = WorldDownload(
     id: 'b2e1d4c5f6a70819304b5c6d7e8f901234567801',
     release: 'Night.Shift.S02E04.1080p.WEB',
-    client: 'transmission',
+    client: 'qbittorrent',
     state: DownloadState.downloading,
     progress: 0.4,
     size: (1.1 * _gb) ~/ 1,

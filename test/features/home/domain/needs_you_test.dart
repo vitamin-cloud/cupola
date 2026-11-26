@@ -176,57 +176,6 @@ void main() {
 
     const timeout = ServiceFailureReason.timeout;
 
-    test('lead as one sentence, and are not counted again after it', () {
-      final stuck = [
-        connection(ServiceKey.seerr, timeout),
-        connection(ServiceKey.radarr, timeout, name: '4K'),
-        for (final service in [
-          ServiceKey.sonarr,
-          ServiceKey.lidarr,
-          ServiceKey.prowlarr,
-        ])
-          connection(service, timeout),
-      ];
-      final stall = decision(DecisionKind.stalledDownload, 'Sintel');
-      final needs = needsYouOf(
-        silent: const [],
-        decisions: [stall, ...stuck],
-        now: now,
-      )!;
-      expect(
-        needs.line,
-        'Seerr, Radarr 4K and 3 others were reached but did not reply in time',
-      );
-      expect(needs.lead, same(stuck.first));
-      expect(needs.more, 1);
-      expect(needs.action, 'Review');
-    });
-
-    test('weigh as many as they are against a folded group', () {
-      final stuck = [
-        connection(ServiceKey.radarr, timeout),
-        connection(ServiceKey.sonarr, timeout),
-        connection(ServiceKey.lidarr, timeout),
-      ];
-      final two = decision(DecisionKind.importBlocked, 'x', count: 2);
-      expect(
-        needsYouOf(
-          silent: const [],
-          decisions: [two, ...stuck],
-          now: now,
-        )!.line,
-        'Radarr, Sonarr and 1 other were reached but did not reply in time',
-      );
-      final eighteen = decision(DecisionKind.importBlocked, 'x', count: 18);
-      final needs = needsYouOf(
-        silent: const [],
-        decisions: [...stuck, eighteen],
-        now: now,
-      )!;
-      expect(needs.line, '18 downloads need a manual import');
-      expect(needs.more, 3);
-    });
-
     test('a refused key and a refused sign-in are two sentences', () {
       const refused = ServiceFailureReason.unauthorized;
       final needs = needsYouOf(
@@ -346,7 +295,6 @@ void main() {
         '18 downloads need a manual import',
       );
     });
-
   });
 
   test('a screen reader hears one sentence, the way in at its end', () {

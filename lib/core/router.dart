@@ -13,7 +13,6 @@ import 'package:cupola/core/utils/blink_transition.dart';
 import 'package:cupola/core/utils/route_utils.dart';
 import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/utils/side_pane_route.dart';
-import 'package:cupola/features/prowlarr/domain/models/prowlarr_models.dart';
 import 'package:cupola/features/movies/domain/models/radarr_movie.dart';
 import 'package:cupola/features/media/domain/media_key.dart';
 import 'package:cupola/features/media/presentation/media_page.dart';
@@ -41,32 +40,14 @@ import 'package:cupola/features/activity/presentation/arr_tab_screen.dart';
 import 'package:cupola/features/activity/presentation/arr_calendar_screen.dart';
 import 'package:cupola/features/movies/presentation/movies_screen.dart';
 import 'package:cupola/features/series/presentation/series_screen.dart';
-import 'package:cupola/features/music/presentation/music_screen.dart';
-import 'package:cupola/features/music/presentation/artist_page.dart';
-import 'package:cupola/features/readarr/domain/models/readarr_models.dart';
-import 'package:cupola/features/readarr/presentation/author_page.dart';
-import 'package:cupola/features/music/presentation/lidarr_overview_screen.dart';
-import 'package:cupola/features/music/domain/models/lidarr_artist.dart';
 import 'package:cupola/features/services/presentation/service_all_screens.dart';
 import 'package:cupola/features/services/presentation/service_home_screen.dart';
 import 'package:cupola/features/services/presentation/stack_screen.dart';
-import 'package:cupola/features/discover/domain/catalog_query.dart';
-import 'package:cupola/features/discover/domain/discover_index.dart';
 import 'package:cupola/features/discover/domain/seerr_invite.dart';
-import 'package:cupola/features/discover/presentation/discover_atrium.dart'
-    show DiscoverIndexPage;
-import 'package:cupola/features/discover/presentation/calendar_page.dart';
-import 'package:cupola/features/discover/presentation/catalog_page.dart';
-import 'package:cupola/features/discover/presentation/discover_page.dart';
-import 'package:cupola/features/discover/presentation/more_from_your_artists_page.dart';
-import 'package:cupola/features/release_search/presentation/release_search_settings_screen.dart';
 import 'package:cupola/features/settings/presentation/widgets/settings_master_detail.dart';
-import 'package:cupola/features/settings/presentation/settings_appearance_screen.dart';
-import 'package:cupola/features/settings/presentation/settings_hints_screen.dart';
 import 'package:cupola/features/outside/domain/outside_link.dart';
 import 'package:cupola/features/outside/presentation/settings_notifications_screen.dart';
 import 'package:cupola/features/settings/presentation/settings_home_screen.dart';
-import 'package:cupola/features/settings/presentation/settings_region_screen.dart';
 import 'package:cupola/features/settings/presentation/requester_account_page.dart';
 import 'package:cupola/features/settings/presentation/settings_connections_screen.dart';
 import 'package:cupola/features/settings/presentation/service_settings_screen.dart';
@@ -94,35 +75,11 @@ import 'package:cupola/features/qbittorrent/presentation/qbittorrent_overview_sc
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_screen.dart';
 import 'package:cupola/features/qbittorrent/presentation/torrent_detail_screen.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_rss_screen.dart';
-import 'package:cupola/features/bazarr/domain/models/bazarr_models.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_library_screen.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_movie_detail_screen.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_overview_screen.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_history_screen.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_providers_screen.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_overview_screen.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_library_screen.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_indexer_detail_screen.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_settings_screen.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_provider_list_screen.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_app_profiles_screen.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_tags_screen.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_history_screen.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_stats_screen.dart';
-import 'package:cupola/features/readarr/presentation/readarr_overview_screen.dart';
-import 'package:cupola/features/readarr/presentation/readarr_library_screen.dart';
-import 'package:cupola/features/readarr/presentation/readarr_activity_screen.dart';
-import 'package:cupola/features/readarr/presentation/readarr_history_screen.dart';
 import 'package:cupola/features/stream/presentation/stream_libraries_screen.dart';
 import 'package:cupola/features/stream/presentation/stream_overview_screen.dart';
 import 'package:cupola/features/stream/presentation/stream_item_screen.dart';
 import 'package:cupola/features/stream/presentation/stream_library_screen.dart';
 import 'package:cupola/features/jellyfin/presentation/jellyfin_tab_screens.dart';
-import 'package:cupola/features/plex/presentation/plex_tab_screens.dart';
-import 'package:cupola/features/unraid/presentation/unraid_overview_screen.dart';
-import 'package:cupola/features/unraid/presentation/unraid_screen.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_series_detail_screen.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_wanted_screen.dart';
 import 'package:cupola/features/dockge/presentation/dockge_overview_screen.dart';
 import 'package:cupola/features/dockge/presentation/dockge_screen.dart';
 import 'package:cupola/features/dockge/presentation/dockge_stack_detail_screen.dart';
@@ -434,19 +391,6 @@ GoRoute _rewriteTree(
     path: path,
     redirect: redirect,
     routes: [for (final tail in tails) GoRoute(path: tail, redirect: redirect)],
-  );
-}
-
-/// A catalogue page of the Discover tab, its question read from the path
-/// alone (`catalogQueryFor`); parameters it cannot read go back to the atrium.
-GoRoute _catalogPage(String path, CatalogBase base) {
-  CatalogQuery? read(GoRouterState state) =>
-      catalogQueryFor(base, state.pathParameters, state.uri.queryParameters);
-  return _page(
-    path,
-    (state) => CatalogPage(query: read(state)!),
-    redirect: (context, state) =>
-        read(state) == null ? ServiceRoutes.discover : null,
   );
 }
 
@@ -846,119 +790,6 @@ RouteBase _sonarrRoutes() => _serviceRoutes(
   },
 );
 
-/// Lidarr.
-RouteBase _lidarrRoutes() => _serviceRoutes(
-  ServiceKey.lidarr,
-  tails: [
-    _tail('media', (_) => ServiceRoutes.lidarrLibrary),
-    _tail(
-      'artist/:id',
-      (s) => '${ServiceRoutes.lidarrArtistBase}/${s.pathParameters['id']}',
-    ),
-  ],
-  roots: {
-    ServiceTab.overview: (state) =>
-        const LidarrOverviewScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.library: (state) =>
-        const MusicScreen(showAppBar: false, topPadding: _serviceTabTopPadding),
-    ServiceTab.calendar: (state) => const ArrCalendarScreen(
-      service: ServiceKey.lidarr,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.queue: (state) => const ArrTabScreen(
-      serviceType: ServiceType.music,
-      mode: ArrTabMode.queue,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.wanted: (state) => const ArrTabScreen(
-      serviceType: ServiceType.music,
-      mode: ArrTabMode.wanted,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.history: (state) => const ArrTabScreen(
-      serviceType: ServiceType.music,
-      mode: ArrTabMode.history,
-      topPadding: _serviceTabTopPadding,
-    ),
-  },
-  inside: {
-    ServiceTab.library: [
-      _libraryDetail<LidarrArtist>(
-        'artist/:id',
-        heroPrefix: 'artist',
-        fallbackLocation: ServiceRoutes.lidarrLibrary,
-        // A lookup row the library does not hold has id 0: never a page.
-        positiveIdsOnly: true,
-        buildChild: (id, heroTag, artist, instanceId, justAdded, query) =>
-            ArtistPage(
-              artistId: id,
-              heroTag: heroTag,
-              initialArtist: artist,
-              instanceId: instanceId,
-              justAdded: justAdded,
-              // The album a link names: the page opens on its tracks.
-              openAlbumId: int.tryParse(query[ServiceRoutes.albumParam] ?? ''),
-            ),
-      ),
-    ],
-  },
-);
-
-/// Readarr, the last of the four \*arr.
-///
-/// It needs no compatibility tails, because the only two paths it ever shipped
-/// are the two the model already spells: the bare service root, which the node
-/// redirects like the other three, and `/dashboard/readarr/library`, which was
-/// the pushed author list and is now the Library tab's root at the same
-/// address. Its Library pushes an author's page (`author/:id`), as Lidarr's
-/// pushes an artist's.
-///
-/// Its Overview is the page written against the board, and it draws only the
-/// regions the client can fill: the queue's faults, the library's backlog,
-/// where the books are filed, what happened today. The two the board asks for
-/// and `ReadarrService` cannot answer (`Coming up`, `Recently added`) are left
-/// out, and the retired home never drew either of them.
-RouteBase _readarrRoutes() => _serviceRoutes(
-  ServiceKey.readarr,
-  roots: {
-    ServiceTab.overview: (state) =>
-        const ReadarrOverviewScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.library: (state) => const ReadarrLibraryScreen(
-      showAppBar: false,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.calendar: (state) => const ArrCalendarScreen(
-      service: ServiceKey.readarr,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.queue: (state) => const ReadarrActivityScreen(
-      mode: ReadarrActivityMode.queue,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.wanted: (state) => const ReadarrActivityScreen(
-      mode: ReadarrActivityMode.wanted,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.history: (state) =>
-        const ReadarrHistoryScreen(topPadding: _serviceTabTopPadding),
-  },
-  inside: {
-    ServiceTab.library: [
-      _libraryDetail<ReadarrAuthor>(
-        'author/:id',
-        heroPrefix: 'author',
-        fallbackLocation: ServiceRoutes.readarrLibrary,
-        buildChild: (id, heroTag, author, instanceId, _, _) => AuthorPage(
-          authorId: id,
-          heroTag: heroTag,
-          initialAuthor: author,
-          instanceId: instanceId,
-        ),
-      ),
-    ],
-  },
-);
-
 /// qBittorrent: the first download client on one shell and one bar.
 ///
 /// Two things are qBittorrent's own. The torrent list was the *whole* service,
@@ -991,82 +822,6 @@ RouteBase _qbittorrentRoutes() => _serviceRoutes(
         'torrent/:hash',
         (state) =>
             TorrentDetailScreen(hash: state.pathParameters['hash'] ?? ''),
-      ),
-    ],
-  },
-);
-
-/// Bazarr.
-///
-/// Two things are Bazarr's own. Its bar names the **record types** rather than
-/// a Library: Series and Movies are two destinations (decision 22), so the
-/// two-tab `BazarrLibraryScreen` split in half and the detail spelling is
-/// `<tab>/:id`, which is why the series detail did not have to move at all.
-/// And what was the service home is superseded by `BazarrOverviewScreen`.
-///
-/// `library` was the combined Series/Movies page; it lands on Series rather
-/// than on the service root, one bar tap from the other half. Singular `movie`
-/// is the pre-tab spelling.
-///
-/// No `heroTag` on either detail: the Bazarr lead is a figure plate, not a
-/// poster, so there is no source counterpart on a Bazarr row to fly from and an
-/// orphan flight would fade in from nothing. Both routes still accept the query
-/// param: global search builds one for every service uniformly, and nothing
-/// reads it.
-RouteBase _bazarrRoutes() => _serviceRoutes(
-  ServiceKey.bazarr,
-  tails: [
-    _tail('library', (_) => ServiceRoutes.bazarrSeriesBase),
-    _tail(
-      'movie/:id',
-      (s) => '${ServiceRoutes.bazarrMovieBase}/${s.pathParameters['id']}',
-    ),
-  ],
-  roots: {
-    ServiceTab.overview: (state) =>
-        const BazarrOverviewScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.wanted: (state) => const BazarrWantedScreen(
-      showAppBar: false,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.series: (state) => const BazarrLibraryScreen.series(
-      showAppBar: false,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.movies: (state) => const BazarrLibraryScreen.movies(
-      showAppBar: false,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.history: (state) =>
-        const BazarrHistoryScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.providers: (state) =>
-        const BazarrProvidersScreen(topPadding: _serviceTabTopPadding),
-  },
-  inside: {
-    ServiceTab.series: [
-      _page(
-        ':id',
-        (state) => BazarrSeriesDetailScreen(
-          sonarrSeriesId: RouteUtils.safeIntParam(state, 'id')!,
-          initialWanted: RouteUtils.safeExtra<BazarrWantedItem>(state),
-        ),
-        redirect: (context, state) =>
-            RouteUtils.safeIntParam(state, 'id') == null
-            ? ServiceRoutes.bazarrSeriesBase
-            : null,
-      ),
-    ],
-    ServiceTab.movies: [
-      _page(
-        ':id',
-        (state) => BazarrMovieDetailScreen(
-          radarrId: RouteUtils.safeIntParam(state, 'id')!,
-          initialWanted: RouteUtils.safeExtra<BazarrWantedItem>(state),
-        ),
-        redirect: (context, state) =>
-            RouteUtils.safeIntParam(state, 'id') == null
-            ? ServiceRoutes.bazarrMovieBase
-            : null,
       ),
     ],
   },
@@ -1148,107 +903,6 @@ String? _rejectBlankDockgeStackName(
     ? ServiceRoutes.dockgeStacks
     : null;
 
-/// Prowlarr.
-///
-/// What is Prowlarr's own is **Settings**, which is not a tab (decision 26) and
-/// therefore not in the shell. It hangs off the service node beside the
-/// `StatefulShellRoute`, exactly where it hung off the service page before:
-/// four field-driven sections, an app-profiles page and a tags page that no one
-/// tab owns, pushed on the Dashboard branch's navigator as they always were. It
-/// keeps its children where a compatibility tail may not, and safely: `settings`
-/// is not a tab segment, so there is nothing inside the shell for it to shadow.
-RouteBase _prowlarrRoutes() => _serviceRoutes(
-  ServiceKey.prowlarr,
-  tails: [
-    _tail('library', (_) => ServiceRoutes.prowlarrIndexers),
-    _tail(
-      'indexer/:id',
-      (s) => '${ServiceRoutes.prowlarrIndexerBase}/${s.pathParameters['id']}',
-    ),
-    _page(
-      'settings',
-      (state) => const ProwlarrSettingsScreen(),
-      routes: [
-        _page('sync-profiles', (state) => const ProwlarrAppProfilesScreen()),
-        _page('tags', (state) => const ProwlarrTagsScreen()),
-        // One route for the four field-driven sections; an unknown segment
-        // falls back to the hub rather than a blank screen.
-        _page(
-          ':section',
-          (state) => ProwlarrProviderListScreen(
-            kind: ProwlarrProviderKind.fromRouteSegment(
-              state.pathParameters['section']!,
-            )!,
-          ),
-          redirect: (context, state) =>
-              ProwlarrProviderKind.fromRouteSegment(
-                    state.pathParameters['section'] ?? '',
-                  ) ==
-                  null
-              ? ServiceRoutes.prowlarrSettings
-              : null,
-        ),
-      ],
-    ),
-  ],
-  roots: {
-    ServiceTab.overview: (state) =>
-        const ProwlarrOverviewScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.indexers: (state) => const ProwlarrLibraryScreen(
-      showAppBar: false,
-      topPadding: _serviceTabTopPadding,
-    ),
-    ServiceTab.history: (state) =>
-        const ProwlarrHistoryScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.stats: (state) =>
-        const ProwlarrStatsScreen(topPadding: _serviceTabTopPadding),
-  },
-  inside: {
-    ServiceTab.indexers: [
-      _page(
-        'indexer/:id',
-        (state) => ProwlarrIndexerDetailScreen(
-          indexerId: RouteUtils.safeIntParam(state, 'id')!,
-        ),
-        redirect: (context, state) =>
-            RouteUtils.safeIntParam(state, 'id') == null
-            ? ServiceRoutes.prowlarrIndexers
-            : null,
-      ),
-    ],
-  },
-);
-
-/// Unraid.
-///
-/// **No compatibility tail at all**, which is Unraid's own difference and the
-/// same one Transmission has: the only path it ever shipped is its bare root,
-/// because the whole service was one page with no detail to push.
-///
-/// Every tab has a concrete read surface. Array and Docker retain the original
-/// split, while VMs, Notifications and Shares use the corresponding GraphQL
-/// documents exposed by `UnraidClient`; write affordances remain gated by the
-/// schema capabilities returned by the instance. The screens are honest about
-/// fields the contract does not provide (for example SMART history), but no
-/// branch is left as an endpoint-blocked route.
-RouteBase _unraidRoutes() => _serviceRoutes(
-  ServiceKey.unraid,
-  roots: {
-    ServiceTab.overview: (state) =>
-        const UnraidOverviewScreen(topPadding: _serviceTabTopPadding),
-    ServiceTab.array: (state) =>
-        const UnraidScreen.array(topPadding: _serviceTabTopPadding),
-    ServiceTab.docker: (state) =>
-        const UnraidScreen.docker(topPadding: _serviceTabTopPadding),
-    ServiceTab.vms: (state) =>
-        const UnraidScreen.vms(topPadding: _serviceTabTopPadding),
-    ServiceTab.notifications: (state) =>
-        const UnraidScreen.notifications(topPadding: _serviceTabTopPadding),
-    ServiceTab.shares: (state) =>
-        const UnraidScreen.shares(topPadding: _serviceTabTopPadding),
-  },
-);
-
 /// The route spellings of one media server, by key.
 ///
 /// A switch returning the four constants rather than interpolating them from
@@ -1265,18 +919,6 @@ _streamPaths(ServiceKey service) => switch (service) {
     overview: ServiceRoutes.jellyfinOverview,
     libraries: ServiceRoutes.jellyfinLibraries,
     itemBase: ServiceRoutes.jellyfinItemBase,
-  ),
-  ServiceKey.plex => (
-    root: ServiceRoutes.plex,
-    overview: ServiceRoutes.plexOverview,
-    libraries: ServiceRoutes.plexLibraries,
-    itemBase: ServiceRoutes.plexItemBase,
-  ),
-  ServiceKey.emby => (
-    root: ServiceRoutes.emby,
-    overview: ServiceRoutes.embyOverview,
-    libraries: ServiceRoutes.embyLibraries,
-    itemBase: ServiceRoutes.embyItemBase,
   ),
   _ => throw UnsupportedError('${service.name} is not a media server'),
 };
@@ -1334,11 +976,6 @@ RouteBase _streamRoutes(ServiceKey service) {
         (s) => '${paths.libraries}/${s.pathParameters['id']}',
       ),
       _tail('item/:id', (s) => '${paths.itemBase}/${s.pathParameters['id']}'),
-      // Plex's On deck was a tab of its own; it lives in Activities now
-      // (decision `P-stream-library-browse`), and the spelling it shipped
-      // under still lands there.
-      if (service == ServiceKey.plex)
-        _tail('on-deck', (_) => ServiceRoutes.plexActivities),
     ],
     roots: {
       for (final tab in tabsFor(service)!) tab: _streamRoot(service, tab),
@@ -1461,40 +1098,6 @@ Widget _streamCapabilityScreen(
       instanceId: instanceId,
     ),
     (ServiceKey.jellyfin, ServiceTab.activity) => JellyfinActivityScreen(
-      topPadding: _serviceTabTopPadding,
-      instanceId: instanceId,
-    ),
-    // Emby's four are Jellyfin's screens: the same page over the same client
-    // surface, told which server it is on.
-    (ServiceKey.emby, ServiceTab.users) => JellyfinUsersScreen(
-      topPadding: _serviceTabTopPadding,
-      instanceId: instanceId,
-      service: ServiceKey.emby,
-    ),
-    (ServiceKey.emby, ServiceTab.devices) => JellyfinDevicesScreen(
-      topPadding: _serviceTabTopPadding,
-      instanceId: instanceId,
-      service: ServiceKey.emby,
-    ),
-    (ServiceKey.emby, ServiceTab.tasks) => JellyfinTasksScreen(
-      topPadding: _serviceTabTopPadding,
-      instanceId: instanceId,
-      service: ServiceKey.emby,
-    ),
-    (ServiceKey.emby, ServiceTab.activity) => JellyfinActivityScreen(
-      topPadding: _serviceTabTopPadding,
-      instanceId: instanceId,
-      service: ServiceKey.emby,
-    ),
-    (ServiceKey.plex, ServiceTab.activities) => PlexActivitiesScreen(
-      topPadding: _serviceTabTopPadding,
-      instanceId: instanceId,
-    ),
-    (ServiceKey.plex, ServiceTab.devices) => PlexDevicesScreen(
-      topPadding: _serviceTabTopPadding,
-      instanceId: instanceId,
-    ),
-    (ServiceKey.plex, ServiceTab.playlists) => PlexPlaylistsScreen(
       topPadding: _serviceTabTopPadding,
       instanceId: instanceId,
     ),
@@ -1638,29 +1241,24 @@ String _preserveQuery(Uri source, String path) {
 /// (`ServiceRoutes.mediaMountFor`), and Back returns to the view.
 final List<RouteBase> _activityViews = [
   for (final tab in ActivityTab.values)
-    if (tab != ActivityTab.all)
+    if (tab != ActivityTab.history)
       GoRoute(
         path: tab.location,
         pageBuilder: (context, state) => _activityPage(state, tab),
       ),
+  // This fork: History is Activity's own page, and there is no Requests view.
+  for (final old in [
+    ServiceRoutes.activityHistory,
+    ServiceRoutes.activityRequests,
+  ])
+    GoRoute(path: old, redirect: (context, state) => ServiceRoutes.activity),
 ];
 
 /// Activity at [tab]: one page whichever view the address names, so moving
 /// between views changes what it draws and leaves the page where it is, with
 /// no transition and no second header.
-Page<void> _activityPage(GoRouterState state, ActivityTab tab) => _tabPage(
-  state,
-  ActivityPage(
-    tab: tab,
-    requestsOf: tab == ActivityTab.requests
-        ? state.uri.queryParameters['i']
-        : null,
-    requestFilters: tab == ActivityTab.requests
-        ? RequestFilters.fromQuery(state.uri.queryParameters)
-        : RequestFilters.none,
-  ),
-  key: const ValueKey('activity'),
-);
+Page<void> _activityPage(GoRouterState state, ActivityTab tab) =>
+    _tabPage(state, ActivityPage(tab: tab), key: const ValueKey('activity'));
 
 /// The route at the root of each tab's own navigator.
 ///
@@ -1700,22 +1298,15 @@ RouteBase _branchRootFor(NavTab tab) => switch (tab) {
       _seerrRoutes(),
       _radarrRoutes(),
       _sonarrRoutes(),
-      _lidarrRoutes(),
       _qbittorrentRoutes(),
-      _bazarrRoutes(),
       _truenasRoutes(path: ServiceKey.truenas.routeParam),
       _dockgeRoutes(),
-      _prowlarrRoutes(),
-      _readarrRoutes(),
-      _unraidRoutes(),
       _streamRoutes(ServiceKey.jellyfin),
-      _streamRoutes(ServiceKey.plex),
-      _streamRoutes(ServiceKey.emby),
     ],
   ),
   NavTab.activity => GoRoute(
     path: ServiceRoutes.activity,
-    pageBuilder: (context, state) => _activityPage(state, ActivityTab.all),
+    pageBuilder: (context, state) => _activityPage(state, ActivityTab.history),
     routes: [
       _page(
         ServiceRoutes.activityNeedsYouSegment,
@@ -1751,66 +1342,6 @@ RouteBase _branchRootFor(NavTab tab) => switch (tab) {
   // under it; the bare details Seerr's room and the pre-rename `/discover`
   // tree linked to (`movie/603`, `person/287`, `requests`) rewrite to where
   // those pages live now.
-  NavTab.discover => GoRoute(
-    path: ServiceRoutes.discover,
-    pageBuilder: (context, state) => _tabPage(state, const DiscoverPage()),
-    routes: [
-      // This fork: the Region chip's page, inside Discover, so tapping it
-      // blinks the page in rather than switching to the Settings tab.
-      _page('region', (state) => const SettingsRegionScreen()),
-      _page('calendar', (state) => const CalendarPage()),
-      // The shelf `More from your artists`, whole: Lidarr's, so the
-      // operator's (`_audienceRedirect`).
-      _page('artists', (state) => const MoreFromYourArtistsPage()),
-      _page(
-        'browse/:index',
-        (state) => DiscoverIndexPage(
-          index: DiscoverIndex.values.byName(state.pathParameters['index']!),
-        ),
-        // An index this version does not have is the lobby.
-        redirect: (context, state) =>
-            DiscoverIndex.values.asNameMap().containsKey(
-              state.pathParameters['index'],
-            )
-            ? null
-            : ServiceRoutes.discover,
-      ),
-      _catalogPage('all/:kind', CatalogBase.all),
-      _catalogPage('trending', CatalogBase.trending),
-      _catalogPage('upcoming/:kind', CatalogBase.upcoming),
-      _catalogPage('genre/:kind/:id', CatalogBase.genre),
-      _catalogPage('network/:id', CatalogBase.network),
-      _catalogPage('studio/:id', CatalogBase.studio),
-      _catalogPage('keyword/:kind/:id', CatalogBase.keyword),
-      _catalogPage('language/:kind/:code', CatalogBase.language),
-      _catalogPage('decade/:kind/:start', CatalogBase.decade),
-      // The see-alls the first catalogue shipped. Before `tv/:id`: routes
-      // match in declaration order.
-      for (final tail in const ['movies/all', 'tv/all', 'trending/all'])
-        GoRoute(
-          path: tail,
-          redirect: (context, state) =>
-              _toDiscover(state.uri, ServiceRoutes.discover),
-        ),
-      for (final tail in const [
-        'movie/:id',
-        'tv/:id',
-        'person/:id',
-        'collection/:id',
-      ])
-        GoRoute(
-          path: tail,
-          redirect: (context, state) =>
-              _toDiscover(state.uri, ServiceRoutes.discover),
-        ),
-      GoRoute(
-        path: 'requests',
-        redirect: (context, state) => ServiceRoutes.seerrRequests,
-      ),
-      ..._mediaRoutes(),
-    ],
-  ),
-  // The requester's own requests. A title opened from one hangs under it.
   NavTab.requests => GoRoute(
     path: ServiceRoutes.requests,
     pageBuilder: (context, state) => _tabPage(state, const RequestsScreen()),
@@ -1825,21 +1356,9 @@ RouteBase _branchRootFor(NavTab tab) => switch (tab) {
     pageBuilder: (context, state) =>
         _tabPage(state, const SettingsHomeScreen()),
     routes: [
-      // `_page`, like its six siblings, rather than the bare `GoRoute` with a
-      // `builder` it was: that form gave this route a Material page while every
-      // other settings destination got `RouteUtils.cupertinoPage`, so the one
-      // section owned by another feature was also the one that transitioned
-      // differently and lost the rail. Nothing else about the route changes:
-      // same path, same screen, same location in the rail's `sections` list.
-      _section(
-        'background-search',
-        (state) => const ReleaseSearchSettingsScreen(),
-      ),
-      _section('appearance', (state) => const SettingsAppearanceScreen()),
       // Edit Home, from Settings: the page the Home's own row opens, whose
       // way back here is Settings.
       _section('home', (state) => const EditHomePage()),
-      _section('hints', (state) => const SettingsHintsScreen()),
       _page('notifications', (state) => const SettingsNotificationsScreen()),
       _section('connections', (state) => const SettingsConnectionsScreen()),
       // The code another device copies this one's connections from: the
@@ -1854,7 +1373,6 @@ RouteBase _branchRootFor(NavTab tab) => switch (tab) {
         path: 'services',
         redirect: (context, state) => '/settings/connections',
       ),
-      _section('region', (state) => const SettingsRegionScreen()),
       // The requester's account. The operator's lives in the connection's
       // form, where `_audienceRedirect` sends him.
       _section(
@@ -1918,7 +1436,6 @@ String _legacyActivityTarget(GoRouterState state) =>
     switch (state.pathParameters['type']) {
       'movies' => '${ServiceRoutes.radarr}/${ServiceTab.queue.segment}',
       'series' => '${ServiceRoutes.sonarr}/${ServiceTab.queue.segment}',
-      'music' => '${ServiceRoutes.lidarr}/${ServiceTab.queue.segment}',
       'discover' => ServiceRoutes.activityRequestsOf(
         state.uri.queryParameters['i'],
       ),
@@ -2050,6 +1567,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
       final path = state.uri.path;
       if (path == ServiceRoutes.legacyOnboarding) return ServiceRoutes.welcome;
+      // This fork has no Discover: anything that still links there lands on
+      // the Stack.
+      if (path == ServiceRoutes.discover ||
+          path.startsWith('${ServiceRoutes.discover}/')) {
+        return ServiceRoutes.stack;
+      }
       // Never away from the way in: a run saves its first connection before
       // it is over, "Revisit onboarding" arrives with the flag already on,
       // and the flow leaves for the Home on its own.
@@ -2225,11 +1748,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/series',
         serviceBase: ServiceRoutes.sonarrSeriesBase,
         fallbackLocation: ServiceRoutes.sonarrLibrary,
-      ),
-      _legacyLibraryTree(
-        '/music',
-        serviceBase: ServiceRoutes.lidarrArtistBase,
-        fallbackLocation: ServiceRoutes.lidarrLibrary,
       ),
       // Where Activity's per-service pages lived: a queue is its arr's own
       // tab now, and Seerr's requests are Activity's Requests. One hop, the

@@ -101,7 +101,6 @@ ServiceQueueItem _row({
 
 void main() {
   group('what each source says is queued', () {
-
     test(
       'P7: an arr whose client says nothing reads its own `queued`',
       () async {
@@ -132,8 +131,6 @@ void main() {
       );
     });
 
-
-
     test('a queue somebody paused holds a queued job, as it did', () async {
       final items = await _items(
         await _start(Profiles.p1.withPausedQueue(WorldIds.sabnzbd)),
@@ -162,7 +159,6 @@ void main() {
       expect(joined.queued, isFalse);
       expect(joined.isMoving, isTrue);
     });
-
 
     test('a fault or a pause outranks a wait', () {
       final held = join(
@@ -202,7 +198,6 @@ void main() {
         expect(joined.tvdbId, 9);
       },
     );
-
   });
 
   group('when a SABnzbd job starts', () {
@@ -268,8 +263,6 @@ void main() {
       );
     });
 
-
-
     test('an arr row no client row joined has none', () async {
       // P7: the device is away and SABnzbd and qBittorrent do not answer.
       final items = await _items(await _start(Profiles.p7));
@@ -312,21 +305,6 @@ void main() {
   });
 
   group('the counts', () {
-    test('P1: what moves is the preview and the count; what waits is queued, '
-        'and not on the Home', () async {
-      final container = await _start(Profiles.p1);
-      final inFlight = await container.read(servicesInFlightProvider.future);
-
-      expect(inFlight.movingCount, 4);
-      expect(inFlight.activeCount, inFlight.movingCount);
-      expect(inFlight.preview.every((item) => item.isMoving), isTrue);
-      expect(inFlight.preview, hasLength(4));
-      expect(inFlight.queued.map((item) => item.downloadId), [
-        WorldDownloads.sintel4k.id,
-      ]);
-      expect(inFlight.queued.single.isMoving, isFalse);
-    });
-
     test('the queued rows come in their queue order, after everything '
         'else', () async {
       final container = await _start(Profiles.p1.withDownloads([_qbQueued]));

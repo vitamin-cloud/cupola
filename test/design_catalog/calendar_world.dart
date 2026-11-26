@@ -60,17 +60,6 @@ abstract final class CalendarWorld {
     state: state,
   );
 
-  static final album = CalendarEvent(
-    identity: 'sintel-album',
-    kind: CalendarKind.album,
-    day: DateTime(2026, 10, 2),
-    title: 'Sintel (Anniversary Edition)',
-    byline: 'Jan Morgenstern',
-    poster: _poster,
-    sources: const ['Lidarr'],
-    state: const CalendarState.notYet(),
-  );
-
   static final disc = CalendarEvent(
     identity: 'sf-disc',
     kind: CalendarKind.movie,
@@ -88,7 +77,6 @@ abstract final class CalendarWorld {
     episode('Night Shift', 30, 22, 2, 5),
     // 2 October is the 32nd of September to `DateTime`.
     episode('Harbour Lights', 31, 21, 1, 3),
-    album,
     episode(
       'Cosmos Laundromat',
       32,

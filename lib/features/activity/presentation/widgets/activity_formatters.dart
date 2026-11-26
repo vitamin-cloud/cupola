@@ -152,12 +152,6 @@ String? formatCutoffSize(Map<String, dynamic> item, ServiceType serviceType) {
           asActivityMap(item['statistics'])?['sizeOnDisk'] ??
           asActivityMap(item['episodeFile'])?['size'] ??
           item['size'],
-    ServiceType.music =>
-      item['sizeOnDisk'] ??
-          asActivityMap(item['albumFile'])?['size'] ??
-          asActivityMap(item['trackFile'])?['size'] ??
-          asActivityMap(item['statistics'])?['sizeOnDisk'] ??
-          item['size'],
     ServiceType.discover => null,
   };
 
@@ -201,13 +195,6 @@ String? wantedStatusText(Map<String, dynamic> item, ServiceType serviceType) {
     case ServiceType.series:
       if (!hasFile) {
         return 'Episode missing from disk';
-      }
-      break;
-    case ServiceType.music:
-      final statistics = asActivityMap(item['statistics']);
-      final trackFileCount = intOrNull(statistics?['trackFileCount']) ?? 0;
-      if (!hasFile || trackFileCount == 0) {
-        return 'Album missing from disk';
       }
       break;
     case ServiceType.discover:
@@ -284,7 +271,7 @@ String queueTitle(Map<String, dynamic> item, ServiceType serviceType) {
       arrPrimaryMediaTitle(item, includeMovieYear: true) ??
           arrReleaseTitle(item) ??
           'Unknown release',
-    ServiceType.series || ServiceType.music =>
+    ServiceType.series =>
       arrPrimaryMediaTitle(item) ?? arrReleaseTitle(item) ?? 'Unknown release',
     ServiceType.discover => arrReleaseTitle(item) ?? 'Unknown release',
   };
@@ -336,7 +323,6 @@ String? activitySecondaryLine(
       uniqueRelease,
     ],
     ServiceType.movies => [uniqueRelease],
-    ServiceType.music => [arrArtistName(item), uniqueRelease],
     ServiceType.discover => null,
   };
   if (parts == null) return null;
@@ -351,8 +337,6 @@ String wantedTitle(Map<String, dynamic> item, ServiceType serviceType) {
       final title = stringOrNull(item['title']) ?? 'Unknown movie';
       final year = intOrNull(item['year']);
       return year == null ? title : '$title ($year)';
-    case ServiceType.music:
-      return stringOrNull(item['title']) ?? 'Unknown release';
     case ServiceType.series:
       final episodeCode = formatArrEpisodeCode(
         intOrNull(item['seasonNumber']),
@@ -375,8 +359,6 @@ String? wantedSubtitle(Map<String, dynamic> item, ServiceType serviceType) {
         item['airDateUtc'] ?? item['digitalRelease'] ?? item['inCinemas'],
       );
       return date == null ? null : 'Release ${formatShortDate(date)}';
-    case ServiceType.music:
-      return stringOrNull(asActivityMap(item['artist'])?['artistName']);
     case ServiceType.series:
       return stringOrNull(asActivityMap(item['series'])?['title']) ??
           'Unknown series';

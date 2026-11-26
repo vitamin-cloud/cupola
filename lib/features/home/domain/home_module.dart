@@ -47,13 +47,7 @@ enum HomeModule {
     audience: Audience.operator,
     label: 'Featured',
     line: 'What you were watching, what is new and what is out today',
-    services: [
-      ServiceKey.jellyfin,
-      ServiceKey.plex,
-      ServiceKey.emby,
-      ServiceKey.radarr,
-      ServiceKey.sonarr,
-    ],
+    services: [ServiceKey.jellyfin, ServiceKey.radarr, ServiceKey.sonarr],
   ),
 
   /// What somebody started and did not finish.
@@ -65,7 +59,7 @@ enum HomeModule {
     audience: Audience.operator,
     label: 'Continue watching',
     line: 'What you started and did not finish',
-    services: [ServiceKey.jellyfin, ServiceKey.plex, ServiceKey.emby],
+    services: [ServiceKey.jellyfin],
   ),
 
   /// What comes out or airs from today to three days on.
@@ -73,12 +67,7 @@ enum HomeModule {
     audience: Audience.operator,
     label: 'Coming up',
     line: 'What comes out or airs in the next few days',
-    services: [
-      ServiceKey.radarr,
-      ServiceKey.sonarr,
-      ServiceKey.lidarr,
-      ServiceKey.readarr,
-    ],
+    services: [ServiceKey.radarr, ServiceKey.sonarr],
   ),
 
   /// What the libraries gained in the last seven days.
@@ -86,7 +75,7 @@ enum HomeModule {
     audience: Audience.operator,
     label: 'Arrived',
     line: 'New in your libraries in the last 7 days',
-    services: [ServiceKey.radarr, ServiceKey.sonarr, ServiceKey.lidarr],
+    services: [ServiceKey.radarr, ServiceKey.sonarr],
   ),
 
   /// What is moving now.
@@ -94,13 +83,7 @@ enum HomeModule {
     audience: Audience.operator,
     label: 'Downloads',
     line: 'What is moving now, from every queue',
-    services: [
-      ServiceKey.radarr,
-      ServiceKey.sonarr,
-      ServiceKey.lidarr,
-      ServiceKey.readarr,
-      ServiceKey.qbittorrent,
-    ],
+    services: [ServiceKey.radarr, ServiceKey.sonarr, ServiceKey.qbittorrent],
     needs: 'Needs Radarr, Sonarr or a download client',
   ),
 
@@ -121,7 +104,7 @@ enum HomeModule {
     audience: Audience.operator,
     label: 'Now playing',
     line: 'Who is watching, and on which screen',
-    services: [ServiceKey.jellyfin, ServiceKey.plex, ServiceKey.emby],
+    services: [ServiceKey.jellyfin],
   ),
 
   /// Every service's light on one slab: the Stack tab, folded. Off until the
@@ -138,7 +121,7 @@ enum HomeModule {
     audience: Audience.operator,
     label: 'Storage',
     line: 'Pools and disks, from TrueNAS or Unraid',
-    services: [ServiceKey.truenas, ServiceKey.unraid],
+    services: [ServiceKey.truenas],
     defaultOn: false,
   ),
 

@@ -8,7 +8,6 @@ import 'package:cupola/core/network/redirect_guard.dart';
 import 'package:cupola/core/router.dart';
 import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
 import 'package:cupola/features/outside/data/outside_speaker.dart'
     show outsideNoticeRouteOf;
 import 'package:cupola/features/release_search/data/release_search_notifications.dart';
@@ -84,31 +83,6 @@ final releaseSearchLensReachProvider =
         id == null ? null : ref.watch(connectionReachProvider(id)),
       );
     });
-
-/// Whether the lens connection for [service] presents a gateway credential.
-///
-/// The background transport cannot refuse a redirect, and a gateway answer is
-/// exactly a redirect. The setting stays available because the person chose it,
-/// but the settings screen names the trade-off only for the connections where
-/// it is real.
-final releaseSearchLensGatewayProvider = Provider.family<bool, ServiceKey>((
-  ref,
-  service,
-) {
-  final id =
-      ref.watch(activeInstanceProvider(service))?.id ??
-      ref.watch(
-        currentSettingsProvider.select((s) => s.primaryOf(service)?.id),
-      );
-  return ref.watch(
-    currentSettingsProvider.select((s) {
-      final instance = id == null ? null : s.instanceById(id);
-      if (instance == null) return false;
-      return !instance.access.isEmpty ||
-          !(instance.away?.access.isEmpty ?? true);
-    }),
-  );
-});
 
 /// What [reached] imposes on a search: where it goes, which is the address
 /// its connection's route is on (a cleartext address away from home is as
@@ -326,11 +300,6 @@ SonarrService _sonarrFor(Ref ref, ReleaseSearchTarget target) =>
     ? ref.read(sonarrServiceProvider)
     : ref.read(sonarrServiceForProvider(target.instanceId));
 
-LidarrService _lidarrFor(Ref ref, ReleaseSearchTarget target) =>
-    target.instanceId.isEmpty
-    ? ref.read(lidarrServiceProvider)
-    : ref.read(lidarrServiceForProvider(target.instanceId));
-
 /// Runs the search through the service that owns the endpoint.
 ///
 /// Carries the user's own ceiling with it: the services default to the
@@ -365,19 +334,6 @@ Future<List<dynamic>> _searchViaService(
         cancelToken: cancelToken,
         receiveTimeout: timeout,
       );
-    case ServiceKey.lidarr:
-      final service = _lidarrFor(ref, target);
-      return target.scope == ReleaseSearchScope.album
-          ? service.getReleases(
-              albumId: target.id,
-              cancelToken: cancelToken,
-              receiveTimeout: timeout,
-            )
-          : service.getReleases(
-              artistId: target.id,
-              cancelToken: cancelToken,
-              receiveTimeout: timeout,
-            );
     default:
       throw UnsupportedError(
         '${target.service.name} has no interactive release search',
@@ -406,13 +362,6 @@ Future<List<dynamic>> _searchViaService(
         ref,
         target,
       ).releaseSearchRequest({'movieId': target.id});
-    case ServiceKey.lidarr:
-      final service = _lidarrFor(ref, target);
-      return service.releaseSearchRequest(
-        target.scope == ReleaseSearchScope.album
-            ? {'albumId': target.id}
-            : {'artistId': target.id},
-      );
     default:
       throw UnsupportedError(
         '${target.service.name} has no interactive release search',
@@ -439,11 +388,6 @@ final releaseGrabberProvider =
             ).grabRelease(guid: guid, indexerId: indexerId);
           case ServiceKey.radarr:
             await _radarrFor(
-              ref,
-              target,
-            ).grabRelease(guid: guid, indexerId: indexerId);
-          case ServiceKey.lidarr:
-            await _lidarrFor(
               ref,
               target,
             ).grabRelease(guid: guid, indexerId: indexerId);

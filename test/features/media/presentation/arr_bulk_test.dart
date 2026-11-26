@@ -18,10 +18,6 @@ import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/movies/domain/models/radarr_movie.dart';
 import 'package:cupola/features/movies/presentation/movies_bulk.dart';
-import 'package:cupola/features/readarr/data/readarr_service.dart';
-import 'package:cupola/features/readarr/domain/models/readarr_models.dart';
-import 'package:cupola/features/readarr/presentation/readarr_bulk.dart';
-import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/series/domain/models/sonarr_series.dart';
 import 'package:cupola/features/series/presentation/series_bulk.dart';
@@ -109,18 +105,6 @@ SonarrSeries _series(int id, String title) => SonarrSeries.fromJson({
   'images': const [],
 });
 
-ReadarrAuthor _author(int id, String name) => ReadarrAuthor(
-  id: id,
-  authorName: name,
-  monitored: true,
-  bookCount: 7,
-  bookFileCount: 6,
-  qualityProfileId: 1,
-  metadataProfileId: 1,
-  monitorNewItems: 'all',
-  sizeOnDisk: _gib,
-);
-
 /// The actions of [bulkOf] over a selection, each behind a button that runs
 /// what it asks.
 class _Host<T> extends ConsumerStatefulWidget {
@@ -177,9 +161,6 @@ Future<_Arr> _pump<T>(
         sonarrServiceForProvider.overrideWith(
           (ref, id) => SonarrService(_client(arr)),
         ),
-        readarrServiceForProvider.overrideWith(
-          (ref, id) => ReadarrService(_client(arr)),
-        ),
       ],
       child: MaterialApp(
         theme: AppTheme.darkTheme(),
@@ -201,37 +182,11 @@ final _shows = [
   _series(2, 'Cowboy Bebop'),
   _series(3, 'Hero'),
 ];
-final _authors = [
-  _author(1, 'Jules Verne'),
-  _author(2, 'Jules Renard'),
-  _author(3, 'Brandon Sanderson'),
-];
 
 final _threeGb = formatBytes(3 * _gib);
 
 void main() {
-  group('the words', () {
-    test('each wall counts and hints in its own nouns', () {
-      expect(radarrBulkKind.countOf(3), '3 movies');
-      expect(radarrBulkKind.countOf(1), '1 movie');
-      expect(radarrBulkKind.noneHint, 'Select a movie first');
-      expect(sonarrBulkKind.countOf(3), '3 series');
-      expect(sonarrBulkKind.countOf(1), '1 series');
-      expect(sonarrBulkKind.noneHint, 'Select a series first');
-      expect(readarrBulkKind.countOf(2), '2 authors');
-      expect(readarrBulkKind.noneHint, 'Select an author first');
-    });
-
-    test('only the editors that take them get a second control and a '
-        'metadata profile', () {
-      expect(radarrBulkKind.newItemsHeading, isNull);
-      expect(radarrBulkKind.hasMetadataProfile, isFalse);
-      expect(sonarrBulkKind.newItemsHeading, 'Monitor new seasons');
-      expect(sonarrBulkKind.hasMetadataProfile, isFalse);
-      expect(readarrBulkKind.newItemsHeading, 'Monitor new books');
-      expect(readarrBulkKind.hasMetadataProfile, isTrue);
-    });
-  });
+  group('the words', () {});
 
   group('Search over many titles', () {
     List<SonarrSeries> many(int n) => [
@@ -479,102 +434,6 @@ void main() {
 
       expect(arr.bodies.map((b) => b['name']).toSet(), {'SeriesSearch'});
       expect(arr.bodies.map((b) => b['seriesId']).toList()..sort(), [1, 2, 3]);
-    });
-  });
-
-  group('Authors', () {
-    MediaBulk<ReadarrAuthor> bulkOf(WidgetRef ref) =>
-        readarrBulk(ref: ref, instanceId: 'readarr', name: 'Readarr');
-
-    testWidgets('Monitor has `Monitor new books`', (tester) async {
-      final arr = await _pump(tester, bulkOf: bulkOf, items: _authors);
-
-      await tester.tap(find.text('Run Monitor'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Monitor 3 authors'), findsOneWidget);
-      expect(find.text('Monitor new books'), findsOneWidget);
-      await tester.tap(find.text('Apply to 3 authors'));
-      await tester.pumpAndSettle();
-
-      expect(arr.requests, ['PUT /api/v1/author/editor']);
-      expect(arr.bodies.single['authorIds'], [1, 2, 3]);
-    });
-
-    testWidgets('Profile is a quality and a metadata profile, from '
-        'Readarr’s own routes', (tester) async {
-      final arr = await _pump(tester, bulkOf: bulkOf, items: _authors);
-
-      await tester.tap(find.text('Run Profile'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Profiles for 3 authors'), findsOneWidget);
-      expect(find.text('Quality profile'), findsOneWidget);
-      expect(find.text('Metadata profile'), findsOneWidget);
-      // They all have profile 1, which the rows name.
-      expect(find.text('Any'), findsOneWidget);
-      expect(find.text('Standard'), findsOneWidget);
-
-      await tester.tap(find.text('Metadata profile'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Fiction only'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Apply to 3 authors'));
-      await tester.pumpAndSettle();
-
-      expect(arr.bodies.single, {
-        'authorIds': [1, 2, 3],
-        'metadataProfileId': 2,
-      });
-    });
-
-    testWidgets('Remove says what Readarr stops, and is one DELETE per '
-        'author with both choices, never the editor’s', (tester) async {
-      final arr = await _pump(tester, bulkOf: bulkOf, items: _authors);
-
-      await tester.tap(find.text('Run Remove'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Remove 3 authors from Readarr?'), findsOneWidget);
-      expect(find.text('Readarr stops looking for their books.'), findsOne);
-      await tester.tap(find.text('Also delete $_threeGb of files'));
-      await tester.pump();
-      await tester.tap(find.text('Remove 3 authors and delete $_threeGb'));
-      await tester.pumpAndSettle();
-
-      expect(arr.requests.toList()..sort(), [
-        'DELETE /api/v1/author/1',
-        'DELETE /api/v1/author/2',
-        'DELETE /api/v1/author/3',
-      ]);
-      for (final query in arr.queries) {
-        expect(query['deleteFiles'], 'true');
-      }
-    });
-
-    testWidgets('an author whose statistics Readarr did not send leaves '
-        'the size out', (tester) async {
-      await _pump(
-        tester,
-        bulkOf: bulkOf,
-        items: [
-          _author(1, 'A'),
-          const ReadarrAuthor(
-            id: 2,
-            authorName: 'B',
-            monitored: true,
-            bookCount: 0,
-            bookFileCount: 0,
-            hasStatistics: false,
-          ),
-        ],
-      );
-
-      await tester.tap(find.text('Run Remove'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Also delete their files'), findsOneWidget);
-      expect(find.textContaining('GB'), findsNothing);
     });
   });
 }

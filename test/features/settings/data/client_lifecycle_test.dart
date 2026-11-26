@@ -4,21 +4,14 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/features/bazarr/presentation/bazarr_provider.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/dockge/presentation/dockge_provider.dart';
-import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
-import 'package:cupola/features/plex/presentation/plex_provider.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_provider.dart';
-import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/truenas/presentation/truenas_provider.dart';
-import 'package:cupola/features/unraid/presentation/unraid_provider.dart';
 
 import '../../../test_helpers/settings_scope.dart';
 
@@ -62,42 +55,17 @@ void main() {
           key: ServiceKey.sonarr,
           read: (c) => c.read(sonarrServiceProvider),
         ),
-        'lidarr': (
-          key: ServiceKey.lidarr,
-          read: (c) => c.read(lidarrServiceProvider),
-        ),
         'seerr': (
           key: ServiceKey.seerr,
           read: (c) => c.read(seerrServiceProvider),
-        ),
-        'bazarr': (
-          key: ServiceKey.bazarr,
-          read: (c) => c.read(bazarrServiceProvider),
-        ),
-        'prowlarr': (
-          key: ServiceKey.prowlarr,
-          read: (c) => c.read(prowlarrServiceProvider),
-        ),
-        'readarr': (
-          key: ServiceKey.readarr,
-          read: (c) => c.read(readarrServiceProvider),
         ),
         'qbittorrent': (
           key: ServiceKey.qbittorrent,
           read: (c) => c.read(qbittorrentServiceProvider),
         ),
-        'unraid': (
-          key: ServiceKey.unraid,
-          read: (c) => c.read(unraidClientProvider),
-        ),
         'dockge': (
           key: ServiceKey.dockge,
           read: (c) => c.read(dockgeClientProvider),
-        ),
-        'plex': (key: ServiceKey.plex, read: (c) => c.read(plexClientProvider)),
-        'jellyfin': (
-          key: ServiceKey.jellyfin,
-          read: (c) => c.read(jellyfinClientProvider),
         ),
         'truenas': (
           key: ServiceKey.truenas,
@@ -107,26 +75,6 @@ void main() {
 
   group('an unrelated settings write leaves the client alone', () {
     for (final entry in clients.entries) {
-      test('${entry.key} survives a theme change', () async {
-        final container = await containerWith([entry.value.key]);
-        final before = entry.value.read(container);
-
-        // Something with no bearing on any transport.
-        final settings = container.read(currentSettingsProvider);
-        await container
-            .read(settingsProvider.notifier)
-            .updateSettings(settings.copyWith(region: 'IT'));
-
-        expect(
-          identical(entry.value.read(container), before),
-          isTrue,
-          reason:
-              '${entry.key} was rebuilt by a settings write it does not depend '
-              'on. Watching the whole SettingsModel would do this; a select of '
-              'its own transport identity must not.',
-        );
-      });
-
       test('${entry.key} survives another service being edited', () async {
         // Configure a second service so there is a neighbour to disturb.
         final neighbour = entry.value.key == ServiceKey.radarr

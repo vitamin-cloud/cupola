@@ -11,23 +11,11 @@ final streamPlayerChoiceProvider =
       StreamPlayerChoiceNotifier.new,
     );
 
-/// The same choice for an Emby title.
-///
-/// A provider of its own, not one more value of the Jellyfin choice: the two
-/// servers have no player in common, so a household with both would otherwise
-/// have each title forget the other's choice the moment it found it
-/// uninstalled.
-final embyPlayerChoiceProvider =
-    NotifierProvider<StreamPlayerChoiceNotifier, StreamPlayer?>(
-      () => StreamPlayerChoiceNotifier(key: 'stream_player_emby'),
-    );
-
 /// The choice provider of [service]'s players. Throws for a server with no
 /// choice to make: a caller that asks has been handed the wrong key.
 NotifierProvider<StreamPlayerChoiceNotifier, StreamPlayer?>
 streamPlayerChoiceOf(ServiceKey service) => switch (service) {
   ServiceKey.jellyfin => streamPlayerChoiceProvider,
-  ServiceKey.emby => embyPlayerChoiceProvider,
   _ => throw ArgumentError.value(service, 'service', 'has no player choice'),
 };
 

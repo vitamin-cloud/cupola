@@ -209,14 +209,12 @@ String blockedImportTitle(int files) =>
 /// What the arr calls the title it grabbed, in a sentence.
 String _titleNoun(ServiceKey service) => switch (service) {
   ServiceKey.radarr => "movie's name",
-  ServiceKey.lidarr => "artist's name",
   _ => 'series name',
 };
 
 /// What one file is, to the arr.
 String _unit(ServiceKey service) => switch (service) {
   ServiceKey.radarr => 'movie',
-  ServiceKey.lidarr => 'track',
   _ => 'episode',
 };
 
@@ -408,7 +406,6 @@ String needYouExplanation(
 
 String _unitTitle(ServiceKey service) => switch (service) {
   ServiceKey.radarr => 'movie',
-  ServiceKey.lidarr => 'album',
   _ => 'series',
 };
 

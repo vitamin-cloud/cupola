@@ -14,13 +14,9 @@
 /// `hide`, so the 79 importers see the same API as before.
 library;
 
-import 'package:cupola/features/discover/presentation/discover_provider.dart';
-
 export 'services_decisions.dart';
 export 'services_history.dart';
 export 'services_probe.dart' hide MergeConnection, watchMergeConnections;
 export 'services_queue.dart';
 export 'services_queue_snapshots.dart';
 export 'services_signals.dart';
-
-final servicesRequestsProvider = requestsProvider;

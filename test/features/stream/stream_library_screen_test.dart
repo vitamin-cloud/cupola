@@ -223,10 +223,7 @@ Future<void> _pumpLibrary(
         // not-configured leaf rather than a Retry that can never succeed. These
         // cases are about the pager, so they answer the question and move on.
         currentSettingsProvider.overrideWith(
-          (ref) => settingsWithServices(const [
-            ServiceKey.jellyfin,
-            ServiceKey.plex,
-          ]),
+          (ref) => settingsWithServices(const [ServiceKey.jellyfin]),
         ),
         jellyfinServerProvider.overrideWithValue(server),
       ],

@@ -277,21 +277,6 @@ void main() {
   });
 
   group('DesktopNavRail sections', () {
-    testWidgets('draws the bar, then Settings at the foot', (tester) async {
-      await pumpRail(tester);
-
-      final tops = [
-        for (final tab in bar) tester.getTopLeft(railItem(tab.label)).dy,
-      ];
-      expect(tops, orderedEquals([...tops]..sort()), reason: 'bar order');
-      // Four sections, and the settings key below the last of them.
-      expect(tops, hasLength(4));
-      final settings = tester.getTopLeft(railItem('Settings')).dy;
-      expect(settings, greaterThan(tops.last));
-      // Settings is no section: the rail has five buttons.
-      expect(railItem('Requests'), findsNothing);
-    });
-
     testWidgets(
       'the sections carry the bar\'s shortcuts, Settings carries ⌘,',
       (tester) async {

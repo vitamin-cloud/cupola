@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -194,21 +193,11 @@ class SettingsService {
       legacyApiKey: 'sonarr_api_key',
       secureApiKey: 'secure_sonarr_api_key',
     ),
-    ServiceKey.lidarr: _ServiceStorageKeys(
-      url: 'lidarr_url',
-      legacyApiKey: 'lidarr_api_key',
-      secureApiKey: 'secure_lidarr_api_key',
-    ),
     ServiceKey.qbittorrent: _ServiceStorageKeys(
       url: 'qbittorrent_url',
       legacyApiKey: '',
       secureApiKey: 'secure_qbittorrent_password',
       username: 'qbittorrent_username',
-    ),
-    ServiceKey.bazarr: _ServiceStorageKeys(
-      url: 'bazarr_url',
-      legacyApiKey: '',
-      secureApiKey: 'secure_bazarr_api_key',
     ),
     ServiceKey.truenas: _ServiceStorageKeys(
       url: 'truenas_url',
@@ -221,40 +210,11 @@ class SettingsService {
       secureApiKey: 'secure_dockge_password',
       username: 'dockge_username',
     ),
-    ServiceKey.prowlarr: _ServiceStorageKeys(
-      url: 'prowlarr_url',
-      legacyApiKey: '',
-      secureApiKey: 'secure_prowlarr_api_key',
-    ),
-    ServiceKey.readarr: _ServiceStorageKeys(
-      url: 'readarr_url',
-      legacyApiKey: '',
-      secureApiKey: 'secure_readarr_api_key',
-    ),
-    ServiceKey.unraid: _ServiceStorageKeys(
-      url: 'unraid_url',
-      legacyApiKey: '',
-      secureApiKey: 'secure_unraid_api_key',
-    ),
     ServiceKey.jellyfin: _ServiceStorageKeys(
       url: 'jellyfin_url',
       legacyApiKey: '',
       secureApiKey: 'secure_jellyfin_api_key',
       userId: 'jellyfin_user_id',
-    ),
-    ServiceKey.plex: _ServiceStorageKeys(
-      url: 'plex_url',
-      legacyApiKey: '',
-      secureApiKey: 'secure_plex_token',
-      clientId: 'plex_client_id',
-    ),
-    // The viewer id is Jellyfin's pattern: an Emby API key has no user, so the
-    // household member the lenses read as is chosen once and kept beside it.
-    ServiceKey.emby: _ServiceStorageKeys(
-      url: 'emby_url',
-      legacyApiKey: '',
-      secureApiKey: 'secure_emby_api_key',
-      userId: 'emby_user_id',
     ),
   };
 
@@ -456,13 +416,10 @@ class SettingsService {
       if (storageKeys.userId != null) {
         await _prefs.remove(storageKeys.userId!);
       }
-      // The client id goes too. It is not a credential, but leaving it behind
-      // would tie a freshly set-up install to the device row the old one
-      // registered on the user's Plex server.
-      if (storageKeys.clientId != null) {
-        await _prefs.remove(storageKeys.clientId!);
-      }
     }
+    // The plex.tv client id goes too: not a credential, but kept it would tie
+    // a fresh install to the old one's sign-ins.
+    await _prefs.remove(_plexClientIdKey);
 
     // `_secureStore.deleteAll()` above already wipes the secure copy of the
     // trust map and of both legacy fingerprints; only a plaintext-prefs
@@ -507,8 +464,6 @@ class SettingsService {
     var model = SettingsModel(
       plexClientId: plexClientId,
       trustedCertificates: trustedCertificates,
-      region: _loadRegion(),
-      themeMode: AppThemeMode.fromName(_prefs.getString(_kThemeMode)),
     );
     for (final service in ServiceKey.values) {
       final (url, credential) = serviceSettings[service]!;
@@ -750,16 +705,7 @@ class SettingsService {
   }
 
   Future<void> _write(SettingsModel settings, SettingsModel? base) async {
-    final normalizedRegion = SettingsModel.normalizeRegion(settings.region);
-
     await _saveInstances(settings, previous: base);
-    if (base == null ||
-        SettingsModel.normalizeRegion(base.region) != normalizedRegion) {
-      await _prefs.setString(_kRegion, normalizedRegion);
-    }
-    if (base == null || base.themeMode != settings.themeMode) {
-      await _prefs.setString(_kThemeMode, settings.themeMode.name);
-    }
     if (base == null) await _prefs.remove('hidden_tabs');
 
     if (base == null ||
@@ -774,8 +720,7 @@ class SettingsService {
     // device row on the following load.
     if (settings.plexClientId.isNotEmpty &&
         (base == null || base.plexClientId != settings.plexClientId)) {
-      final plexKeys = _serviceStorageKeys[ServiceKey.plex]!;
-      await _prefs.setString(plexKeys.clientId!, settings.plexClientId);
+      await _prefs.setString(_plexClientIdKey, settings.plexClientId);
     }
   }
 
@@ -811,8 +756,12 @@ class SettingsService {
   /// from [Random.secure] rather than a `uuid` dependency: the project does not
   /// take new packages without approval, and nothing here needs more than 122
   /// random bits.
+  /// Where the plex.tv client id lives: Seerr's sign-in with Plex asks for it,
+  /// though Plex itself is gone from this fork.
+  static const _plexClientIdKey = 'plex_client_id';
+
   Future<String> _loadOrCreatePlexClientId() async {
-    final key = _serviceStorageKeys[ServiceKey.plex]!.clientId!;
+    const key = _plexClientIdKey;
     final existing = _prefs.getString(key)?.trim() ?? '';
     if (existing.isNotEmpty) return existing;
 
@@ -1032,13 +981,6 @@ class SettingsService {
 
   String _loadString(String key) {
     return _prefs.getString(key) ?? '';
-  }
-
-  String _loadRegion() {
-    return SettingsModel.normalizeRegion(
-      _prefs.getString(_kRegion) ??
-          PlatformDispatcher.instance.locale.countryCode,
-    );
   }
 
   /// Writes every connection to the keys derived from its id, forgets the ones
@@ -1511,13 +1453,6 @@ class _ServiceStorageKeys {
   /// through. Changes whenever the user picks a different household member.
   final String? userId;
 
-  /// Prefs key for the persisted per-install client identifier (Plex).
-  ///
-  /// Machine-generated exactly once and then immutable: the opposite lifecycle
-  /// to [userId]. Regenerating it registers a new device against the user's
-  /// server, so it must survive every launch, update and settings edit.
-  final String? clientId;
-
   const _ServiceStorageKeys({
     required this.url,
     required this.legacyApiKey,
@@ -1527,7 +1462,6 @@ class _ServiceStorageKeys {
     this.legacySecureApiKey,
     this.username,
     this.userId,
-    this.clientId,
   });
 }
 

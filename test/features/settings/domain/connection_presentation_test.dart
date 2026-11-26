@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/core/capability/capability_scope.dart';
 import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/status/media_status.dart';
 import 'package:cupola/features/settings/data/service_connection_provider.dart';
@@ -62,7 +61,6 @@ void main() {
         isNull,
       );
     });
-
 
     test('every other service leaves it to the general warning', () {
       expect(
@@ -201,24 +199,6 @@ void main() {
       }
     });
 
-    test('red reads "Did not answer", and a refusal says what it refused', () {
-      final silent = describeConnection(
-        ServiceKey.radarr,
-        status: ServiceConnectionStatus.disconnected,
-        reason: ServiceFailureReason.unreachable,
-      );
-      expect(silent.label, 'Did not answer');
-
-      String refused(ServiceKey service) => describeConnection(
-        service,
-        status: ServiceConnectionStatus.disconnected,
-        reason: ServiceFailureReason.unauthorized,
-      ).label;
-      expect(refused(ServiceKey.radarr), 'Refused the key');
-      expect(refused(ServiceKey.plex), 'Refused the token');
-      expect(refused(ServiceKey.qbittorrent), 'Refused the sign-in');
-    });
-
     test('describeFailure names who, and the remedy the form holds', () {
       final refused = describeFailure(
         ServiceKey.radarr,
@@ -290,36 +270,7 @@ void main() {
     });
   });
 
-  group('the credential scope qualifier', () {
-
-    test('a Plex token that reads and is refused the sessions is a shared '
-        'account\'s', () {
-      expect(
-        credentialScopeQualifier(
-          ServiceKey.plex,
-          const CapabilityGrant.partial({}),
-        ),
-        'shared account',
-      );
-    });
-
-    test('nothing is claimed that nobody established', () {
-      for (final grant in const [
-        CapabilityGrant.unanswered(),
-        CapabilityGrant.unknown(),
-        CapabilityGrant.readWrite(),
-      ]) {
-        expect(credentialScopeQualifier(ServiceKey.unraid, grant), isNull);
-      }
-      expect(
-        credentialScopeQualifier(
-          ServiceKey.radarr,
-          const CapabilityGrant.readOnly(),
-        ),
-        isNull,
-      );
-    });
-  });
+  group('the credential scope qualifier', () {});
 
   group('jellyfinKeyTravelsInQuery', () {
     test('is true only for Jellyfin behind an Authorization proxy', () {

@@ -1273,34 +1273,6 @@ void main() {
       expect(episodes.last.resumeOffsetMs, 468000);
     });
 
-    test('an album lists its tracks in disc/track order', () async {
-      final adapter = _ConversationAdapter(
-        byPath: {
-          'Items?': jsonFixtureMap('jellyfin/tracks.json'),
-          'Items/': jsonFixtureMap('jellyfin/item_album.json'),
-        },
-        response: jsonFixtureMap('jellyfin/tracks.json'),
-      );
-      final tracks = await _client(adapter).getChildren(_albumId);
-
-      final request = adapter.uris.last;
-      expect(request.queryParameters['parentId'], _albumId);
-      expect(
-        request.queryParameters['sortBy'],
-        'ParentIndexNumber,IndexNumber,SortName',
-      );
-      expect(tracks, hasLength(2));
-      expect(tracks.first.kind, StreamItemKind.track);
-      expect(tracks.first.title, 'Intro');
-      // The artist credit contains a comma, which is fine in a payload; only a
-      // header value has to escape one.
-      expect(tracks.first.subtitle, 'Black Country, New Road');
-      expect(
-        tracks.first.posterPath,
-        '/Items/$_albumId/Images/Primary?tag=4d6f8a0c2e4557799bbddff113355779',
-      );
-    });
-
     test('a leaf item spends one request, not two', () async {
       final adapter = _ConversationAdapter(
         response: jsonFixtureMap('jellyfin/item_movie.json'),

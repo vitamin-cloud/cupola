@@ -13,7 +13,6 @@ import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/truenas/data/truenas_service.dart';
 import 'package:cupola/features/truenas/presentation/truenas_provider.dart';
-import 'package:cupola/features/unraid/presentation/unraid_provider.dart';
 
 /// How often Storage is read again while the Home is seen.
 const homeStorageInterval = Duration(seconds: 60);
@@ -59,23 +58,6 @@ final homeStorageProvider = FutureProvider.autoDispose<HomeStorage>((
       ),
     );
   }
-  for (final instance in settings.configuredInstancesOf(ServiceKey.unraid)) {
-    final id = instance.id;
-    reads.add(
-      ref
-          .watch(unraidClientForProvider(id))
-          .getArray()
-          .then(
-            (array) => (
-              [storagePoolOfUnraid(array, instanceId: id)],
-              answered(ServiceKey.unraid, id),
-            ),
-            onError: (Object error) =>
-                (const <StoragePool>[], failed(ServiceKey.unraid, id, error)),
-          ),
-    );
-  }
-
   final answers = await Future.wait(reads);
   return (
     pools: [for (final (pools, _) in answers) ...pools],

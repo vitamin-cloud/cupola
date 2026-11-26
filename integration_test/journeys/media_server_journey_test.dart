@@ -64,94 +64,6 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 
 import 'testlab_journey_harness.dart';
 
-/// A media server of the MediaBrowser family the journeys drive, and what
-/// differs between its members: where its API sits, how its key travels, the
-/// routes the app opens and the words the test names carry.
-enum _Server {
-  jellyfin(
-    service: ServiceKey.jellyfin,
-    title: 'Jellyfin',
-    tokenName: 'CUPOLA_TESTLAB_JELLYFIN_TOKEN',
-    basePath: '',
-    overview: ServiceRoutes.jellyfinOverview,
-    libraries: ServiceRoutes.jellyfinLibraries,
-    users: ServiceRoutes.jellyfinUsers,
-    devices: ServiceRoutes.jellyfinDevices,
-    tasks: ServiceRoutes.jellyfinTasks,
-    activity: ServiceRoutes.jellyfinActivity,
-    s01: 'S-01 · the Jellyfin libraries and a title',
-    s02: 'S-02 · the household users, devices and tasks Jellyfin holds',
-    s03: 'S-03 · pause, resume, message and stop a Jellyfin playback',
-    s09: 'S-09 · Now playing draws one and two playbacks, then its idle line',
-  ),
-  emby(
-    service: ServiceKey.emby,
-    title: 'Emby',
-    tokenName: 'CUPOLA_TESTLAB_EMBY_TOKEN',
-    basePath: '/emby',
-    overview: ServiceRoutes.embyOverview,
-    libraries: ServiceRoutes.embyLibraries,
-    users: ServiceRoutes.embyUsers,
-    devices: ServiceRoutes.embyDevices,
-    tasks: ServiceRoutes.embyTasks,
-    activity: ServiceRoutes.embyActivity,
-    s01: 'S-01 · the Emby libraries and a title',
-    s02: 'S-02 · the household users, devices and tasks Emby holds',
-    s03: 'S-03 · pause, resume, message and stop an Emby playback',
-    s09:
-        'S-09 · Now playing draws one and two Emby playbacks, then its idle line',
-  );
-
-  const _Server({
-    required this.service,
-    required this.title,
-    required this.tokenName,
-    required this.basePath,
-    required this.overview,
-    required this.libraries,
-    required this.users,
-    required this.devices,
-    required this.tasks,
-    required this.activity,
-    required this.s01,
-    required this.s02,
-    required this.s03,
-    required this.s09,
-  });
-
-  final ServiceKey service;
-
-  /// The name the app draws for the server, and the failure messages use.
-  final String title;
-
-  /// The lab's credential name for what a reading authenticates with.
-  final String tokenName;
-
-  /// Where the API lives under the address: Emby answers under `/emby`.
-  final String basePath;
-
-  /// The tab roots the app opens for the server.
-  final String overview;
-  final String libraries;
-  final String users;
-  final String devices;
-  final String tasks;
-  final String activity;
-
-  /// The journey names. They are what `journey_sessions.py` selects a server's
-  /// session journeys by, so each is distinctive.
-  final String s01;
-  final String s02;
-  final String s03;
-  final String s09;
-
-  /// The route of one title's page.
-  String item(String id) => switch (this) {
-    _Server.jellyfin => ServiceRoutes.jellyfinItem(id),
-    _Server.emby => ServiceRoutes.embyItem(id),
-  };
-}
-
 /// The title the lab's library holds first, by the kind the server names.
 Future<String> _movieTitle(LabApp app, _Server server) async {
   final items = await _media(
@@ -193,43 +105,6 @@ void main() {
   for (final server in _Server.values) {
     _mediaBrowserJourneys(binding, server);
   }
-
-  testWidgets('S-06 · the Plex libraries, on deck, devices and playlists', (
-    tester,
-  ) async {
-    binding.framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
-    final app = await LabApp.asOperator(
-      tester,
-      services: const {ServiceKey.plex},
-    );
-
-    final sections = await _plexContainer(app, '/library/sections');
-    final titles = [
-      for (final directory in sections['Directory'] as List? ?? const [])
-        if ((directory as Map)['title'] case final String title) title,
-    ];
-    expect(titles, isNotEmpty, reason: 'the lab seeded Plex libraries');
-
-    await app.go(tester, ServiceRoutes.plexLibraries);
-    for (final title in titles) {
-      await app.surface.see(title);
-    }
-
-    // On deck lives in Activities, beside who is watching.
-    final onDeck = await _plexContainer(app, '/library/onDeck');
-    final deck = (onDeck['Metadata'] as List? ?? const []);
-    await app.go(tester, ServiceRoutes.plexActivities);
-    await app.surface.see('On deck');
-    if (deck.isNotEmpty) {
-      await app.surface.see((deck.first as Map)['title'] as String);
-    }
-
-    await app.go(tester, ServiceRoutes.plexDevices);
-    await app.surface.see('Devices');
-    await app.go(tester, ServiceRoutes.plexPlaylists);
-    await app.surface.see('Playlists');
-  }, timeout: const Timeout(Duration(minutes: 10)));
-
 }
 
 /// The journeys Jellyfin and Emby share: S-01, S-02, S-03 and S-09, for one
@@ -532,8 +407,6 @@ Future<Object?> _mediaRequest(
               'DeviceId="cupola-journey-reader", Version="test", '
               'Token="$token"',
         );
-      case _Server.emby:
-        request.headers.set('X-Emby-Token', token);
     }
     request.headers.set('Accept', 'application/json');
     final response = await request.close();
@@ -542,27 +415,6 @@ Future<Object?> _mediaRequest(
       fail('${server.title} $path answered ${response.statusCode}: $body');
     }
     return body.isEmpty ? null : jsonDecode(body);
-  } finally {
-    client.close(force: true);
-  }
-}
-
-Future<Map> _plexContainer(LabApp app, String path) async {
-  final token = app.credentials.require('CUPOLA_TESTLAB_PLEX_TOKEN');
-  final client = HttpClient();
-  try {
-    final request = await client.getUrl(
-      Uri.parse('${LabEndpoints.directUrlOf(ServiceKey.plex)}$path'),
-    );
-    request.headers.set('X-Plex-Token', token);
-    request.headers.set('Accept', 'application/json');
-    final response = await request.close();
-    final body = await response.transform(utf8.decoder).join();
-    if (response.statusCode >= 400) {
-      fail('Plex $path answered ${response.statusCode}: $body');
-    }
-    final json = jsonDecode(body) as Map;
-    return (json['MediaContainer'] as Map?) ?? json;
   } finally {
     client.close(force: true);
   }
@@ -597,3 +449,73 @@ String _texts(WidgetTester tester) => tester
     .map((text) => text.data ?? '')
     .where((data) => data.isNotEmpty)
     .join(' | ');
+
+/// A media server of the MediaBrowser family the journeys drive, and what
+/// differs between its members: where its API sits, how its key travels, the
+/// routes the app opens and the words the test names carry.
+enum _Server {
+  jellyfin(
+    service: ServiceKey.jellyfin,
+    title: 'Jellyfin',
+    tokenName: 'CUPOLA_TESTLAB_JELLYFIN_TOKEN',
+    basePath: '',
+    overview: ServiceRoutes.jellyfinOverview,
+    libraries: ServiceRoutes.jellyfinLibraries,
+    users: ServiceRoutes.jellyfinUsers,
+    devices: ServiceRoutes.jellyfinDevices,
+    tasks: ServiceRoutes.jellyfinTasks,
+    activity: ServiceRoutes.jellyfinActivity,
+    s01: 'S-01 · the Jellyfin libraries and a title',
+    s02: 'S-02 · the household users, devices and tasks Jellyfin holds',
+    s03: 'S-03 · pause, resume, message and stop a Jellyfin playback',
+    s09: 'S-09 · Now playing draws one and two playbacks, then its idle line',
+  );
+
+  const _Server({
+    required this.service,
+    required this.title,
+    required this.tokenName,
+    required this.basePath,
+    required this.overview,
+    required this.libraries,
+    required this.users,
+    required this.devices,
+    required this.tasks,
+    required this.activity,
+    required this.s01,
+    required this.s02,
+    required this.s03,
+    required this.s09,
+  });
+
+  final ServiceKey service;
+
+  /// The name the app draws for the server, and the failure messages use.
+  final String title;
+
+  /// The lab's credential name for what a reading authenticates with.
+  final String tokenName;
+
+  /// Where the API lives under the address: Emby answers under `/emby`.
+  final String basePath;
+
+  /// The tab roots the app opens for the server.
+  final String overview;
+  final String libraries;
+  final String users;
+  final String devices;
+  final String tasks;
+  final String activity;
+
+  /// The journey names. They are what `journey_sessions.py` selects a server's
+  /// session journeys by, so each is distinctive.
+  final String s01;
+  final String s02;
+  final String s03;
+  final String s09;
+
+  /// The route of one title's page.
+  String item(String id) => switch (this) {
+    _Server.jellyfin => ServiceRoutes.jellyfinItem(id),
+  };
+}

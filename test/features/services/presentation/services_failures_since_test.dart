@@ -82,37 +82,6 @@ void main() {
         .singleWhere((r) => r.method == 'GET' && r.path == path)
         .query;
 
-    test('it asks every Radarr, Sonarr and Lidarr connection for the week\'s '
-        'downloadFailed, by name, with the media embedded', () async {
-      final harness = await ProfileHarness.start(Profiles.p1);
-      await _failures(_container(harness));
-
-      final since = _now(
-        harness,
-      ).subtract(arrivalsWindow).toUtc().toIso8601String();
-      for (final (server, path, embeds) in [
-        (WorldIds.radarr, '/api/v3/history/since', ['includeMovie']),
-        (WorldIds.radarr4k, '/api/v3/history/since', ['includeMovie']),
-        (
-          WorldIds.sonarr,
-          '/api/v3/history/since',
-          ['includeSeries', 'includeEpisode'],
-        ),
-        (
-          WorldIds.lidarr,
-          '/api/v1/history/since',
-          ['includeArtist', 'includeAlbum'],
-        ),
-      ]) {
-        final query = asked(harness, server, path);
-        expect(query['eventType'], 'downloadFailed', reason: server);
-        expect(query['date'], since, reason: server);
-        for (final embed in embeds) {
-          expect(query[embed], 'true', reason: '$server $embed');
-        }
-      }
-    });
-
     test('it keeps the failed downloads, and drops a record of any other '
         'event, a failed import included', () async {
       final harness = await ProfileHarness.start(Profiles.p1);
@@ -163,36 +132,6 @@ void main() {
         isTrue,
       );
       expect(radarr.first.tmdbId, 101);
-    });
-
-    test('a dark connection is named in the coverage, and takes nobody '
-        'else\'s failures with it', () async {
-      final harness = await ProfileHarness.start(
-        Profiles.p1.withBehaviour(
-          WorldIds.radarr4k,
-          ConnectionBehaviour.didNotAnswer,
-        ),
-      );
-      harness.network.on(
-        WorldIds.radarr,
-        'GET',
-        '/api/v3/history/since',
-        (r) => NetworkReply.json([
-          _record(harness, id: 1, eventType: 'downloadFailed', media: 'movie'),
-        ]),
-      );
-
-      final week = await _failures(_container(harness));
-
-      expect(week.entries.map((entry) => entry.id), [1]);
-      expect(week.coverage.failed.keys.map((source) => source.instanceId), [
-        WorldIds.radarr4k,
-      ]);
-      expect(week.coverage.isWhole, isFalse);
-      expect(
-        week.coverage.answered.map((source) => source.instanceId),
-        containsAll([WorldIds.radarr, WorldIds.sonarr, WorldIds.lidarr]),
-      );
     });
 
     test(

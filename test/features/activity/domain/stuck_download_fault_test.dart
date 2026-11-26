@@ -158,7 +158,6 @@ void main() {
   });
 
   group('the ways out', () {
-
     test('nobody has the file: another download first, then Remove and '
         'Keep waiting', () {
       final actions = stuckActionsFor(_stuck());
@@ -175,8 +174,6 @@ void main() {
         StuckAction.keepWaiting,
       ]);
     });
-
-
 
     test('a failed download is not kept waiting: it will not move', () {
       final actions = stuckActionsFor(_stuck(fault: InFlightFault.failed));

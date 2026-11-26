@@ -48,7 +48,6 @@ final _settings = SettingsModel(
       label: 'HD',
     ),
     _instance(ServiceKey.sonarr, 'https://sonarr.lan:8989'),
-    _instance(ServiceKey.prowlarr, 'https://prowlarr.lan:9696'),
     _instance(ServiceKey.qbittorrent, 'https://qbit.lan:8080'),
   ],
 );

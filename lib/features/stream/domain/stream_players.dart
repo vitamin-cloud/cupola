@@ -18,9 +18,7 @@ enum StreamPlayer {
   web('Jellyfin in the browser', 'In your browser'),
   swiftfin('Swiftfin', 'Opens its page'),
   streamyfin('Streamyfin', 'Plays from where you stopped'),
-  fladder('Fladder', 'Opens its page'),
-  emby('Emby', 'Opens its page'),
-  embyWeb('Emby in the browser', 'In your browser');
+  fladder('Fladder', 'Opens its page');
 
   const StreamPlayer(this.label, this.line);
 
@@ -28,7 +26,6 @@ enum StreamPlayer {
   /// sheet draws them in. Empty for a server with no choice to make.
   static List<StreamPlayer> of(ServiceKey service) => switch (service) {
     ServiceKey.jellyfin => const [swiftfin, streamyfin, fladder, web],
-    ServiceKey.emby => const [emby, embyWeb],
     _ => const [],
   };
 
@@ -38,12 +35,10 @@ enum StreamPlayer {
     StreamPlayer.swiftfin ||
     StreamPlayer.streamyfin ||
     StreamPlayer.fladder => ServiceKey.jellyfin,
-    StreamPlayer.emby || StreamPlayer.embyWeb => ServiceKey.emby,
   };
 
   /// Whether this is a server's own web client rather than an app.
-  bool get isBrowser =>
-      this == StreamPlayer.web || this == StreamPlayer.embyWeb;
+  bool get isBrowser => this == StreamPlayer.web;
 
   /// Its name, in the sheet and in Settings.
   final String label;
@@ -53,20 +48,18 @@ enum StreamPlayer {
 
   /// The platforms the app exists on. The browser is on every one.
   Set<TargetPlatform> get platforms => switch (this) {
-    StreamPlayer.web || StreamPlayer.embyWeb => TargetPlatform.values.toSet(),
+    StreamPlayer.web => TargetPlatform.values.toSet(),
     StreamPlayer.swiftfin => const {TargetPlatform.iOS},
     StreamPlayer.streamyfin ||
-    StreamPlayer.fladder ||
-    StreamPlayer.emby => const {TargetPlatform.iOS, TargetPlatform.android},
+    StreamPlayer.fladder => const {TargetPlatform.iOS, TargetPlatform.android},
   };
 
   /// The scheme the app claims, or null for the browser.
   String? get scheme => switch (this) {
-    StreamPlayer.web || StreamPlayer.embyWeb => null,
+    StreamPlayer.web => null,
     StreamPlayer.swiftfin => 'swiftfin',
     StreamPlayer.streamyfin => 'streamyfin',
     StreamPlayer.fladder => 'fladder',
-    StreamPlayer.emby => 'emby',
   };
 
   /// What to ask the platform about, to learn whether the app is installed:
@@ -93,11 +86,7 @@ enum StreamPlayer {
     Uri? webUrl,
     TargetPlatform? platform,
   }) => switch (this) {
-    StreamPlayer.web || StreamPlayer.embyWeb => webUrl,
-    StreamPlayer.emby =>
-      serverId == null || serverId.isEmpty
-          ? null
-          : _embyLink(serverId, itemId, platform ?? defaultTargetPlatform),
+    StreamPlayer.web => webUrl,
     StreamPlayer.swiftfin =>
       serverId == null || serverId.isEmpty || userId == null || userId.isEmpty
           ? null
@@ -114,18 +103,3 @@ enum StreamPlayer {
     ),
   };
 }
-
-/// Emby's app link, in the two spellings its staff give in the forum: not
-/// documented, so offered only once the platform says the app is there.
-Uri? _embyLink(String serverId, String itemId, TargetPlatform platform) =>
-    switch (platform) {
-      TargetPlatform.iOS => Uri.tryParse(
-        'emby://items?serverId=${Uri.encodeQueryComponent(serverId)}'
-        '&itemId=${Uri.encodeQueryComponent(itemId)}',
-      ),
-      TargetPlatform.android => Uri.tryParse(
-        'emby://items/${Uri.encodeComponent(serverId)}'
-        '/${Uri.encodeComponent(itemId)}',
-      ),
-      _ => null,
-    };

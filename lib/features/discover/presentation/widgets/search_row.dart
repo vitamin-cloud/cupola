@@ -1,9 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'package:cupola/core/app_breakpoints.dart';
 import 'package:cupola/core/app_radius.dart';
 import 'package:cupola/core/app_spacing.dart';
 import 'package:cupola/core/capability/role_gate.dart';
@@ -609,23 +607,6 @@ class SearchRow extends StatelessWidget {
     ),
   );
 }
-
-/// A list of rows at the head of the tab, never wider than a page of one
-/// column ([AppBreakpoints.readingWell]): a title's row and its add, a
-/// recent search and its remove, are read across, and stretched over a
-/// tablet on its side the control stops belonging to its row. The list still
-/// scrolls the whole width, and on a phone this is the gutter alone.
-EdgeInsets searchRowsPadding(double width, {required double bottom}) =>
-    EdgeInsets.fromLTRB(
-      AppSpacing.lg,
-      0,
-      AppSpacing.lg + searchRowsInset(width),
-      bottom,
-    );
-
-/// How much of [width] lies right of the rows' column, past its gutter.
-double searchRowsInset(double width) =>
-    math.max(0, width - 2 * AppSpacing.lg - AppBreakpoints.readingWell);
 
 /// What a row is a picture of, which is its shape.
 enum _Kind { title, person, album, artist }

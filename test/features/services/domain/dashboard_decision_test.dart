@@ -28,8 +28,6 @@ void main() {
       expect(ranked.map((d) => d.title), ['stall', 'request']);
     });
 
-
-
     test('oldest first inside a kind', () {
       final ranked = rankDecisions([
         _decision(
@@ -135,7 +133,6 @@ void main() {
       expect(row.route, '/stack/sonarr');
     });
 
-
     test('a lone fault stays itself', () {
       final lone = _decision(
         DecisionKind.importBlocked,
@@ -144,7 +141,6 @@ void main() {
       );
       expect(groupDecisions([lone]).single, same(lone));
     });
-
 
     test('only a jump folds: Test and Approve act on one item', () {
       final grouped = groupDecisions([
@@ -235,7 +231,6 @@ void main() {
       expect(reportedProblemsClause(1), '1 reported problem');
     });
 
-
     test('the stall control names the client it would open', () {
       expect(
         decisionActionLabel(
@@ -249,28 +244,6 @@ void main() {
         decisionActionLabel(DecisionKind.stalledDownload),
         'Open in client',
       );
-    });
-
-    test('a blocked import names its remedy, not the client', () {
-      // APP-04: filed as a stall, it said "Open in qBittorrent", the one
-      // place that cannot import a file already on disk.
-      expect(
-        decisionActionLabel(
-          DecisionKind.importBlocked,
-          target: ServiceKey.sonarr,
-        ),
-        'Manual import',
-      );
-      // Readarr has no import wizard in this app; the control says where it
-      // actually goes rather than promising one.
-      expect(
-        decisionActionLabel(
-          DecisionKind.importBlocked,
-          target: ServiceKey.readarr,
-        ),
-        'Open in Readarr',
-      );
-      expect(DecisionKind.importBlocked.isFault, isTrue);
     });
 
     test(

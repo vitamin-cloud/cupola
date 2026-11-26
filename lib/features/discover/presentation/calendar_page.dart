@@ -601,11 +601,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   /// When the rows' times are: the note under the agenda.
   static String _timesNote(Set<CalendarKind> kinds) {
     final dated = [
-      for (final kind in const [
-        CalendarKind.movie,
-        CalendarKind.album,
-        CalendarKind.book,
-      ])
+      for (final kind in const [CalendarKind.movie])
         if (kinds.contains(kind)) kind.plural,
     ];
     final datedWords = dated.isEmpty
@@ -1309,15 +1305,8 @@ void openCalendarEvent(BuildContext context, CalendarEvent event) {
   switch (event.target) {
     case CalendarMediaTarget(:final key, :final connectionId):
       context.openMedia(key, focus: connectionId);
-    case CalendarShelfTarget(:final service, :final connectionId, :final id):
-      // A person's shelf lives under its service's tab, in another branch.
-      context.go(switch (service) {
-        ServiceKey.readarr => ServiceRoutes.readarrAuthor(
-          id,
-          instanceId: connectionId,
-        ),
-        _ => ServiceRoutes.lidarrArtist(id, instanceId: connectionId),
-      });
+    // No artist or author shelves in this fork (no Lidarr, no Readarr).
+    case CalendarShelfTarget():
     case null:
       break;
   }

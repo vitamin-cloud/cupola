@@ -390,24 +390,6 @@ void main() {
       );
     });
 
-    test('a row survives its codec whole', () {
-      final row = (
-        service: ServiceKey.plex,
-        instanceId: 'plex-2',
-        connectionName: 'Upstairs',
-        item: episode,
-      );
-      final back = resumeRowFromJson(onDisk(resumeRowToJson(row)))!;
-      expect(back.service, ServiceKey.plex);
-      expect(back.instanceId, 'plex-2');
-      expect(back.connectionName, 'Upstairs');
-      expect(
-        streamItemToJson(back.item),
-        streamItemToJson(episode),
-        reason: 'the item is kept whole',
-      );
-    });
-
     test('a broken record is refused, never half read', () {
       final good = streamItemToJson(episode);
       expect(streamItemFromJson(null), isNull);

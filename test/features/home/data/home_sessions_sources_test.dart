@@ -19,7 +19,6 @@ void main() {
     }
   });
 
-
   test('so are the family over its connections and the merge', () {
     expect(homeSessionsSources, contains(streamSessionsForProvider));
     expect(homeSessionsSources, contains(streamActivityProvider));

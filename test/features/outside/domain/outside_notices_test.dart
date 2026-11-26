@@ -240,7 +240,6 @@ void main() {
       expect(old.flaggedSince, isEmpty);
       expect(old.seen.keys, ['needsYou:Charge']);
     });
-
   });
 
   group('the words', () {

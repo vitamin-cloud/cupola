@@ -55,7 +55,6 @@ void main() {
       expect(sub.read(), _poster);
     });
   }
-
 }
 
 StreamSession _playing(String titleId, {MediaKey? key}) => StreamSession(

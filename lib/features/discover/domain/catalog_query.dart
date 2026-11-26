@@ -352,23 +352,3 @@ class CatalogPageResult {
   final int totalPages;
   final int totalResults;
 }
-
-/// How many titles a catalogue holds, as a phrase that never claims more
-/// than Seerr knows.
-///
-/// Seerr caps what it reports: a discover list past TMDB's last page says
-/// 20,001 over 1,001 pages, trending says 10,000 over 500 (both seen on the
-/// lab, 06/10), so a figure at a cap is a floor ("20,000+"), and only one
-/// under it is a total. Null when Seerr gave no count.
-String? catalogCountPhrase(int? totalResults) {
-  if (totalResults == null || totalResults <= 0) return null;
-  if (totalResults >= 20000) return '20,000+ titles';
-  if (totalResults == 10000) return '10,000+ titles';
-  final digits = totalResults.toString();
-  final grouped = StringBuffer();
-  for (var i = 0; i < digits.length; i++) {
-    if (i > 0 && (digits.length - i) % 3 == 0) grouped.write(',');
-    grouped.write(digits[i]);
-  }
-  return totalResults == 1 ? '1 title' : '$grouped titles';
-}

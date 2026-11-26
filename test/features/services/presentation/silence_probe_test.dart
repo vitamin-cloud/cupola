@@ -14,25 +14,8 @@ import 'package:cupola/core/status/silence_clock.dart';
 import 'package:cupola/features/services/domain/service_summary.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/settings/domain/settings_model.dart';
 
 import '../../../test_helpers/profiles/profiles.dart';
-
-/// The settings a test edits mid-run.
-final _editedSettings = NotifierProvider<_EditedSettings, SettingsModel>(
-  () => _EditedSettings(const SettingsModel()),
-);
-
-class _EditedSettings extends Notifier<SettingsModel> {
-  _EditedSettings(this._initial);
-
-  final SettingsModel _initial;
-
-  @override
-  SettingsModel build() => _initial;
-
-  void set(SettingsModel settings) => state = settings;
-}
 
 void main() {
   late DateTime now;
@@ -50,7 +33,6 @@ void main() {
     container = harness.container(retry: (_, _) => null);
   }
 
-
   /// Asks the probe again, as a Retry or a pull does.
   Future<ServiceSummary> probe(InstanceRef key) {
     container.invalidate(instanceSummaryProvider(key));
@@ -60,18 +42,11 @@ void main() {
   DateTime? silentSince(ServiceKey service, String id) =>
       container.read(silenceClockProvider).since(silenceKey(service, id));
 
-  group('a probe that does not answer', () {
+  group('a probe that does not answer', () {});
 
+  group('a connection that answers again', () {});
 
-  });
-
-  group('a connection that answers again', () {
-
-
-  });
-
-  group('a probe that is refused', () {
-  });
+  group('a probe that is refused', () {});
 
   group('two connections of one service', () {
     test('are two silences', () async {
@@ -124,7 +99,5 @@ void main() {
     });
   });
 
-  group('a connection that is not set up', () {
-  });
-
+  group('a connection that is not set up', () {});
 }

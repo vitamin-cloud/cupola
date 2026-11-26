@@ -25,8 +25,6 @@ import 'package:cupola/features/discover/presentation/discover_provider.dart';
 import 'package:cupola/features/dockge/domain/models/dockge_agent.dart';
 import 'package:cupola/features/dockge/presentation/dockge_provider.dart';
 import 'package:cupola/features/import/presentation/manual_import_routes.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_indexer_actions.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/requests/presentation/widgets/request_answer_controls.dart';
 import 'package:cupola/features/home/presentation/widgets/home_module_parts.dart';
 import 'package:cupola/features/services/domain/dashboard_decision.dart';
@@ -358,21 +356,8 @@ Future<void> runDecision(
         ),
       );
     case DecisionKind.failingIndexer:
-      // On the Prowlarr the indexer failed on: an indexer id is one
-      // server's, and the lens's list would test another indexer, or none.
-      final id = decision.actionId;
-      if (id == null) return;
-      final indexers = await ref.read(
-        prowlarrIndexersForProvider(decision.instanceId).future,
-      );
-      final indexer = indexers.where((each) => each.id == id).firstOrNull;
-      if (!context.mounted || indexer == null) return;
-      await testIndexerFlow(
-        context,
-        ref,
-        indexer,
-        instanceId: decision.instanceId,
-      );
+      // No Prowlarr in this fork: nothing reports one.
+      break;
     case DecisionKind.storageAlert:
       // The server's own page where the alert is (TrueNAS's dashboard,
       // Unraid's array or notifications), on the server that raised it:

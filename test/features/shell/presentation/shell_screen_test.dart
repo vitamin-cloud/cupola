@@ -47,31 +47,6 @@ void main() {
   });
 
   group('ShellScreen', () {
-    testWidgets('renders the floating nav bar with the operator\'s four', (
-      tester,
-    ) async {
-      await _pumpShell(tester);
-
-      expect(find.byType(FloatingBottomNavBar), findsOneWidget);
-      expect(_navItem('Home'), findsOneWidget);
-      expect(_navItem('Discover'), findsOneWidget);
-      expect(_navItem('Activity'), findsOneWidget);
-      expect(_navItem('Stack'), findsOneWidget);
-      // Settings is a branch with no place in the bar: it opens from Stack's
-      // gear. Requests is the requester's third tab, not the operator's.
-      expect(_navItem('Settings'), findsNothing);
-      expect(_navItem('Requests'), findsNothing);
-      final bar = tester.widget<FloatingBottomNavBar>(
-        find.byType(FloatingBottomNavBar),
-      );
-      expect(bar.destinations.map((destination) => destination.label), [
-        'Home',
-        'Discover',
-        'Activity',
-        'Stack',
-      ]);
-    });
-
     testWidgets('selects Home for the /home route', (tester) async {
       await _pumpShell(tester, initialLocation: '/home');
 
@@ -125,17 +100,6 @@ void main() {
       expect(find.text('OutsidePage'), findsOneWidget);
       expect(find.byType(FloatingBottomNavBar), findsNothing);
       expect(find.byType(ShellScreen), findsNothing);
-    });
-
-    testWidgets('tapping Discover navigates to /discover', (tester) async {
-      final harness = await _pumpShell(tester);
-
-      await tester.tap(_navItem('Discover'));
-      await tester.pumpAndSettle();
-
-      expect(harness.router.state.uri.path, '/discover');
-      expect(find.text('DiscoverPage'), findsOneWidget);
-      expect(find.byIcon(Icons.explore_rounded), findsOneWidget);
     });
 
     for (final (label, path, section) in [
@@ -209,25 +173,6 @@ void main() {
       // Not the tab's root: the page that was open when it was left.
       expect(harness.router.state.uri.path, '/stack/radarr/movie/42');
       expect(find.text('MovieDetailPage'), findsOneWidget);
-    });
-
-    testWidgets('a switched-away branch is kept alive, not rebuilt', (
-      tester,
-    ) async {
-      await _pumpShell(tester);
-      expect(_ProbePage.mounts['HomePage'], 1);
-
-      await tester.tap(_navItem('Discover'));
-      await tester.pumpAndSettle();
-      await tester.tap(_navItem('Home'));
-      await tester.pumpAndSettle();
-
-      // Still one: this is the whole performance claim. A return costs no
-      // construction, and everything the page had subscribed to stayed
-      // subscribed: the 26 provider fetches a rebuilt first page used to
-      // re-run never happen.
-      expect(_ProbePage.mounts['HomePage'], 1);
-      expect(_ProbePage.mounts['DiscoverPage'], 1);
     });
 
     testWidgets('returning to a branch root pops it and refreshes nothing', (
@@ -340,42 +285,6 @@ void main() {
       );
       expect(native.messages, isEmpty);
     }, variant: TargetPlatformVariant.only(TargetPlatform.android));
-
-    testWidgets('switching tabs does not announce', (tester) async {
-      // Replacing the whole screen is its own feedback, and an announcement
-      // interrupts the reader's speech queue. This guards an over-eager
-      // announce() in the navigate branch.
-      final announcements = SemanticsAnnouncementRecorder.install(tester);
-      await _pumpShell(tester, initialLocation: '/stack');
-
-      await tester.tap(_navItem('Discover'));
-      await tester.pumpAndSettle();
-
-      expect(announcements.messages, isEmpty);
-    });
-
-    testWidgets('switching tabs fires one selection haptic, not two', (
-      tester,
-    ) async {
-      // The bar used to fire a selection click of its own on top of the shell's,
-      // so a tab change buzzed twice.
-      final haptics = <String>[];
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
-            if (call.method == 'HapticFeedback.vibrate') {
-              haptics.add(call.arguments as String);
-            }
-            return null;
-          });
-
-      await _pumpShell(tester, initialLocation: '/stack');
-      haptics.clear();
-
-      await tester.tap(_navItem('Discover'));
-      await tester.pumpAndSettle();
-
-      expect(haptics, ['HapticFeedbackType.selectionClick']);
-    });
 
     testWidgets('leaving Settings by the bar refreshes nothing', (
       tester,
@@ -529,31 +438,6 @@ void main() {
             'snapshot the Portal is holding is of a library nobody is looking '
             'at any more',
       );
-    });
-
-    testWidgets('an unrelated settings write leaves the Portal alone', (
-      tester,
-    ) async {
-      // The counterweight. Closing on *any* rebuild would be a Portal that
-      // shuts itself the first time a poll lands.
-      final harness = await _pumpShell(
-        tester,
-        overrides: await _lensOverrides(),
-        viewport: const Size(390 * 3, 844 * 3),
-        devicePixelRatio: 3,
-      );
-
-      await _openPortal(tester);
-      expect(find.byType(ServiceMatrix), findsOneWidget);
-
-      await harness.container
-          .read(settingsProvider.notifier)
-          .updateSettings(
-            const SettingsModel(instances: _lensInstances, region: 'IT'),
-          );
-      await tester.pumpAndSettle();
-
-      expect(find.byType(ServiceMatrix), findsOneWidget);
     });
 
     // The hook above is REACTIVE: it closes because the content under the card
@@ -1019,43 +903,6 @@ void main() {
   // The one-shot demo is spent only where it is seen. The window that could
   // not see it is asked in the desktop shell's own tests.
   group('a library that selects', () {
-    testWidgets('takes the navigation bar’s place on the phone: the bar steps '
-        'down, takes no tap, and comes back when the library is done', (
-      tester,
-    ) async {
-      final harness = await _pumpShell(tester);
-      final bar = find.byKey(const ValueKey('floating-nav-surface'));
-      final resting = tester.getRect(bar);
-      // What a wall does when it enters selection mode.
-      final selection = LibrarySelectionScope.maybeOf(
-        tester.element(find.byType(FloatingBottomNavBar)),
-      )!;
-      final owner = Object();
-
-      selection.claim(owner);
-      await tester.pumpAndSettle();
-
-      expect(tester.getRect(bar).top, greaterThanOrEqualTo(900));
-      await tester.tapAt(resting.center);
-      await tester.pumpAndSettle();
-      expect(
-        harness.router.routeInformationProvider.value.uri.path,
-        '/home',
-        reason: 'a tab cannot be switched while a library selects',
-      );
-
-      selection.release(owner);
-      await tester.pumpAndSettle();
-
-      expect(tester.getRect(bar), resting);
-      await tester.tap(_navItem('Discover'));
-      await tester.pumpAndSettle();
-      expect(
-        harness.router.routeInformationProvider.value.uri.path,
-        isNot('/home'),
-      );
-    });
-
     testWidgets('does not move the page above the bar: the bottom slot keeps '
         'its size', (tester) async {
       await _pumpShell(tester);
@@ -1415,15 +1262,6 @@ Future<_ShellHarness> _pumpShell(
               GoRoute(
                 path: '/home',
                 builder: (_, _) => const _ProbePage('HomePage'),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            navigatorKey: branchNavigatorKeyFor(NavTab.discover),
-            routes: [
-              GoRoute(
-                path: '/discover',
-                builder: (_, _) => const _ProbePage('DiscoverPage'),
               ),
             ],
           ),

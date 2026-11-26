@@ -28,7 +28,6 @@ import 'package:cupola/core/widgets/service_offline_state.dart';
 import 'package:cupola/core/widgets/service_tab_bar.dart';
 import 'package:cupola/features/services/domain/service_tab.dart';
 import 'package:cupola/features/services/presentation/widgets/instance_lens_badge.dart';
-import 'package:cupola/features/jellyfin/presentation/jellyfin_admin_placeholder.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/stream/presentation/stream_item_screen.dart';
@@ -42,13 +41,7 @@ final _now = DateTime(2026, 10, 9, 20, 53);
 /// Two Jellyfin: the household's, the lens, and the cabin's beside it.
 final _twoJellyfin = Profiles.p1.withConnection(WorldConnections.jellyfinCabin);
 
-/// Two Plex: the household's, the lens, and the cabin's beside it.
-final _twoPlex = Profiles.p1
-    .withConnection(WorldConnections.plex)
-    .withConnection(WorldConnections.plexCabin);
-
 const _jellyfin = ServiceKey.jellyfin;
-const _plex = ServiceKey.plex;
 
 /// The whole app, on [profile]'s household, with its own router: a phone's
 /// screen unless [size] says otherwise.
@@ -403,44 +396,6 @@ void main() {
       await _close(tester, harness, container);
     });
 
-    testWidgets('a household member\'s token on the cabin is told on its tabs, '
-        'and the key they ask for is the cabin\'s', (tester) async {
-      // Home's token is an administrator's, the cabin's a household member's:
-      // the tabs that need one say so for the connection they read.
-      final (harness, router, container) = await _app(
-        tester,
-        Profiles.p1.withConnection(
-          WorldConnections.jellyfinCabin.withBehaviour(
-            ConnectionBehaviour.readOnly,
-          ),
-        ),
-      );
-      router.go(ServiceRoutes.jellyfinUsers);
-      await _answer(tester);
-      expect(find.text(jellyfinNeedsAdministratorTitle), findsNothing);
-
-      router.go(
-        ServiceRoutes.streamActivity(
-          _jellyfin,
-          instanceId: WorldIds.jellyfinCabin,
-        ),
-      );
-      await _answer(tester);
-      await _openTab(tester, ServiceTab.users);
-      expect(find.text(jellyfinNeedsAdministratorTitle), findsOneWidget);
-      await _openTab(tester, ServiceTab.libraries);
-      expect(find.text(jellyfinNeedsAdministratorTitle), findsOneWidget);
-
-      await tester.tap(find.text('Update the key'));
-      await _answer(tester);
-      expect(
-        router.state.uri.toString(),
-        ServiceRoutes.settingsForConnection(_jellyfin, WorldIds.jellyfinCabin),
-      );
-
-      await _close(tester, harness, container);
-    });
-
     testWidgets('a page pushed inside a tab keeps its place across a tab '
         'switch, and the connection it is on', (tester) async {
       final (harness, router, container) = await _app(tester, _twoJellyfin);
@@ -546,122 +501,5 @@ void main() {
     );
   });
 
-  group('Plex', () {
-    testWidgets('opened on the cabin, every tab reads the cabin and the lens '
-        'stays at home', (tester) async {
-      final (harness, router, container) = await _app(tester, _twoPlex);
-      router.go(
-        ServiceRoutes.streamActivity(_plex, instanceId: WorldIds.plexCabin),
-      );
-      await _answer(tester);
-      expect(_badge(tester), 'Cabin');
-      // Activities reads the cabin's on deck, beside who is watching there.
-      expect(
-        _reached(harness, WorldIds.plexCabin),
-        contains('/hubs/continueWatching'),
-      );
-
-      // The Overview's glance shares that read; its own are the cabin's too.
-      _forget(harness);
-      await _openTab(tester, ServiceTab.overview);
-      expect(_badge(tester), 'Cabin');
-      expect(find.textContaining('cabin.home.arpa'), findsWidgets);
-      expect(find.textContaining('nas.home.arpa'), findsNothing);
-      expect(
-        _reached(harness, WorldIds.plexCabin),
-        contains('/library/sections'),
-      );
-      expect(_reached(harness, WorldIds.plex), isEmpty);
-
-      await _openTab(tester, ServiceTab.libraries);
-      expect(_badge(tester), 'Cabin');
-      await tester.tap(find.text('Movies').first);
-      await _answer(tester);
-      expect(router.state.uri.queryParameters['i'], WorldIds.plexCabin);
-      router.pop();
-      await _answer(tester);
-
-      for (final (tab, path) in [
-        (ServiceTab.devices, '/devices'),
-        (ServiceTab.playlists, '/playlists'),
-      ]) {
-        _forget(harness);
-        await _openTab(tester, tab);
-        expect(_badge(tester), 'Cabin', reason: tab.label);
-        expect(
-          _reached(harness, WorldIds.plexCabin),
-          contains(path),
-          reason: '${tab.label} reads the cabin',
-        );
-        expect(
-          _reached(harness, WorldIds.plex),
-          isNot(contains(path)),
-          reason: '${tab.label} does not read home',
-        );
-      }
-
-      // The tab the link opened reads the cabin too.
-      await _openTab(tester, ServiceTab.activities);
-      expect(_badge(tester), 'Cabin');
-      expect(_nowPlayingReads(tester), WorldIds.plexCabin);
-      expect(_lensOf(container, _plex), WorldIds.plex);
-
-      await _close(tester, harness, container);
-    });
-
-    testWidgets('choosing home in the lens sheet mid-visit makes the rest of '
-        'the visit read home', (tester) async {
-      final (harness, router, container) = await _app(tester, _twoPlex);
-      router.go(
-        ServiceRoutes.streamActivity(_plex, instanceId: WorldIds.plexCabin),
-      );
-      await _answer(tester);
-      await _openTab(tester, ServiceTab.devices);
-      expect(_badge(tester), 'Cabin');
-
-      await _chooseInLensSheet(tester, 'Plex 1');
-      expect(_badge(tester), 'Plex 1');
-      expect(_lensOf(container, _plex), WorldIds.plex);
-
-      _forget(harness);
-      await _openTab(tester, ServiceTab.playlists);
-      expect(_reached(harness, WorldIds.plex), contains('/playlists'));
-      expect(
-        _reached(harness, WorldIds.plexCabin),
-        isNot(contains('/playlists')),
-      );
-
-      // Activities came from the link: back on it, still home.
-      await _openTab(tester, ServiceTab.activities);
-      expect(_badge(tester), 'Plex 1');
-      expect(_nowPlayingReads(tester), WorldIds.plex);
-
-      await _close(tester, harness, container);
-    });
-
-    testWidgets('the visit ends with the service', (tester) async {
-      final (harness, router, container) = await _app(tester, _twoPlex);
-      router.go(
-        ServiceRoutes.streamActivity(_plex, instanceId: WorldIds.plexCabin),
-      );
-      await _answer(tester);
-      await _openTab(tester, ServiceTab.playlists);
-      expect(_badge(tester), 'Cabin');
-
-      router.go(ServiceRoutes.stack);
-      await _answer(tester);
-
-      _forget(harness);
-      router.go(ServiceRoutes.plexPlaylists);
-      await _answer(tester);
-      expect(_badge(tester), 'Plex 1');
-      expect(_reached(harness, WorldIds.plex), contains('/playlists'));
-      expect(
-        _reached(harness, WorldIds.plexCabin),
-        isNot(contains('/playlists')),
-      );
-
-      await _close(tester, harness, container);
-    });
-  });
+  group('Plex', () {});
 }

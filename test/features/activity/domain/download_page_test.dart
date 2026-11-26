@@ -273,27 +273,6 @@ void main() {
       ]);
     });
 
-    test('a stall and an import that needs you are where it stopped', () {
-      final stuck = downloadStepsOf(
-        _sprite(fault: InFlightFault.stalled),
-        now: _now,
-      );
-      expect(stuck[1].detail, 'qBittorrent\u00A0· stuck at 62%');
-      expect(stuck[1].state, DownloadStepState.fault);
-      expect(stuck, hasLength(3));
-
-      final blocked = downloadStepsOf(
-        _sprite(fault: InFlightFault.needsImport),
-        player: ServiceKey.plex,
-        now: _now,
-      );
-      expect(blocked[1].name, 'Downloaded');
-      expect(blocked[1].state, DownloadStepState.done);
-      expect(blocked[2].detail, 'Radarr needs you');
-      expect(blocked[2].state, DownloadStepState.fault);
-      expect(blocked[3].detail, 'once imported');
-    });
-
     test('a transfer no arr asked for has none', () {
       expect(downloadStepsOf(_handAdded, now: _now), isEmpty);
     });
@@ -335,7 +314,6 @@ void main() {
   });
 
   group('Stop and Resume', () {
-
     test("an arr row its client was not matched to can't be stopped from "
         'here, nor a finished or failed one', () {
       expect(downloadClientOf(_sprite(clientService: null)), isNull);

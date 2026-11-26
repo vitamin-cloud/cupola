@@ -33,20 +33,6 @@ void main() {
       expect(summary.versionLabel, 'v2.5.1');
     });
 
-    test('falls back to the registry API label when there is no version', () {
-      const offline = ServiceSummary(
-        service: ServiceKey.lidarr,
-        status: ServiceSummaryStatus.offline,
-        host: 'lidarr.local:8686',
-        version: null,
-      );
-
-      expect(offline.isOnline, isFalse);
-      expect(offline.didNotAnswer, isTrue);
-      expect(offline.failureReason, ServiceFailureReason.unreachable);
-      expect(offline.versionLabel, 'v1 API');
-    });
-
     test('a failed probe is classified: silence is offline, a refusal is a '
         'fault', () {
       final silent = ServiceSummary.failed(

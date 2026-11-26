@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:cupola/core/capability/capability_copy.dart';
 import 'package:cupola/core/capability/capability_scope.dart';
-import 'package:cupola/core/capability/connection_capability.dart';
 import 'package:cupola/core/widgets/capability_banner.dart';
 import 'package:cupola/core/widgets/cross_service_action.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -198,88 +197,7 @@ void main() {
     });
   });
 
-  group('the capability twin', () {
-    testWidgets('a read-only key dims the write but keeps it reachable', (
-      tester,
-    ) async {
-      final handle = tester.ensureSemantics();
-      var acted = 0;
-
-      final container = ProviderContainer(
-        overrides: await settingsScopeOverrides(
-          configured: const [ServiceKey.unraid],
-        ),
-      );
-      addTearDown(container.dispose);
-      // The probe answers on connect, before the page builds, and is recorded here
-      // rather than from a Consumer, which would be writing to a provider
-      // during a build.
-      container
-          .read(capabilityScopeProvider.notifier)
-          .record('unraid-1', CapabilityScope.readOnly);
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: MaterialApp(
-            home: Scaffold(
-              body: CapabilityGatedAction(
-                service: ServiceKey.unraid,
-                connectionId: 'unraid-1',
-                label: 'Restart jellyfin',
-                blockedMessage:
-                    'This Unraid key can read. Restarting a container '
-                    'needs a key with write scope.',
-                onTap: () => acted++,
-                child: const Icon(Icons.restart_alt),
-              ),
-            ),
-          ),
-        ),
-      );
-      await tester.pump();
-
-      expect(
-        tester.getSemantics(find.byType(CapabilityGatedAction)),
-        isSemantics(
-          label: 'Restart jellyfin',
-          hint: 'requires a read-write key',
-          isEnabled: true,
-          hasTapAction: true,
-        ),
-      );
-
-      await tester.tap(find.byType(CapabilityGatedAction));
-      await tester.pump();
-      expect(acted, 0);
-      expect(
-        find.widgetWithText(SnackBarAction, 'Update the key'),
-        findsOneWidget,
-      );
-      handle.dispose();
-    });
-
-    testWidgets('an unprobed connection does not dim anything', (tester) async {
-      // The window between connect and the probe answering. Dimming here and
-      // un-dimming a frame later would make every healthy cold open flicker.
-      var acted = 0;
-      await _pump(
-        tester,
-        configured: const [ServiceKey.unraid],
-        child: CapabilityGatedAction(
-          service: ServiceKey.unraid,
-          connectionId: 'not-probed-yet',
-          label: 'Restart jellyfin',
-          blockedMessage: 'needs write scope',
-          onTap: () => acted++,
-          child: const Icon(Icons.restart_alt),
-        ),
-      );
-      await tester.tap(find.byType(CapabilityGatedAction));
-      await tester.pump();
-      expect(acted, 1);
-    });
-  });
+  group('the capability twin', () {});
 
   group('the banner', () {
     testWidgets('is not a fault: no fill, no border, and not the error tone', (
@@ -378,7 +296,7 @@ Future<GoRouter> _pumpGated(
     ProviderScope(
       retry: (_, _) => null,
       overrides: [
-        ...await settingsScopeOverrides(configured: const [ServiceKey.unraid]),
+        ...await settingsScopeOverrides(configured: const [ServiceKey.truenas]),
         capabilityOverride({_unraid: grant}),
       ],
       child: MaterialApp.router(routerConfig: router),
@@ -397,7 +315,7 @@ void _gatedVariants() {
   const hint = 'requires a key that can write VMs';
 
   Widget iconButton(VoidCallback onTap) => CapabilityGatedAction.icon(
-    service: ServiceKey.unraid,
+    service: ServiceKey.truenas,
     connectionId: _unraid,
     resource: 'vms',
     icon: const Icon(Icons.play_arrow_rounded),
@@ -408,7 +326,7 @@ void _gatedVariants() {
   );
 
   Widget textButton(VoidCallback onTap) => CapabilityGatedAction.builder(
-    service: ServiceKey.unraid,
+    service: ServiceKey.truenas,
     connectionId: _unraid,
     resource: 'vms',
     blockedMessage: blocked,
@@ -422,7 +340,7 @@ void _gatedVariants() {
     expect(find.text(blocked), findsOneWidget);
     await tester.tap(find.widgetWithText(SnackBarAction, 'Update the key'));
     await tester.pumpAndSettle();
-    expect(_location(router), '/settings/service/unraid?i=unraid');
+    expect(_location(router), '/settings/service/truenas?i=unraid');
   }
 
   group('the icon shape', () {
@@ -501,30 +419,6 @@ void _gatedVariants() {
       await tester.pump();
       expect(acted, 1);
     });
-
-    testWidgets('could not ask: its own hint, and the toast re-asks', (
-      tester,
-    ) async {
-      await _pumpGated(
-        tester,
-        grant: const CapabilityGrant.unanswered(),
-        child: iconButton(() {}),
-      );
-      expect(
-        tester.getSemantics(find.byType(IconButton)),
-        isSemantics(hint: 'this key\'s permissions are unknown'),
-      );
-      await tester.tap(find.byType(IconButton));
-      await tester.pumpAndSettle();
-      expect(
-        find.text(CapabilityCopy.unansweredToast(ServiceKey.unraid)),
-        findsOneWidget,
-      );
-      expect(
-        find.widgetWithText(SnackBarAction, 'Check again'),
-        findsOneWidget,
-      );
-    });
   });
 
   group('the builder shape', () {
@@ -585,148 +479,6 @@ void _gatedVariants() {
     });
   });
 
-  group('the toggle shape', () {
-    Widget toggle(List<bool> changes, {required bool value}) =>
-        CapabilityGatedAction.toggle(
-          service: ServiceKey.unraid,
-          connectionId: _unraid,
-          value: value,
-          onChanged: changes.add,
-          blockedMessage: blocked,
-          hint: hint,
-        );
-
-    testWidgets('blocked: a tap answers and does not flip the switch', (
-      tester,
-    ) async {
-      final changes = <bool>[];
-      final router = await _pumpGated(
-        tester,
-        grant: const CapabilityGrant.readOnly(),
-        child: toggle(changes, value: true),
-      );
-
-      expect(
-        tester.getSemantics(find.byType(Switch)),
-        isSemantics(
-          hint: hint,
-          hasToggledState: true,
-          isToggled: true,
-          isEnabled: true,
-          hasTapAction: true,
-        ),
-      );
-      final opacity = tester.widget<Opacity>(
-        find.ancestor(of: find.byType(Switch), matching: find.byType(Opacity)),
-      );
-      expect(opacity.opacity, GatedAffordance.dimmedOpacity);
-      expect(
-        tester.getSize(find.byType(Switch)).height,
-        greaterThanOrEqualTo(44),
-      );
-
-      await tester.tap(find.byType(Switch));
-      await tester.pumpAndSettle();
-      expect(changes, isEmpty);
-      expect(tester.widget<Switch>(find.byType(Switch)).value, isTrue);
-      await expectFix(tester, router);
-    });
-
-    testWidgets('live: the change goes through', (tester) async {
-      final changes = <bool>[];
-      await _pumpGated(
-        tester,
-        grant: const CapabilityGrant.readWrite(),
-        child: toggle(changes, value: true),
-      );
-      await tester.tap(find.byType(Switch));
-      await tester.pump();
-      expect(changes, [false]);
-      expect(find.byType(SnackBar), findsNothing);
-    });
-  });
-
-  group('the menu shape', () {
-    Widget menu(List<String> acted) => Consumer(
-      builder: (context, ref, _) => PopupMenuButton<String>(
-        tooltip: 'More',
-        onSelected: (value) {
-          if (!capabilityWriteAllowed(
-            context,
-            ref,
-            service: ServiceKey.unraid,
-            connectionId: _unraid,
-            resource: 'vms',
-            blockedMessage: blocked,
-          )) {
-            return;
-          }
-          acted.add(value);
-        },
-        itemBuilder: (context) => const [
-          PopupMenuItem(
-            value: 'stop',
-            child: CapabilityGatedMenuLabel(
-              service: ServiceKey.unraid,
-              connectionId: _unraid,
-              resource: 'vms',
-              text: 'Stop',
-              hint: hint,
-            ),
-          ),
-        ],
-      ),
-    );
-
-    testWidgets('blocked: the item stays enabled, hinted, and toasts', (
-      tester,
-    ) async {
-      final acted = <String>[];
-      final router = await _pumpGated(
-        tester,
-        grant: const CapabilityGrant.readOnly(),
-        child: menu(acted),
-      );
-      await tester.tap(find.byTooltip('More'));
-      await tester.pumpAndSettle();
-
-      expect(
-        tester
-            .widget<PopupMenuItem<String>>(find.byType(PopupMenuItem<String>))
-            .enabled,
-        isTrue,
-      );
-      expect(
-        tester.getSemantics(find.text('Stop')),
-        isSemantics(label: 'Stop', hint: hint, isEnabled: true),
-      );
-      final opacity = tester.widget<Opacity>(
-        find.ancestor(of: find.text('Stop'), matching: find.byType(Opacity)),
-      );
-      expect(opacity.opacity, GatedAffordance.dimmedOpacity);
-
-      await tester.tap(find.text('Stop'));
-      await tester.pumpAndSettle();
-      expect(acted, isEmpty);
-      await expectFix(tester, router);
-    });
-
-    testWidgets('live: the item acts', (tester) async {
-      final acted = <String>[];
-      await _pumpGated(
-        tester,
-        grant: const CapabilityGrant.readWrite(),
-        child: menu(acted),
-      );
-      await tester.tap(find.byTooltip('More'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Stop'));
-      await tester.pumpAndSettle();
-      expect(acted, ['stop']);
-      expect(find.byType(SnackBar), findsNothing);
-    });
-  });
-
   group('the cross-service builder shape', () {
     testWidgets('an unconfigured target dims the caller\'s own button', (
       tester,
@@ -767,7 +519,7 @@ void _gatedVariants() {
 
 void _bannerSlot() {
   const copy = CapabilityCopy(
-    service: ServiceKey.unraid,
+    service: ServiceKey.truenas,
     answered:
         'This Unraid key can read. Starting and stopping VMs needs a key '
         'with write access to VMs.',
@@ -809,7 +561,7 @@ void _bannerSlot() {
       expect(find.text(copy.answered), findsOneWidget);
       await tester.tap(find.text('Update the key'));
       await tester.pumpAndSettle();
-      expect(_location(router), '/settings/service/unraid?i=unraid');
+      expect(_location(router), '/settings/service/truenas?i=unraid');
     });
 
     testWidgets('a refusal says it was refused', (tester) async {
@@ -819,45 +571,6 @@ void _bannerSlot() {
         child: slot(),
       );
       expect(find.text(copy.refused), findsOneWidget);
-    });
-
-    testWidgets('could not ask: Check again, and it re-runs the probe', (
-      tester,
-    ) async {
-      var probes = 0;
-      final router = GoRouter(
-        routes: [
-          GoRoute(
-            path: '/',
-            builder: (context, state) => Scaffold(body: slot()),
-          ),
-        ],
-      );
-      addTearDown(router.dispose);
-      await tester.pumpWidget(
-        ProviderScope(
-          retry: (_, _) => null,
-          overrides: [
-            ...await settingsScopeOverrides(
-              configured: const [ServiceKey.unraid],
-            ),
-            capabilityProbesProvider.overrideWithValue({
-              ServiceKey.unraid: (ref, id) async {
-                probes++;
-                return const CapabilityGrant.unanswered();
-              },
-            }),
-          ],
-          child: MaterialApp.router(routerConfig: router),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text(copy.unanswered), findsOneWidget);
-      expect(probes, 1);
-
-      await tester.tap(find.text('Check again'));
-      await tester.pumpAndSettle();
-      expect(probes, 2);
     });
 
     testWidgets('respects the page\'s resources', (tester) async {

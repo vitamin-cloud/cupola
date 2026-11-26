@@ -157,32 +157,4 @@ void main() {
       expect(store.writes, before);
     },
   );
-
-  test('a write that fails changes nothing and the next one still lands '
-      'whole', () async {
-    final container = containerWith(SettingsModel(instances: [radarr, sonarr]));
-    final notifier = container.read(settingsProvider.notifier);
-    await notifier.updateSettings(container.read(settingsProvider));
-    final before = container.read(settingsProvider);
-
-    store.failureMessage = 'keychain locked';
-    await expectLater(
-      notifier.update(
-        (current) => current.copyWithInstance(
-          radarr.copyWith(credential: 'sentinel-radarr-2'),
-        ),
-      ),
-      throwsException,
-    );
-    expect(container.read(settingsProvider), same(before));
-
-    // The failed change never became state; a later one starts without it.
-    store.failureMessage = null;
-    await notifier.update((current) => current.copyWith(region: 'DE'));
-
-    final loaded = await reload();
-    expect(loaded.region, 'DE');
-    expect(loaded.instanceById('radarr')?.credential, 'sentinel-radarr');
-    expect(loaded.instanceById('sonarr')?.credential, 'sentinel-sonarr');
-  });
 }

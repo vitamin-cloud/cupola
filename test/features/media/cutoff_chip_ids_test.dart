@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/features/music/data/lidarr_service.dart';
-import 'package:cupola/features/music/presentation/music_screen.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/series/presentation/series_screen.dart';
 
@@ -45,54 +43,4 @@ void main() {
       containsPair('includeEpisodeFile', false),
     );
   });
-
-  test('the Lidarr chip folds the albums into artist ids and asks for no '
-      'embed', () async {
-    client.getResponseData = {
-      'records': [
-        {'id': 1, 'artistId': 4},
-        {'id': 2, 'artistId': 4},
-        {'id': 3, 'artistId': 5},
-      ],
-      'totalRecords': 3,
-    };
-    final container = ProviderContainer(
-      overrides: [
-        lidarrServiceProvider.overrideWith((_) => LidarrService(client)),
-      ],
-    );
-    addTearDown(container.dispose);
-    container.listen(lidarrCutoffUnmetArtistIdsProvider, (_, _) {});
-
-    final ids = await container.read(lidarrCutoffUnmetArtistIdsProvider.future);
-
-    expect(ids, {4, 5});
-    expect(client.lastGetPath, '/api/v1/wanted/cutoff');
-    expect(client.lastGetQueryParameters, containsPair('includeArtist', false));
-  });
-
-  test(
-    'Activity\'s Wanted list still gets its embeds from the same walk',
-    () async {
-      // The chips override the embeds per call. The service defaults, which the
-      // Wanted tab reads its rows by, stay as they were.
-      client.getResponseData = {'records': const [], 'totalRecords': 0};
-
-      await SonarrService(client).getAllCutoff();
-      expect(
-        client.lastGetQueryParameters,
-        containsPair('includeSeries', true),
-      );
-      expect(
-        client.lastGetQueryParameters,
-        containsPair('includeEpisodeFile', true),
-      );
-
-      await LidarrService(client).getAllCutoff();
-      expect(
-        client.lastGetQueryParameters,
-        containsPair('includeArtist', true),
-      );
-    },
-  );
 }

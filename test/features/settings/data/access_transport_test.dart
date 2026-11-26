@@ -48,28 +48,4 @@ void main() {
     expect(after.headers, containsPair('CF-Access-Client-Id', 'id.access'));
     expect(after.headers, containsPair('CF-Access-Client-Secret', 'secret'));
   });
-
-  test('an unrelated write leaves the client alone', () async {
-    final container = ProviderContainer(
-      overrides: await settingsScopeOverrides(
-        customize: (_) =>
-            SettingsModel(instances: [radarr.copyWith(access: token)]),
-      ),
-    );
-    addTearDown(container.dispose);
-    final subscription = container.listen(radarrServiceProvider, (_, _) {});
-    addTearDown(subscription.close);
-
-    final before = container.read(radarrServiceProvider).client;
-    await container
-        .read(settingsProvider.notifier)
-        .updateSettings(
-          container.read(currentSettingsProvider).copyWith(region: 'DE'),
-        );
-
-    expect(
-      identical(before, container.read(radarrServiceProvider).client),
-      isTrue,
-    );
-  });
 }

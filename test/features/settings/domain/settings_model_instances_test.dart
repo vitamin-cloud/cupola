@@ -28,26 +28,6 @@ void main() {
       ],
     );
 
-    test('instancesOf keeps the user order and excludes other services', () {
-      expect(settings.instancesOf(ServiceKey.radarr).map((i) => i.label), [
-        '4K',
-        'HD',
-      ]);
-      expect(settings.instancesOf(ServiceKey.sonarr), hasLength(1));
-      expect(settings.instancesOf(ServiceKey.plex), isEmpty);
-    });
-
-    test('primaryOf is the first one, not the lowest id', () {
-      expect(settings.primaryOf(ServiceKey.radarr)?.label, '4K');
-      expect(settings.primaryOf(ServiceKey.plex), isNull);
-    });
-
-    test('hasMultipleInstances is the question the UI actually asks', () {
-      expect(settings.hasMultipleInstances(ServiceKey.radarr), isTrue);
-      expect(settings.hasMultipleInstances(ServiceKey.sonarr), isFalse);
-      expect(settings.hasMultipleInstances(ServiceKey.plex), isFalse);
-    });
-
     test('instanceById finds across services', () {
       expect(settings.instanceById('radarr-aaa1111')?.label, 'HD');
       expect(settings.instanceById('nope'), isNull);
@@ -192,7 +172,6 @@ void main() {
       expect(settings.apiKeyFor(ServiceKey.radarr), 'k');
       expect(settings.isServiceConfigured(ServiceKey.radarr), isFalse);
     });
-
   });
 
   group('isServiceConfigured asks all the instances', () {

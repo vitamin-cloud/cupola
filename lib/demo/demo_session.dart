@@ -26,13 +26,8 @@ import 'package:cupola/features/release_search/presentation/release_search_entry
 import 'package:cupola/features/settings/data/settings_service.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 
-/// The household the demo opens on: World A with every service, P1
-/// and every service P1 leaves out.
-final demoProfile = Profiles.p1
-    .withConnection(WorldConnections.plex)
-    .withConnection(WorldConnections.readarr)
-    .withConnection(WorldConnections.unraid)
-    .withConnection(WorldConnections.emby);
+/// The household the demo opens on: World A, P1, every service this fork has.
+final demoProfile = Profiles.p1;
 
 /// The demo home, live: the world's servers answering inside the process,
 /// and every store the app writes to held in memory.

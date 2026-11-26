@@ -174,8 +174,6 @@ String connectLead(ServiceKey service) => switch (service) {
   ServiceKey.seerr =>
     'Seerr already knows your Radarr and Sonarr, keys included, so it is the '
         'quickest place to start.',
-  ServiceKey.prowlarr =>
-    "Prowlarr knows your arrs' addresses, so you only add their keys.",
   _ => walkInstruction(service),
 };
 
@@ -917,7 +915,7 @@ class _OnboardingWalkState extends State<OnboardingWalk> {
           breadcrumb: service.credentialPath == null
               ? null
               : '${service.title} → ${service.credentialPath}',
-          warningFor: service == ServiceKey.plex ? _plexTokenWarning : null,
+          warningFor: null,
         ),
       ] else ...[
         SizedBox(height: widget.away.shown ? AppSpacing.lg : AppSpacing.xs),
@@ -1545,13 +1543,3 @@ class _PortChip extends StatelessWidget {
     );
   }
 }
-
-/// Flags a pasted Plex JSON Web Token while it is still being typed.
-///
-/// A warning rather than an error: the token is well-formed and will work, for
-/// seven days. After that it can only be renewed through plex.tv, which Cupola
-/// never calls, so the user would be left with a 401 and no way to read it.
-String? _plexTokenWarning(String value) => value.trim().startsWith('eyJ')
-    ? 'That token expires in 7 days and cannot be renewed here. Paste a '
-          'long-lived device token instead.'
-    : null;

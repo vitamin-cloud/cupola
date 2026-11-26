@@ -17,7 +17,6 @@ import 'package:cupola/core/widgets/fault_band.dart';
 import 'package:cupola/core/widgets/service_offline_state.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/unraid/presentation/unraid_screen.dart';
 
 import '../../../test_helpers/profiles/profiles.dart';
 
@@ -30,16 +29,7 @@ typedef _Page = ({
   Type type,
 });
 
-final _pages = <_Page>[
-  (
-    name: 'Unraid',
-    service: ServiceKey.unraid,
-    id: WorldConnections.unraid.id,
-    profile: Profiles.p1.withConnection(WorldConnections.unraid),
-    screen: () => const UnraidScreen.array(),
-    type: UnraidScreen,
-  ),
-];
+final _pages = <_Page>[];
 
 void main() {
   late DateTime now;

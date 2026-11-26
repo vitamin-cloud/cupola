@@ -13,18 +13,6 @@ void main() {
       expect(labels('/stack/radarr/library'), ['Stack', 'Radarr', 'Library']);
     });
 
-    test('the first crumb is the tab the location hangs off', () {
-      expect(labels('/home'), ['Home']);
-      expect(labels('/discover'), ['Discover']);
-      expect(labels('/activity'), ['Activity']);
-      expect(labels('/requests'), ['Requests']);
-      expect(labels('/home/media/movie/603'), ['Home', 'Movie']);
-      expect(labels('/requests/media/tv/1396'), ['Requests', 'Series']);
-      // A tab's crumb points back at the tab's own root.
-      expect(ShellBreadcrumb.of('/home').single.location, '/home');
-      expect(ShellBreadcrumb.of('/stack').single.location, '/stack');
-    });
-
     test('a tab takes its own label, not a title-cased segment', () {
       // The defect this file exists for. Nothing knew `vms` or `rss`, so the
       // crumb title-cased the segment and printed `Vms` and `Rss` next to bars
@@ -69,19 +57,6 @@ void main() {
         'Radarr',
         'Library',
       ]);
-    });
-
-    test('a title\'s page under a tab says what it is, not Library', () {
-      // A movie opened from Discover read `Discover › Library`, for a title
-      // the library does not hold.
-      expect(labels('/discover/media/movie/603'), ['Discover', 'Movie']);
-      expect(labels('/discover/media/tv/1396'), ['Discover', 'Series']);
-      expect(labels('/discover/media/person/287'), ['Discover', 'Person']);
-      expect(labels('/discover/media/collection/2344'), [
-        'Discover',
-        'Collection',
-      ]);
-      expect(labels('/stack/media/movie/603'), ['Stack', 'Movie']);
     });
 
     test('an unknown location yields nothing rather than guessing', () {

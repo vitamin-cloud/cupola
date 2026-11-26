@@ -11,11 +11,7 @@ library;
 import 'package:flutter/material.dart';
 
 import 'package:cupola/core/status/media_status.dart';
-import 'package:cupola/core/utils/arr_activity_display.dart';
-import 'package:cupola/core/utils/date_format.dart' show formatRelativeDateTime;
 import 'package:cupola/core/utils/dynamic_map_utils.dart';
-import 'package:cupola/core/utils/release_utils.dart';
-import 'package:cupola/features/activity/domain/global_activity_status.dart';
 import 'package:cupola/features/services/domain/attention_door.dart';
 import 'package:cupola/features/services/domain/services_semantics.dart';
 
@@ -32,15 +28,6 @@ DateTime? parseLocalInstant(String? raw) {
   return parsed?.toLocal();
 }
 
-/// The name of a history record's quality (`Bluray-1080p`, or `epub` for a
-/// book: Readarr's quality names are formats), or null when it carries none.
-String? historyQualityName(dynamic value) {
-  final quality = mapOrNull(value);
-  if (quality == null) return stringOrNull(value);
-  return stringOrNull(mapOrNull(quality['quality'])?['name']) ??
-      stringOrNull(quality['name']);
-}
-
 /// The size a history record states, in bytes, or null when it states none or
 /// a size that is not one.
 int? historyRecordBytes(Map<String, dynamic> record) {
@@ -49,46 +36,6 @@ int? historyRecordBytes(Map<String, dynamic> record) {
       intOrNull(mapOrNull(record['data'])?['size']);
   if (bytes == null || bytes <= 0) return null;
   return bytes;
-}
-
-/// [historyRecordBytes] as words (`8.4 GB`), or null.
-String? historyRecordSize(Map<String, dynamic> record) {
-  final bytes = historyRecordBytes(record);
-  return bytes == null ? null : formatReleaseSize(bytes);
-}
-
-/// Whether [record], a raw `/queue` record, says its transfer is not moving.
-///
-/// The substring `stall` in the error, the status or a status message: the
-/// \*arr's own words for it vary by client. Not `ArrQueueEntry`'s test, which
-/// looks for `stalled` or `no connections` in the error and the messages only:
-/// that one decides a queue row's colour, this one a Needs attention fault, and
-/// the two do not agree on `status`.
-bool isStalledRecord(Map<String, dynamic> record) {
-  final haystack = [
-    stringOrNull(record['errorMessage']),
-    stringOrNull(record['status']),
-    ...extractArrStatusMessages(record['statusMessages']),
-  ].whereType<String>().join(' ').toLowerCase();
-  return haystack.contains('stall');
-}
-
-/// Whether [record], a raw `/queue` record, is a download the \*arr could not
-/// import.
-///
-/// The canonical "Unable to Import Automatically" arrives as a pending import
-/// carrying a status message, which is how the service says a human has to
-/// look at it: see `arrQueueSeverity`.
-bool isImportFaultRecord(Map<String, dynamic> record) {
-  final state = stringOrNull(record['trackedDownloadState'])?.toLowerCase();
-  if (state == 'failed' ||
-      state == 'failedpending' ||
-      state == 'importfailed' ||
-      state == 'importblocked') {
-    return true;
-  }
-  return state == 'importpending' &&
-      arrQueueSeverity(record) != ArrQueueSeverity.ok;
 }
 
 /// What a kind of fault says about itself: its tone and its mark.
@@ -194,57 +141,4 @@ class OverviewHistoryEntry {
     event,
     spokenFromDotted(detail),
   ]);
-}
-
-/// Whether [date] falls on the local calendar day of [now].
-///
-/// "Today" is that day: a record from 23:50 yesterday is out even though it is
-/// twenty minutes old, because the section is headed `today`, and a heading is
-/// a promise.
-bool isLocalToday(DateTime date, DateTime now) {
-  final local = now.toLocal();
-  return date.year == local.year &&
-      date.month == local.month &&
-      date.day == local.day;
-}
-
-/// The history records from today, newest first, capped at [limit].
-///
-/// [subjectOf] reads what a record is about: the one thing the services do not
-/// share. The event and its tone come from the shared \*arr table
-/// (`historyEventDisplay`), never from a local override of it: each fork spells
-/// its imports its own way, and a private switch would keep one screen honest
-/// while the Activity feed, reading the same records, drew a completed import
-/// grey.
-List<OverviewHistoryEntry> overviewHistoryToday(
-  List<dynamic> records, {
-  required DateTime now,
-  required int limit,
-  required String Function(Map<String, dynamic> record) subjectOf,
-}) {
-  final entries = <OverviewHistoryEntry>[];
-  for (final raw in records) {
-    final record = mapOrNull(raw);
-    if (record == null) continue;
-    final date = parseLocalInstant(stringOrNull(record['date']));
-    if (date == null || !isLocalToday(date, now)) continue;
-
-    final eventType = stringOrNull(record['eventType']) ?? 'unknown';
-    final (event, tone) = historyEventDisplay(eventType);
-    entries.add(
-      OverviewHistoryEntry(
-        subject: subjectOf(record),
-        event: event,
-        tone: tone,
-        detail: joinDisplayParts([
-          historyQualityName(record['quality']),
-          historyRecordSize(record),
-          formatRelativeDateTime(date, now: now),
-        ]),
-        date: date,
-      ),
-    );
-  }
-  entries.sort((a, b) => b.date.compareTo(a.date));
-  return List.unmodifiable(entries.take(limit));
 }

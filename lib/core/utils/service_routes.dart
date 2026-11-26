@@ -1,7 +1,6 @@
 import 'package:cupola/features/discover/domain/catalog_query.dart';
 import 'package:cupola/features/discover/domain/discover_index.dart';
 import 'package:cupola/features/media/domain/media_key.dart';
-import 'package:cupola/features/prowlarr/domain/models/prowlarr_models.dart';
 import 'package:cupola/features/settings/domain/connection_access.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
@@ -58,17 +57,10 @@ class ServiceRoutes {
   static const seerr = '$stack/seerr';
   static const radarr = '$stack/radarr';
   static const sonarr = '$stack/sonarr';
-  static const lidarr = '$stack/lidarr';
   static const qbittorrent = '$stack/qbittorrent';
-  static const bazarr = '$stack/bazarr';
   static const truenas = '$stack/truenas';
   static const dockge = '$stack/dockge';
-  static const prowlarr = '$stack/prowlarr';
-  static const readarr = '$stack/readarr';
-  static const unraid = '$stack/unraid';
   static const jellyfin = '$stack/jellyfin';
-  static const plex = '$stack/plex';
-  static const emby = '$stack/emby';
 
   /// The two the file was missing. Both services shipped with their callers
   /// building `'/services/transmission'` and `'/services/npm'` by hand, which
@@ -132,29 +124,14 @@ class ServiceRoutes {
 
   // Emby is Jellyfin's ancestor and keeps its bar, spelled out here for the same
   // reason as the two above: a literal each, so the constants stay `const`.
-  static const embyOverview = '$emby/overview';
-  static const embyLibraries = '$emby/libraries';
-  static const embyItemBase = '$embyLibraries/item';
-  static const embyUsers = '$emby/users';
-  static const embyDevices = '$emby/devices';
-  static const embyTasks = '$emby/tasks';
-  static const embyActivity = '$emby/activity';
 
   // Tracearr watches the media servers and is not one: no libraries, no item
   // tree, five tabs of its own. A literal each, tied to the tab segments by a
   // test, for the reason the blocks above are.
 
-  static const plexOverview = '$plex/overview';
-
   /// The same two roles [jellyfinLibraries] carries, and the same move: the
   /// browse was `/dashboard/plex/library/:id` and a childless tail keeps that
   /// spelling resolving.
-  static const plexLibraries = '$plex/libraries';
-  static const plexItemBase = '$plexLibraries/item';
-
-  static const plexActivities = '$plex/activities';
-  static const plexDevices = '$plex/devices';
-  static const plexPlaylists = '$plex/playlists';
 
   /// One library's browse route, e.g.
   /// `/dashboard/jellyfin/libraries/f137a2dd`.
@@ -172,10 +149,6 @@ class ServiceRoutes {
     String? title,
     String? instanceId,
   }) => _streamLibrary(jellyfinLibraries, id, title, instanceId);
-  static String plexLibrary(String id, {String? title, String? instanceId}) =>
-      _streamLibrary(plexLibraries, id, title, instanceId);
-  static String embyLibrary(String id, {String? title, String? instanceId}) =>
-      _streamLibrary(embyLibraries, id, title, instanceId);
 
   static String _streamLibrary(
     String base,
@@ -203,10 +176,6 @@ class ServiceRoutes {
   /// given. The path alone still resolves, on the service's active connection.
   static String jellyfinItem(String id, {String? instanceId}) =>
       _withQuery('$jellyfinItemBase/$id', {'i': instanceId});
-  static String plexItem(String id, {String? instanceId}) =>
-      _withQuery('$plexItemBase/$id', {'i': instanceId});
-  static String embyItem(String id, {String? instanceId}) =>
-      _withQuery('$embyItemBase/$id', {'i': instanceId});
 
   /// [jellyfinLibrary], [plexLibrary] or [embyLibrary], by [service].
   static String streamLibrary(
@@ -220,8 +189,6 @@ class ServiceRoutes {
       title: title,
       instanceId: instanceId,
     ),
-    ServiceKey.plex => plexLibrary(id, title: title, instanceId: instanceId),
-    ServiceKey.emby => embyLibrary(id, title: title, instanceId: instanceId),
     _ => throw _notAMediaServer(service),
   };
 
@@ -232,8 +199,6 @@ class ServiceRoutes {
     String? instanceId,
   }) => switch (service) {
     ServiceKey.jellyfin => jellyfinItem(id, instanceId: instanceId),
-    ServiceKey.plex => plexItem(id, instanceId: instanceId),
-    ServiceKey.emby => embyItem(id, instanceId: instanceId),
     _ => throw _notAMediaServer(service),
   };
 
@@ -243,8 +208,6 @@ class ServiceRoutes {
       _withQuery(
         switch (service) {
           ServiceKey.jellyfin => jellyfinActivity,
-          ServiceKey.plex => plexActivities,
-          ServiceKey.emby => embyActivity,
           _ => throw _notAMediaServer(service),
         },
         {'i': instanceId},
@@ -404,14 +367,10 @@ class ServiceRoutes {
   /// and the page it flew to share one Navigator.
   static const sonarrSeriesBase = '$sonarrLibrary/series';
 
-  static const lidarrOverview = '$lidarr/overview';
-  static const lidarrLibrary = '$lidarr/library';
-
   /// The artist, inside the Library tab's branch. The tab is drawn as one
   /// segmented view of Artists and Albums (decision 24), but an album has no
   /// route of its own to give: `getAllAlbums()` does not exist on
   /// `LidarrService`, so there is one record type here and not two.
-  static const lidarrArtistBase = '$lidarrLibrary/artist';
 
   // ── The download clients, under the tab model ────────────────────────────
   //
@@ -460,10 +419,6 @@ class ServiceRoutes {
   // all, which is the happiest case of the migration: every link that ever
   // pointed at a Bazarr series still points at it, now at a page inside the
   // Series tab's branch rather than at a sibling of the tabs.
-  static const bazarrOverview = '$bazarr/overview';
-  static const bazarrWanted = '$bazarr/wanted';
-  static const bazarrHistory = '$bazarr/history';
-  static const bazarrProviders = '$bazarr/providers';
 
   /// The Series tab's root, **and** the base of the series detail under it:
   /// one constant because they are one address. Unchanged by the migration,
@@ -473,13 +428,11 @@ class ServiceRoutes {
   ///
   /// There is no `bazarrSeries` constant beside it because [bazarrSeries] is
   /// already the function that builds one.
-  static const bazarrSeriesBase = '$bazarr/series';
 
   /// The Movies tab's root, and the base of the film detail under it. This one
   /// **did** move: it was `/dashboard/bazarr/movie/:id`, singular, a sibling of
   /// nothing. The old spelling still resolves; `router.dart` keeps a childless
   /// tail for it.
-  static const bazarrMovieBase = '$bazarr/movies';
 
   // ── Prowlarr, under the tab model ─────────────────────────────────────────
   //
@@ -489,16 +442,11 @@ class ServiceRoutes {
   // page always was: a list of indexers under a heading that said Library
   // because every other service's list did. The old spelling still resolves;
   // `router.dart` keeps a childless tail for it.
-  static const prowlarrOverview = '$prowlarr/overview';
-  static const prowlarrIndexers = '$prowlarr/indexers';
-  static const prowlarrHistory = '$prowlarr/history';
-  static const prowlarrStats = '$prowlarr/stats';
 
   /// The indexer, inside the Indexers tab's branch: the same move the film
   /// made into Radarr's Library, and for the same reasons: a detail pushed
   /// *inside* its tab survives a switch away from Prowlarr, and the row it was
   /// pushed from is still under it on one Navigator.
-  static const prowlarrIndexerBase = '$prowlarrIndexers/indexer';
 
   /// Prowlarr's own Settings, which is **not** a tab (decision 26): Apps,
   /// download clients, notifications and indexer proxies are sections of one
@@ -506,17 +454,6 @@ class ServiceRoutes {
   /// bar entry nobody opens twice. It stays a page pushed from the service, so
   /// it hangs off the service node beside the shell rather than inside a
   /// branch; no one tab owns it.
-  static const prowlarrSettings = '$prowlarr/settings';
-  static const prowlarrSyncProfiles = '$prowlarrSettings/sync-profiles';
-  static const prowlarrTags = '$prowlarrSettings/tags';
-
-  /// Indexer detail, e.g. `/dashboard/prowlarr/indexers/indexer/3`.
-  static String prowlarrIndexer(int id) => '$prowlarrIndexerBase/$id';
-
-  /// One of the field-driven settings sections, e.g.
-  /// `/dashboard/prowlarr/settings/apps`.
-  static String prowlarrSettingsSection(ProwlarrProviderKind kind) =>
-      '$prowlarrSettings/${kind.routeSegment}';
 
   // ── Readarr, under the tab model ──────────────────────────────────────────
   //
@@ -525,11 +462,8 @@ class ServiceRoutes {
   // was already a page at `/dashboard/readarr/library`, which is exactly where
   // the Library tab's root mounts; so every link that ever pointed at it still
   // points at it, this time at a tab rather than at a pushed page.
-  static const readarrOverview = '$readarr/overview';
-  static const readarrLibrary = '$readarr/library';
 
   /// An author's page, pushed over the Library tab.
-  static const readarrAuthorBase = '$readarrLibrary/author';
 
   // ── The infrastructure three, under the tab model ─────────────────────────
   //
@@ -573,12 +507,6 @@ class ServiceRoutes {
   /// Unraid's six, and not one of them moved: the service shipped exactly one
   /// path (its bare root), so there is no pre-tab spelling to keep resolving
   /// beyond that root, the way Transmission had none.
-  static const unraidOverview = '$unraid/overview';
-  static const unraidArray = '$unraid/array';
-  static const unraidDocker = '$unraid/docker';
-  static const unraidVms = '$unraid/vms';
-  static const unraidNotifications = '$unraid/notifications';
-  static const unraidShares = '$unraid/shares';
 
   /// Nginx Proxy Manager's five. Spelled `npm…` rather than
   /// `nginxProxyManager…` because that is what the whole feature is called:
@@ -630,48 +558,8 @@ class ServiceRoutes {
   /// its tracks. A query, so a link carries it as `extra` could not.
   static const albumParam = 'album';
 
-  /// An artist's page. [justAdded]: Lidarr took the artist a moment ago and
-  /// has not read its albums yet. [albumId]: the page opens on that album, on
-  /// its tracks.
-  static String lidarrArtist(
-    int id, {
-    String? heroTag,
-    String? instanceId,
-    bool justAdded = false,
-    int? albumId,
-  }) {
-    return _withQuery('$lidarrArtistBase/$id', {
-      'heroTag': heroTag,
-      'i': instanceId,
-      justAddedParam: justAdded ? '1' : null,
-      albumParam: albumId?.toString(),
-    });
-  }
-
-  static String readarrAuthor(int id, {String? heroTag, String? instanceId}) {
-    return _withQuery('$readarrAuthorBase/$id', {
-      'heroTag': heroTag,
-      'i': instanceId,
-    });
-  }
-
   static String qbittorrentTorrent(String hash) {
     return '$qbittorrentTorrentBase/$hash';
-  }
-
-  /// No `i` on the two Bazarr routes, and that is the honest shape rather than
-  /// an omission: a Bazarr row's id is a **third** server's (`radarrId` /
-  /// `sonarrSeriesId`), so the connection that matters at the destination is an
-  /// arr's, which nothing on the row knows. They briefly took an `instanceId`
-  /// that no caller passed and no route read.
-  static String bazarrSeries(int sonarrSeriesId, {String? heroTag}) {
-    return _withQuery('$bazarrSeriesBase/$sonarrSeriesId', {
-      'heroTag': heroTag,
-    });
-  }
-
-  static String bazarrMovie(int radarrId, {String? heroTag}) {
-    return _withQuery('$bazarrMovieBase/$radarrId', {'heroTag': heroTag});
   }
 
   /// The two top-level tabs a title can be opened from besides the Dashboard.
@@ -736,8 +624,6 @@ class ServiceRoutes {
     ServiceKey.radarr,
     ServiceKey.sonarr,
     ServiceKey.jellyfin,
-    ServiceKey.plex,
-    ServiceKey.emby,
     // Its Live and History rows open the title they are about.
   };
 

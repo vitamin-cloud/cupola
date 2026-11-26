@@ -8,17 +8,10 @@ enum ServiceKey {
   seerr,
   radarr,
   sonarr,
-  lidarr,
   qbittorrent,
-  bazarr,
   truenas,
   dockge,
-  prowlarr,
-  readarr,
-  unraid,
   jellyfin,
-  plex,
-  emby,
 }
 
 /// High-level grouping used to organise services across the app.
@@ -61,17 +54,10 @@ extension ServiceKeyExtension on ServiceKey {
   ServiceDomain get domain => switch (this) {
     ServiceKey.seerr ||
     ServiceKey.radarr ||
-    ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
-    ServiceKey.bazarr ||
-    ServiceKey.readarr ||
-    ServiceKey.prowlarr => ServiceDomain.media,
-    ServiceKey.jellyfin ||
-    ServiceKey.plex ||
-    ServiceKey.emby => ServiceDomain.stream,
+    ServiceKey.sonarr => ServiceDomain.media,
+    ServiceKey.jellyfin => ServiceDomain.stream,
     ServiceKey.truenas ||
     ServiceKey.dockge ||
-    ServiceKey.unraid ||
     // This fork has no Downloads band: the torrent client sits with the box.
     ServiceKey.qbittorrent => ServiceDomain.infrastructure,
   };
@@ -93,17 +79,10 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.seerr => 'Seerr',
     ServiceKey.radarr => 'Radarr',
     ServiceKey.sonarr => 'Sonarr',
-    ServiceKey.lidarr => 'Lidarr',
     ServiceKey.qbittorrent => 'qBittorrent',
-    ServiceKey.bazarr => 'Bazarr',
     ServiceKey.truenas => 'TrueNAS',
     ServiceKey.dockge => 'Dockge',
-    ServiceKey.prowlarr => 'Prowlarr',
-    ServiceKey.readarr => 'Readarr',
-    ServiceKey.unraid => 'Unraid',
     ServiceKey.jellyfin => 'Jellyfin',
-    ServiceKey.plex => 'Plex',
-    ServiceKey.emby => 'Emby',
   };
 
   /// What the service is for, in a word or two: the line under "Set up X"
@@ -112,13 +91,9 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.seerr => 'Requests',
     ServiceKey.radarr => 'Movies',
     ServiceKey.sonarr => 'Series',
-    ServiceKey.lidarr => 'Music',
-    ServiceKey.bazarr => 'Subtitles',
-    ServiceKey.readarr => 'Books\u00A0· no longer maintained upstream',
-    ServiceKey.prowlarr => 'Indexers',
     ServiceKey.qbittorrent => 'Torrent client',
-    ServiceKey.jellyfin || ServiceKey.plex || ServiceKey.emby => 'Streaming',
-    ServiceKey.truenas || ServiceKey.unraid => 'Server',
+    ServiceKey.jellyfin => 'Streaming',
+    ServiceKey.truenas => 'Server',
     ServiceKey.dockge => 'Containers',
   };
 
@@ -128,8 +103,6 @@ extension ServiceKeyExtension on ServiceKey {
   /// which is set up on its own.
   String? get knowsOthers => switch (this) {
     ServiceKey.seerr => 'Knows your Radarr and Sonarr, keys included',
-    ServiceKey.prowlarr =>
-      "Knows your arrs' addresses\u00A0· you add their keys",
     _ => null,
   };
 
@@ -151,17 +124,10 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.seerr => ServiceGlyphs.seerr,
     ServiceKey.radarr => ServiceGlyphs.radarr,
     ServiceKey.sonarr => ServiceGlyphs.sonarr,
-    ServiceKey.lidarr => ServiceGlyphs.lidarr,
     ServiceKey.qbittorrent => ServiceGlyphs.qbittorrent,
-    ServiceKey.bazarr => ServiceGlyphs.bazarr,
     ServiceKey.truenas => ServiceGlyphs.truenas,
     ServiceKey.dockge => ServiceGlyphs.dockge,
-    ServiceKey.prowlarr => ServiceGlyphs.prowlarr,
-    ServiceKey.readarr => ServiceGlyphs.readarr,
-    ServiceKey.unraid => ServiceGlyphs.unraid,
     ServiceKey.jellyfin => ServiceGlyphs.jellyfin,
-    ServiceKey.plex => ServiceGlyphs.plex,
-    ServiceKey.emby => ServiceGlyphs.emby,
   };
 
   /// What the interface paints for this service: the neutral lamp, the same
@@ -192,17 +158,10 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.seerr => AppColors.seerr,
     ServiceKey.radarr => AppColors.radarr,
     ServiceKey.sonarr => AppColors.sonarr,
-    ServiceKey.lidarr => AppColors.lidarr,
     ServiceKey.qbittorrent => AppColors.qbittorrent,
-    ServiceKey.bazarr => AppColors.bazarr,
     ServiceKey.truenas => AppColors.truenas,
     ServiceKey.dockge => AppColors.dockge,
-    ServiceKey.prowlarr => AppColors.prowlarr,
-    ServiceKey.readarr => AppColors.readarr,
-    ServiceKey.unraid => AppColors.unraid,
     ServiceKey.jellyfin => AppColors.jellyfin,
-    ServiceKey.plex => AppColors.plex,
-    ServiceKey.emby => AppColors.emby,
   };
 
   /// Whether this service authenticates with a single API key rather than a
@@ -222,15 +181,8 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
-    ServiceKey.bazarr ||
     ServiceKey.truenas ||
-    ServiceKey.prowlarr ||
-    ServiceKey.readarr ||
-    ServiceKey.unraid ||
-    ServiceKey.jellyfin ||
-    ServiceKey.plex ||
-    ServiceKey.emby => true,
+    ServiceKey.jellyfin => true,
   };
 
   /// Whether the library this service serves has to be entered through a chosen
@@ -258,18 +210,13 @@ extension ServiceKeyExtension on ServiceKey {
   ///
   /// An exhaustive switch, so the next service declares what it is.
   bool get isMediaServer => switch (this) {
-    ServiceKey.jellyfin || ServiceKey.plex || ServiceKey.emby => true,
+    ServiceKey.jellyfin => true,
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.bazarr ||
     ServiceKey.truenas ||
-    ServiceKey.dockge ||
-    ServiceKey.prowlarr ||
-    ServiceKey.readarr ||
-    ServiceKey.unraid => false,
+    ServiceKey.dockge => false,
   };
 
   /// Says who is playing now: its answer becomes rows of Now playing,
@@ -282,25 +229,19 @@ extension ServiceKeyExtension on ServiceKey {
   ///
   /// An exhaustive switch, so the next service declares whether it does.
   bool get givesSessions => switch (this) {
-    ServiceKey.jellyfin || ServiceKey.plex || ServiceKey.emby => true,
+    ServiceKey.jellyfin => true,
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.bazarr ||
     ServiceKey.truenas ||
-    ServiceKey.dockge ||
-    ServiceKey.prowlarr ||
-    ServiceKey.readarr ||
-    ServiceKey.unraid => false,
+    ServiceKey.dockge => false,
   };
 
   /// Speaks the MediaBrowser API (Emby, and Jellyfin, which forked it): an API key with no
   /// user behind it (so [needsViewerSelection]), sessions that take Pause and
   /// a message besides Stop, and a server-wide admin console.
-  bool get speaksMediaBrowser =>
-      this == ServiceKey.jellyfin || this == ServiceKey.emby;
+  bool get speaksMediaBrowser => this == ServiceKey.jellyfin;
 
   /// Whether listing the libraries is an administrator's read: Jellyfin
   /// refuses `/Library/VirtualFolders` to a household member's token. Emby
@@ -333,16 +274,11 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.seerr => 5055,
     ServiceKey.radarr => 7878,
     ServiceKey.sonarr => 8989,
-    ServiceKey.lidarr => 8686,
-    ServiceKey.readarr => 8787,
-    ServiceKey.prowlarr => 9696,
-    ServiceKey.bazarr => 6767,
     ServiceKey.qbittorrent => 8080,
-    ServiceKey.jellyfin || ServiceKey.emby => 8096,
-    ServiceKey.plex => 32400,
+    ServiceKey.jellyfin => 8096,
     ServiceKey.dockge => 5001,
     // Both ship a TLS web UI on the standard port.
-    ServiceKey.truenas || ServiceKey.unraid => 443,
+    ServiceKey.truenas => 443,
   };
 
   /// What the credential is called in this service's own vocabulary.
@@ -351,8 +287,7 @@ extension ServiceKeyExtension on ServiceKey {
   /// integration shipped; everything else keeps the wording the settings form
   /// already used, so moving the string into the registry changes where it lives
   /// and not what it says.
-  String get credentialLabel =>
-      this == ServiceKey.plex ? 'Plex token' : 'API key';
+  String get credentialLabel => 'API key';
 
   /// The header this service's own client carries the credential in, when it
   /// carries it in one: the header a custom access header of the same name
@@ -366,16 +301,8 @@ extension ServiceKeyExtension on ServiceKey {
   ///
   /// Exhaustive, like [usesApiKey], so a new service has to answer.
   String? get credentialHeader => switch (this) {
-    ServiceKey.seerr ||
-    ServiceKey.radarr ||
-    ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
-    ServiceKey.bazarr ||
-    ServiceKey.prowlarr ||
-    ServiceKey.readarr ||
-    ServiceKey.unraid => 'X-Api-Key',
-    ServiceKey.plex => 'X-Plex-Token',
-    ServiceKey.jellyfin || ServiceKey.emby => 'X-Emby-Token',
+    ServiceKey.seerr || ServiceKey.radarr || ServiceKey.sonarr => 'X-Api-Key',
+    ServiceKey.jellyfin => 'X-Emby-Token',
     ServiceKey.truenas || ServiceKey.dockge || ServiceKey.qbittorrent => null,
   };
 
@@ -389,14 +316,6 @@ extension ServiceKeyExtension on ServiceKey {
   /// a bearer token) and not for Jellyfin, whose token moves to `X-Emby-Token` and
   /// leaves `Authorization` to the proxy.
   Set<String> get ownHeaders => switch (this) {
-    ServiceKey.plex => const {
-      'x-plex-token',
-      'x-plex-client-identifier',
-      'x-plex-product',
-      'x-plex-version',
-      'x-plex-platform',
-      'x-plex-device-name',
-    },
     ServiceKey.qbittorrent => const {'referer', 'origin'},
     _ => {?credentialHeader?.toLowerCase()},
   };
@@ -425,12 +344,12 @@ extension ServiceKeyExtension on ServiceKey {
     // token is a person's: a shared account's reads the libraries and is
     // refused who is watching, which only the owner's sees
     // (`plex_capability.dart`).
-    ServiceKey.unraid || ServiceKey.truenas || ServiceKey.plex => true,
+    ServiceKey.truenas => true,
     // Jellyfin's slot can hold a non-admin user's token, but a non-admin is
     // only ever shown sessions it may control, so no write Cupola draws can be
     // refused (see `jellyfin_client.dart`). What it loses are reads, a read
     // scope `jellyfin_provider.dart` answers.
-    ServiceKey.jellyfin || ServiceKey.emby => false,
+    ServiceKey.jellyfin => false,
     // One key compared for equality, or one account with no role: nothing to
     // be narrower than. SABnzbd's NZB key and NZBGet's add-only user are
     // narrower, but they cannot *read* either, which makes them a connection
@@ -438,10 +357,6 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
-    ServiceKey.bazarr ||
-    ServiceKey.prowlarr ||
-    ServiceKey.readarr ||
     ServiceKey.qbittorrent ||
     ServiceKey.dockge => false,
   };
@@ -451,8 +366,6 @@ extension ServiceKeyExtension on ServiceKey {
   ///
   /// One getter so no banner, hint or toast picks the noun for itself.
   String get capabilityCredentialNoun => switch (this) {
-    // What Plex and the connection form call it.
-    ServiceKey.plex => 'token',
     _ => 'key',
   };
 
@@ -479,18 +392,11 @@ extension ServiceKeyExtension on ServiceKey {
   /// secret the first time someone noticed.
   String get credentialStorageSuffix => switch (this) {
     ServiceKey.qbittorrent || ServiceKey.dockge => 'password',
-    ServiceKey.plex => 'token',
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
-    ServiceKey.bazarr ||
     ServiceKey.truenas ||
-    ServiceKey.prowlarr ||
-    ServiceKey.readarr ||
-    ServiceKey.unraid ||
-    ServiceKey.jellyfin ||
-    ServiceKey.emby => 'api_key',
+    ServiceKey.jellyfin => 'api_key',
   };
 
   /// Whether this service may hold more than one instance.
@@ -515,7 +421,7 @@ extension ServiceKeyExtension on ServiceKey {
   /// not a Discover media page. The line here is drawn by the destination, and
   /// Seerr's search destination is still the lens-bound one.
   bool get searchesPerConnection => switch (this) {
-    ServiceKey.radarr || ServiceKey.sonarr || ServiceKey.lidarr => true,
+    ServiceKey.radarr || ServiceKey.sonarr => true,
     _ => false,
   };
 
@@ -536,16 +442,9 @@ extension ServiceKeyExtension on ServiceKey {
   String? get credentialPath => switch (this) {
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
-    ServiceKey.readarr ||
-    ServiceKey.prowlarr ||
-    ServiceKey.bazarr ||
     ServiceKey.seerr => 'Settings → General → API Key',
     ServiceKey.jellyfin => 'Dashboard → Advanced → API Keys',
-    ServiceKey.emby => 'Settings → Advanced → API Keys',
     ServiceKey.truenas => 'Credentials → API Keys',
-    ServiceKey.unraid => 'Settings → Management Access → API Keys',
-    ServiceKey.plex => 'any item → Get Info → View XML → copy X-Plex-Token',
     // Web-UI login: the user already has these.
     ServiceKey.qbittorrent || ServiceKey.dockge => null,
   };
@@ -565,47 +464,16 @@ extension ServiceKeyExtension on ServiceKey {
       'Requires TrueNAS SCALE $kTrueNasMinVersion or newer. Create an '
           'API key under Credentials → Local Users, and use the https:// '
           'address of the web UI.',
-    ServiceKey.unraid =>
-      'Unraid 7.2 and later have the API built in; on an older release, '
-          'install the Unraid Connect plugin first. Then create an API key '
-          'under Settings → Management Access → API Keys.',
-    // Readarr development stopped upstream. Saying so here is the honest
-    // thing: the integration works against the last released API, but the
-    // user should know they are pointing at a project that will not receive
-    // fixes.
-    ServiceKey.readarr =>
-      'Readarr development has stopped upstream. Stack targets its '
-          'last released API, so existing instances keep working, but expect '
-          'no new server-side fixes.',
     ServiceKey.jellyfin =>
       'Create an API key under Dashboard → Advanced → API Keys. The '
           'key authenticates as an administrator but carries no user of its '
           'own, so pick whose watch state to read below once the connection '
           'works.',
-    // Naming the *kind* of token matters more than naming the place. Plex has
-    // two, and the modern one is a dead end here: a JWT expires after seven
-    // days and can only be refreshed through plex.tv, which this connection
-    // never calls. Saying so up front beats a week of working software.
-    // Emby's own wording: the gear opens "Settings" and the key is made with
-    // "New API Key". Like Jellyfin's, it is an administrator's and has no user.
-    ServiceKey.emby =>
-      'Create an API key under Settings → Advanced → API Keys with New '
-          'API Key. The key authenticates as an administrator but carries no '
-          'user of its own, so pick whose watch state to read below once the '
-          'connection works.',
-    ServiceKey.plex =>
-      'Open any item in Plex Web, choose Get Info → View XML, and copy '
-          'the X-Plex-Token from the address bar. This connection talks to '
-          'your Plex server alone, so it needs a long-lived device token, not '
-          'a temporary one beginning "eyJ" that only plex.tv can renew.',
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.bazarr ||
-    ServiceKey.dockge ||
-    ServiceKey.prowlarr => null,
+    ServiceKey.dockge => null,
   };
 
   /// The same caveats as [setupNote], said in the onboarding walk's voice: a
@@ -628,50 +496,27 @@ extension ServiceKeyExtension on ServiceKey {
     ServiceKey.truenas =>
       'Stack supports TrueNAS SCALE $kTrueNasMinVersion or newer. An older '
           'release may connect and still leave whole sections empty.',
-    ServiceKey.readarr =>
-      'Readarr development has stopped upstream. Existing instances keep '
-          'working against its last released API, but expect no new '
-          'server-side fixes.',
-    ServiceKey.unraid =>
-      'Before Unraid 7.2 the API comes with the Unraid Connect plugin, and '
-          'the endpoint stays silent without it.',
     ServiceKey.jellyfin =>
       'The key signs in as an administrator but carries no user of its '
           'own, so pick whose watch state to read in Settings afterwards.',
-    ServiceKey.emby =>
-      'The key signs in as an administrator but carries no user of its '
-          'own, so pick whose watch state to read in Settings afterwards.',
-    ServiceKey.plex =>
-      'It must be a long-lived device token: one beginning "eyJ" expires '
-          'in 7 days and Stack cannot renew it without contacting plex.tv.',
     ServiceKey.seerr ||
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.bazarr ||
-    ServiceKey.dockge ||
-    ServiceKey.prowlarr => null,
+    ServiceKey.dockge => null,
   };
 
   bool get supportsManualImport {
-    return this == ServiceKey.radarr ||
-        this == ServiceKey.sonarr ||
-        this == ServiceKey.lidarr;
+    return this == ServiceKey.radarr || this == ServiceKey.sonarr;
   }
 
   String get apiVersion => switch (this) {
-    ServiceKey.seerr || ServiceKey.lidarr || ServiceKey.readarr => 'v1',
+    ServiceKey.seerr => 'v1',
     ServiceKey.radarr || ServiceKey.sonarr => 'v3',
     ServiceKey.qbittorrent => 'WebUI',
-    ServiceKey.bazarr => 'v1',
     ServiceKey.truenas => 'v25',
     ServiceKey.dockge => 'Socket.IO',
-    ServiceKey.prowlarr => 'v1',
-    ServiceKey.unraid => 'GraphQL',
     ServiceKey.jellyfin => 'v10',
-    ServiceKey.plex => 'v1',
-    ServiceKey.emby => 'v4',
   };
 
   /// The endpoint used to prove a service is answering.
@@ -691,19 +536,12 @@ extension ServiceKeyExtension on ServiceKey {
   String get statusEndpoint => switch (this) {
     ServiceKey.seerr => '/api/v1/status',
     ServiceKey.radarr || ServiceKey.sonarr => '/api/v3/system/status',
-    ServiceKey.lidarr => '/api/v1/system/status',
     ServiceKey.qbittorrent => '/api/v2/app/version',
-    ServiceKey.bazarr => '/api/system/status',
-    ServiceKey.prowlarr => '/api/v1/system/status',
-    ServiceKey.readarr => '/api/v1/system/status',
     // Both media-server probes are deliberately the *unauthenticated* ones, so
     // reachability separates cleanly from credentials: a 200 here with a 401
     // elsewhere means "the box is up, the token is wrong", which is the single
     // most common Stream misconfiguration and the one a generic timeout hides.
     ServiceKey.jellyfin => '/System/Info/Public',
-    ServiceKey.plex => '/identity',
-    // Emby answers the same anonymous route under its `/emby` base path.
-    ServiceKey.emby => '/emby/System/Info/Public',
     // Transmission (RPC envelope + session-id handshake) and Nginx Proxy
     // Manager (token exchange) join this group for the same reason: no plain
     // GET can separate "reachable" from "authenticated" for either.
@@ -716,47 +554,31 @@ extension ServiceKeyExtension on ServiceKey {
     // Handled over WebSocket in _loadVersion; no REST endpoint.
     ServiceKey.truenas ||
     // Handled over Socket.IO in _loadVersion; no REST endpoint.
-    ServiceKey.dockge ||
-    // Handled over the query-string API in _loadVersion; no REST endpoint.
-    // Handled over JSON-RPC in _loadVersion; no REST endpoint.
-    // Handled over GraphQL in _loadVersion; no REST endpoint.
-    ServiceKey.unraid => '',
+    ServiceKey.dockge => '',
   };
 
   String get itemLabel => switch (this) {
     ServiceKey.seerr => 'requests',
     ServiceKey.radarr => 'movies',
     ServiceKey.sonarr => 'series',
-    ServiceKey.lidarr => 'artists',
     ServiceKey.qbittorrent => 'torrents',
-    ServiceKey.bazarr => 'subtitles',
     ServiceKey.truenas => 'pools',
     ServiceKey.dockge => 'stacks',
-    ServiceKey.prowlarr => 'indexers',
-    ServiceKey.readarr => 'authors',
-    ServiceKey.unraid => 'containers',
     // The top-level thing you enumerate on a media server. Not "movies":
     // a single Jellyfin or Plex instance mixes films, shows and music, and
     // naming one of them would both misdescribe the server and read as a
     // duplicate of Radarr's or Sonarr's own label.
-    ServiceKey.jellyfin || ServiceKey.plex || ServiceKey.emby => 'libraries',
+    ServiceKey.jellyfin => 'libraries',
   };
 
   String get routeParam => switch (this) {
     ServiceKey.seerr => 'seerr',
     ServiceKey.radarr ||
     ServiceKey.sonarr ||
-    ServiceKey.lidarr ||
     ServiceKey.qbittorrent ||
-    ServiceKey.bazarr ||
     ServiceKey.truenas ||
     ServiceKey.dockge ||
-    ServiceKey.prowlarr ||
-    ServiceKey.readarr ||
-    ServiceKey.unraid ||
-    ServiceKey.jellyfin ||
-    ServiceKey.plex ||
-    ServiceKey.emby => name,
+    ServiceKey.jellyfin => name,
   };
 
   String? extractHost(String? url) {
@@ -780,7 +602,7 @@ extension ServiceKeyExtension on ServiceKey {
 /// The media servers, in registry order ([ServiceKeyExtension.isMediaServer]).
 ///
 /// The one list a site walks when it means "every media server": never a
-/// literal `[ServiceKey.jellyfin, ServiceKey.plex]`, which a new media server
+/// literal `[ServiceKey.jellyfin]`, which a new media server
 /// would silently miss.
 final List<ServiceKey> mediaServers = List.unmodifiable(
   ServiceKey.values.where((s) => s.isMediaServer),

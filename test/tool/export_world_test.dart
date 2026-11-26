@@ -32,25 +32,6 @@ void main() {
     expect(titles.where((item) => item['isSeries'] == false), hasLength(41));
   });
 
-  test('the music and the books are the world catalogue', () {
-    final artists = (document['artists'] as List).cast<Map<String, dynamic>>();
-    final authors = (document['authors'] as List).cast<Map<String, dynamic>>();
-    expect(artists, hasLength(WorldMusic.all.length));
-    expect(authors, hasLength(WorldBooks.all.length));
-    expect(artists.first['name'], 'Air');
-    expect(authors.first['name'], 'Jane Austen');
-    for (final artist in WorldMusic.all) {
-      final entry = artists.firstWhere((item) => item['key'] == artist.key);
-      expect(entry['name'], artist.name);
-      expect(entry['albums'], hasLength(artist.albums.length));
-    }
-    for (final author in WorldBooks.all) {
-      final entry = authors.firstWhere((item) => item['key'] == author.key);
-      expect(entry['name'], author.name);
-      expect(entry['books'], hasLength(author.books.length));
-    }
-  });
-
   test('every download is in the export, with its join', () {
     final downloads = (document['downloads'] as List)
         .cast<Map<String, dynamic>>();

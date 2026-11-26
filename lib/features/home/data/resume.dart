@@ -56,12 +56,7 @@ final homeResumeProvider = FutureProvider.autoDispose<HomeResume>((ref) async {
       final items = ref
           .watch(backend.clientFor(instance.id))
           .getContinueWatching(
-            // Plex's hub also carries the next episode of a series nobody has
-            // started, which `isInProgress` drops below, so it is asked for twice
-            // what is drawn to still have enough left.
-            count: service == ServiceKey.plex
-                ? continueWatchingRowLimit * 2
-                : continueWatchingRowLimit,
+            count: continueWatchingRowLimit,
             cancelToken: cancelToken,
           );
       reads.add(

@@ -31,7 +31,10 @@ class _Page extends ConsumerWidget {
       silent: silent,
       instanceId: instanceId,
     );
-    final since = ref.silentSince(ServiceKey.qbittorrent, instanceId: instanceId);
+    final since = ref.silentSince(
+      ServiceKey.qbittorrent,
+      instanceId: instanceId,
+    );
     final spoken = span == null ? null : formatElapsedSpan(span);
     return Text(
       '${span == null ? 'no span' : spoken ?? 'under a minute'}'

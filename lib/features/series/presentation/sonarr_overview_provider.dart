@@ -24,10 +24,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:cupola/core/utils/parallel_reads.dart';
 import 'package:cupola/core/api/base_arr_service.dart';
-import 'package:cupola/core/providers/provider_retry.dart';
-import 'package:cupola/core/status/lexicon.dart';
 import 'package:cupola/core/status/media_status.dart';
 import 'package:cupola/core/utils/arr_activity_display.dart';
 import 'package:cupola/core/utils/arr_overview.dart';
@@ -36,19 +33,7 @@ import 'package:cupola/core/utils/dynamic_map_utils.dart';
 import 'package:cupola/core/utils/episode_code.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/series/domain/models/sonarr_series.dart';
-import 'package:cupola/features/series/presentation/series_provider.dart';
-import 'package:cupola/features/services/domain/attention_door.dart';
-import 'package:cupola/features/services/domain/service_tab.dart';
 import 'package:cupola/features/services/domain/services_semantics.dart';
-import 'package:cupola/features/settings/data/settings_provider.dart';
-import 'package:cupola/features/settings/domain/service_key.dart';
-
-/// How far ahead the week window looks.
-const int sonarrAiringDays = 7;
-
-/// How many airing rows the section draws before the header's count is the only
-/// place the rest are reported.
-const int sonarrAiringPreviewLimit = 5;
 
 /// Posters on the Recently downloaded rail.
 const int sonarrRecentlyDownloadedLimit = 6;
@@ -60,16 +45,6 @@ const int sonarrRecentlyDownloadedLimit = 6;
 /// busy Sonarr can be an hour of activity. It is still one request, and both
 /// history-derived sections read this same page rather than fetching twice.
 const int sonarrHistoryPageSize = 30;
-
-/// Rows the History today section draws.
-const int sonarrHistoryTodayLimit = 3;
-
-/// One page of a backlog endpoint.
-///
-/// Only the envelope's `totalRecords` is printed as a figure; the rows are read
-/// for one thing only: how many distinct series they span, and only when the
-/// page provably holds all of them. See [sonarrSeriesSpread].
-const int sonarrBacklogPageSize = 20;
 
 // ─── Airing this week ───────────────────────────────────────────────────────
 
@@ -105,116 +80,6 @@ class SonarrAiringWeek {
   final bool canReport;
 }
 
-/// Whether Sonarr told us enough for silence to mean "nothing".
-///
-/// This guards the narrow case only: the server answered and the *field* was
-/// absent. The wide one, the server did not answer at all, is not this
-/// function's to catch and cannot be caught here, because a failed fetch and an
-/// empty library arrive as the same `[]`. It is caught one layer down, by
-/// [sonarrOverviewSeriesProvider] reading `getSeriesOrThrow`: by the time a
-/// list reaches this function it is a list Sonarr actually sent, so `[]` means
-/// an empty library.
-///
-/// True as soon as one series carries a date: the server answers the question,
-/// so any series without one genuinely has nothing scheduled. True also for a
-/// library where nothing *could* air: every series ended or was deleted, and an
-/// empty week is then simply the truth. False only in the third case, a library
-/// with running series and not one date in it, which is what an older Sonarr or
-/// a proxy stripping fields looks like.
-bool sonarrCanReportAirings(List<SonarrSeries> series) {
-  var expectsDates = false;
-  for (final entry in series) {
-    if (parseLocalInstant(entry.nextAiring) != null) return true;
-    if (sonarrMayStillAir(entry)) expectsDates = true;
-  }
-  return !expectsDates;
-}
-
-/// Whether this series could have a future episode at all.
-///
-/// Sonarr's series `status` is a small closed vocabulary; `continuing` and
-/// `upcoming` are the two that mean "more is coming". `ended` and `deleted`
-/// mean the opposite, and `unknown` is treated as ended rather than as
-/// expecting a date: the alternative makes one un-catalogued series in a
-/// library of finished shows suppress the whole section.
-bool sonarrMayStillAir(SonarrSeries series) {
-  final status = series.status.toLowerCase();
-  return status == 'continuing' || status == 'upcoming';
-}
-
-/// The series with an episode due inside the next [days] local calendar days.
-///
-/// The window opens at local midnight **today** (inclusive) and closes at local
-/// midnight [days] days later (exclusive): an episode that aired earlier today
-/// is still part of today's row (the user has not seen this screen yet), and
-/// one dated exactly seven days out belongs to next week's window.
-///
-/// The end is built with `DateTime(y, m, d + days)` rather than
-/// `start.add(Duration(days: days))`: a `Duration` is absolute, so across a DST
-/// change the added form lands an hour off midnight and admits or drops the
-/// boundary day by accident.
-///
-/// **One row per series, by construction.** `nextAiring` is a single instant,
-/// so a series airing Tuesday and Friday appears once, on Tuesday. That is why
-/// the section counts series: an episode count derived from this would be short
-/// by exactly the episodes it cannot see, which is the worst kind of wrong
-/// figure: plausible.
-SonarrAiringWeek sonarrAiringWeek(
-  List<SonarrSeries> series, {
-  required DateTime now,
-  int days = sonarrAiringDays,
-}) {
-  final local = now.toLocal();
-  final start = DateTime(local.year, local.month, local.day);
-  final end = DateTime(local.year, local.month, local.day + days);
-
-  final entries = <SonarrAiringEntry>[];
-  for (final entry in series) {
-    final airsAt = parseLocalInstant(entry.nextAiring);
-    if (airsAt == null) continue;
-    if (airsAt.isBefore(start) || !airsAt.isBefore(end)) continue;
-    entries.add(SonarrAiringEntry(series: entry, airsAt: airsAt));
-  }
-
-  entries.sort((a, b) {
-    final byDate = a.airsAt.compareTo(b.airsAt);
-    return byDate != 0
-        ? byDate
-        : a.series.sortTitle.compareTo(b.series.sortTitle);
-  });
-
-  return SonarrAiringWeek(
-    entries: List.unmodifiable(entries),
-    canReport: sonarrCanReportAirings(series),
-  );
-}
-
-/// The library, read so that a failure is still a failure when it arrives.
-///
-/// **[seriesProvider] itself.** It was a second copy of the same request,
-/// kept apart for its default retry, and with the KPI rail's a third: the
-/// series list was downloaded up to three times a session. One read now,
-/// `noProviderRetry` like the wall and the rail, so a blip is the user's
-/// Retry. Pull-to-refresh invalidates it explicitly.
-final sonarrOverviewSeriesProvider = seriesProvider;
-
-/// The week, from the library.
-///
-/// `noProviderRetry`, because its source ([sonarrOverviewSeriesProvider])
-/// carries it: a derivation that dropped it would retry, one step down, what
-/// the source refused. See `lib/core/providers/provider_retry.dart`.
-///
-/// That Retry is reachable now, which it was not while the source swallowed its
-/// own failure into `[]`, and it has to invalidate the source too, not only
-/// this fold: the source is plain, so a Retry that re-ran the fold alone read
-/// the same cached error straight back and could never recover.
-final sonarrAiringWeekProvider = FutureProvider.autoDispose<SonarrAiringWeek>((
-  ref,
-) async {
-  final series = await ref.watch(sonarrOverviewSeriesProvider.future);
-  return sonarrAiringWeek(series, now: DateTime.now());
-}, retry: noProviderRetry);
-
 // ─── Needs attention ────────────────────────────────────────────────────────
 
 /// The four conditions this screen can derive today.
@@ -247,9 +112,6 @@ enum SonarrAttentionKind implements ArrAttentionKind {
   final IconData icon;
 }
 
-/// One row of Needs attention (`ArrAttentionItem`).
-typedef SonarrAttentionItem = ArrAttentionItem<SonarrAttentionKind>;
-
 /// The slot a queue or history record is about: `S2 E5`, or `S4` for a season
 /// pack, or null when the record names neither.
 ///
@@ -267,195 +129,6 @@ String? sonarrEpisodeSlot(Map<String, dynamic> record) {
   );
   if (season == null) return null;
   return formatSeasonCode(season);
-}
-
-/// `Slow Horses S4 E6`: the subject of a row, as far as the record names it.
-String sonarrRecordSubject(Map<String, dynamic> record) {
-  final named = joinDisplayParts([
-    arrSeriesTitle(record),
-    sonarrEpisodeSlot(record),
-  ], separator: ' ');
-  if (named.isNotEmpty) return named;
-  return arrReleaseTitle(record) ?? 'Unknown release';
-}
-
-/// Reads the faults out of a page of **raw** `/queue` records.
-///
-/// Raw, because `ArrQueueSnapshot` folds a queue down to one entry per series
-/// id and keeps neither the release title nor `added`, and this section is
-/// entirely made of those two. On Sonarr the fold costs more than on Radarr: a
-/// season pack and three single episodes of one series collapse to one entry,
-/// so three of the four faults would vanish.
-///
-/// Stalled is tested before import: a transfer that is not moving has not
-/// reached the import stage at all, and Sonarr marks both with the same
-/// `trackedDownloadStatus: warning`.
-///
-/// A season pack is one torrent and one record per episode, and one download is
-/// one fault: its records are read together, and the row names the pack
-/// (`Slow Horses S4 E1–E6`) rather than the first episode it happens to list.
-///
-/// Several downloads in one of the two states are one row (`3 downloads
-/// stuck`, the series in the detail) whose door is the Queue tab, which lists
-/// them all; one of a kind keeps its own row and opens its own page.
-/// [instanceId] is the connection the records were read from, which a
-/// download's page is addressed by, and [cutShort] says the walk stopped on a
-/// full page, so a count taken in it is a floor.
-List<SonarrAttentionItem> sonarrQueueFaults(
-  List<Map<String, dynamic>> records, {
-  required DateTime now,
-  String instanceId = '',
-  bool cutShort = false,
-}) {
-  final items = <SonarrAttentionItem>[];
-  for (final download in _byDownload(records)) {
-    // The download's fault is its worst record's: a stall before an import
-    // (a transfer that is not moving has not reached the import stage).
-    final stalled = download.where(isStalledRecord).firstOrNull;
-    final record = stalled ?? download.where(isImportFaultRecord).firstOrNull;
-    if (record == null) continue;
-
-    final subject = download.length == 1
-        ? sonarrRecordSubject(record)
-        : _packSubject(download) ?? sonarrRecordSubject(record);
-    final when = parseLocalInstant(stringOrNull(record['added']));
-    final age = when == null ? null : formatRelativeDateTime(when, now: now);
-    final message =
-        stringOrNull(record['errorMessage']) ?? arrQueueWarningMessage(record);
-    final door = arrQueueRecordDoor(record, instanceId: instanceId);
-
-    items.add(
-      stalled != null
-          ? SonarrAttentionItem(
-              kind: SonarrAttentionKind.stalled,
-              headline: '${StateWord.stuck.label}\u00A0· $subject',
-              detail: joinDisplayParts([
-                stringOrNull(record['downloadClient']),
-                message,
-                age,
-              ]),
-              door: door,
-              subject: subject,
-            )
-          : SonarrAttentionItem(
-              kind: SonarrAttentionKind.importFailed,
-              headline: 'Import failed\u00A0· $subject',
-              detail: joinDisplayParts([message, age]),
-              door: door,
-              subject: subject,
-            ),
-    );
-  }
-  return foldAttention<SonarrAttentionItem, SonarrAttentionKind>(
-    items,
-    kindOf: (item) => item.kind,
-    merge: (kind, members) {
-      final words = kind == SonarrAttentionKind.stalled
-          ? stuckDownloadsWords(members.length, floor: cutShort)
-          : failedImportsWords(members.length, floor: cutShort);
-      return SonarrAttentionItem(
-        kind: kind,
-        headline: words.headline,
-        spokenHeadline: words.spoken,
-        detail: attentionNames(members.map((member) => member.subject ?? '')),
-        door: const AttentionDoor.tab(ServiceTab.queue),
-        count: members.length,
-      );
-    },
-  );
-}
-
-/// The records of [records] one download at a time, in the order the queue
-/// lists them: a season pack is one torrent and a record per episode, all
-/// carrying the one `downloadId`. A record with no client id is its own
-/// download.
-List<List<Map<String, dynamic>>> _byDownload(
-  List<Map<String, dynamic>> records,
-) {
-  final downloads = <List<Map<String, dynamic>>>[];
-  final byKey = <String, List<Map<String, dynamic>>>{};
-  for (final record in records) {
-    final key = stringOrNull(record['downloadId'])?.trim().toLowerCase();
-    if (key == null || key.isEmpty) {
-      downloads.add([record]);
-      continue;
-    }
-    final existing = byKey[key];
-    if (existing != null) {
-      existing.add(record);
-    } else {
-      final download = [record];
-      byKey[key] = download;
-      downloads.add(download);
-    }
-  }
-  return downloads;
-}
-
-/// A pack in a sentence: the series and the episodes its records name,
-/// `Slow Horses S4 E1–E6`. Null when the records name no series or no
-/// episode.
-String? _packSubject(List<Map<String, dynamic>> records) {
-  final series = arrSeriesTitle(records.first);
-  final bySeason = <int, List<int>>{};
-  for (final record in records) {
-    final episode = mapOrNull(record['episode']);
-    final season = intOrNull(
-      episode?['seasonNumber'] ?? record['seasonNumber'],
-    );
-    final number = intOrNull(
-      episode?['episodeNumber'] ?? record['episodeNumber'],
-    );
-    if (season == null || number == null) continue;
-    bySeason.putIfAbsent(season, () => []).add(number);
-  }
-  final runs = episodeRunsLine({
-    for (final season in bySeason.keys.toList()..sort())
-      season: bySeason[season]!.toSet().toList()..sort(),
-  });
-  if (series == null || runs == null) return null;
-  return '$series $runs';
-}
-
-/// The missing-episodes backlog row, or null when there is nothing to report,
-/// **and null also when nobody could answer**.
-///
-/// [total] is `ArrRecordPage.total`, which is nullable precisely so a server
-/// that did not answer is distinguishable from one that answered "none". A zero
-/// printed over an unasked question is the failure this whole file is written
-/// against, so a null total draws no row at all rather than a reassuring one.
-SonarrAttentionItem? sonarrMissingEpisodesItem(int? total, {int? seriesCount}) {
-  if (total == null || total <= 0) return null;
-  return SonarrAttentionItem(
-    kind: SonarrAttentionKind.missing,
-    headline: total == 1
-        ? '1 missing monitored episode'
-        : '$total missing monitored episodes',
-    // "across 5 series" only when the page provably held every record: see
-    // [sonarrSeriesSpread]. Otherwise the mechanism, which is true at any size:
-    // nothing is wrong, Sonarr is still looking.
-    detail: seriesCount == null
-        ? 'Sonarr keeps searching for them'
-        : seriesCount == 1
-        ? 'in 1 series'
-        : 'across $seriesCount series',
-    door: const AttentionDoor.tab(ServiceTab.wanted),
-  );
-}
-
-/// The below-cutoff backlog row, or null. Same null rule as
-/// [sonarrMissingEpisodesItem].
-SonarrAttentionItem? sonarrBelowCutoffItem(int? total) {
-  if (total == null || total <= 0) return null;
-  return SonarrAttentionItem(
-    kind: SonarrAttentionKind.belowCutoff,
-    headline: total == 1
-        ? '1 episode below your quality cutoff'
-        : '$total episodes below your quality cutoff',
-    detail: 'Sonarr keeps searching for an upgrade',
-    // Wanted lists what is below its cutoff beside what is missing.
-    door: const AttentionDoor.tab(ServiceTab.wanted),
-  );
 }
 
 /// How many distinct series a backlog page spans, or null when the page cannot
@@ -481,78 +154,6 @@ int? sonarrSeriesSpread(ArrRecordPage page) {
   }
   return ids.isEmpty ? null : ids.length;
 }
-
-/// The raw `/queue` walk, with its envelope.
-///
-/// The equivalent of the private `_loadServiceQueueItems` in
-/// `services_provider.dart`, stopping one step earlier: that one maps straight
-/// to `ServiceQueueItem`, which carries title/subtitle/progress/warning and no
-/// timestamp at all. The page and not its bare rows, for the reason
-/// `radarrQueueRecordsProvider` gives: faults counted in a walk that stopped
-/// short are a floor.
-final sonarrQueueRecordsProvider = FutureProvider.autoDispose<ArrRecordPage>((
-  ref,
-) {
-  return ref.watch(sonarrServiceProvider).getQueuePage();
-});
-
-/// The two backlog rows, or as many of them as the server would answer.
-///
-/// Each endpoint is wrapped on its own and degrades to "no row": the faults
-/// above are the subject of this section and the backlog is an addition to it,
-/// so a fork that does not serve `wanted/missing` reports no backlog rather
-/// than taking a broken import down with it. `getCutoffPage` already swallows
-/// its own failure for exactly this reason; `getMissingPage` does not, hence
-/// the `try` here.
-final sonarrBacklogProvider =
-    FutureProvider.autoDispose<List<SonarrAttentionItem>>((ref) async {
-      final service = ref.watch(sonarrServiceProvider);
-
-      // Both reads start together; each degrades to nothing on its own.
-      final missingRead = service
-          .getMissingPage(page: 1, pageSize: sonarrBacklogPageSize)
-          .then<SonarrAttentionItem?>(
-            (page) => sonarrMissingEpisodesItem(
-              page.total,
-              seriesCount: sonarrSeriesSpread(page),
-            ),
-          )
-          .catchError((Object _) => null);
-      final cutoffRead = service
-          .getCutoffPage(page: 1, pageSize: sonarrBacklogPageSize)
-          .then<SonarrAttentionItem?>(
-            (page) => sonarrBelowCutoffItem(page.total),
-          )
-          .catchError((Object _) => null);
-
-      final missing = await missingRead;
-      final cutoff = await cutoffRead;
-      return [?missing, ?cutoff];
-    });
-
-/// Faults first, backlog last.
-///
-/// The order is the design's: what needs a decision before what is merely
-/// outstanding.
-final sonarrNeedsAttentionProvider =
-    FutureProvider.autoDispose<List<SonarrAttentionItem>>((ref) async {
-      final (page, backlog) = await readTogether(
-        ref.watch(sonarrQueueRecordsProvider.future),
-        ref.watch(sonarrBacklogProvider.future),
-      );
-      return [
-        ...sonarrQueueFaults(
-          page.recordMaps,
-          now: DateTime.now(),
-          // The connection the queue was read from: a download's page is
-          // addressed by it.
-          instanceId:
-              ref.watch(activeInstanceProvider(ServiceKey.sonarr))?.id ?? '',
-          cutShort: page.cutShort,
-        ),
-        ...backlog,
-      ];
-    });
 
 // ─── History, and the two sections built from it ────────────────────────────
 
@@ -679,31 +280,6 @@ final sonarrRecentlyDownloadedProvider =
     FutureProvider.autoDispose<List<SonarrDownloadedEpisode>>((ref) async {
       final records = await ref.watch(sonarrHistoryPageProvider.future);
       return sonarrRecentlyDownloaded(records, now: DateTime.now());
-    });
-
-/// One history record, resolved into the two lines the row draws.
-typedef SonarrHistoryEntry = OverviewHistoryEntry;
-
-/// The records from today, newest first, capped at [limit].
-///
-/// "Today" is the local calendar day of [now]. A record from 23:50 yesterday is
-/// out even though it is twenty minutes old. The section is headed `today`,
-/// and a heading is a promise.
-List<SonarrHistoryEntry> sonarrHistoryToday(
-  List<dynamic> records, {
-  required DateTime now,
-  int limit = sonarrHistoryTodayLimit,
-}) => overviewHistoryToday(
-  records,
-  now: now,
-  limit: limit,
-  subjectOf: (record) => sonarrRecordSubject(record),
-);
-
-final sonarrHistoryTodayProvider =
-    FutureProvider.autoDispose<List<SonarrHistoryEntry>>((ref) async {
-      final records = await ref.watch(sonarrHistoryPageProvider.future);
-      return sonarrHistoryToday(records, now: DateTime.now());
     });
 
 // ─── Shared parsing ─────────────────────────────────────────────────────────

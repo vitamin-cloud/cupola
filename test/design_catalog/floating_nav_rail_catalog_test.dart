@@ -63,13 +63,6 @@ void main() {
         height: 320,
       ),
       CatalogScene(
-        'FloatingNavRail · on Discover, three things need you · Activity\'s '
-        'number on the amber fill, at the glyph\'s top right, as on the bar',
-        (_) => _rail(_operatorBar.indexOf(NavTab.discover), needYou: 3),
-        width: 120,
-        height: 320,
-      ),
-      CatalogScene(
         'FloatingNavRail · the requester on her Requests',
         (_) => _rail(2, audience: Audience.requester),
         width: 120,
@@ -80,14 +73,6 @@ void main() {
         (_) => _rail(-1),
         width: 120,
         height: 320,
-      ),
-      CatalogScene(
-        'Text at 200% · the names grow to the bar\'s 1.3 and the pill widens '
-        'to hold them',
-        (_) => _rail(_operatorBar.indexOf(NavTab.discover), needYou: 12),
-        width: 160,
-        height: 380,
-        textScale: catalogTextScale,
       ),
     ],
   );

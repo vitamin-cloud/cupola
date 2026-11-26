@@ -269,25 +269,6 @@ void main() {
       );
     });
 
-    test('every searchable service is held to it, not just Sonarr', () {
-      for (final service in [
-        ServiceKey.sonarr,
-        ServiceKey.radarr,
-        ServiceKey.lidarr,
-      ]) {
-        expect(
-          reachFor(
-            service,
-            baseUrl: _httpBase,
-            certTrustedInApp: false,
-            backgroundEnabled: true,
-            platform: TargetPlatform.iOS,
-          ),
-          ReleaseSearchReach.whileOpenCleartext,
-        );
-      }
-    });
-
     test('only the background transport claims to survive suspension', () {
       expect(
         const BackgroundReleaseSearchTransport().survivesBackgrounding,

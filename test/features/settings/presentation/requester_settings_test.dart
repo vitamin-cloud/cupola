@@ -50,36 +50,6 @@ void main() {
   );
 
   group('her Settings, on a phone', () {
-    testWidgets('her account first, then General, About, and Set up a '
-        'service last', (tester) async {
-      final harness = await pump(tester, const SettingsHomeScreen());
-
-      expect(find.text('Account'), findsOne);
-      expect(find.text('Signed in as ${WorldPeople.anna}'), findsOne);
-      expect(find.text(where), findsOne);
-      for (final row in [
-        'Region',
-        'Appearance',
-        'Home',
-        'Send feedback',
-        'Licenses & trademarks',
-      ]) {
-        expect(find.text(row), findsOne, reason: row);
-      }
-      expect(find.text('Set up a service'), findsOne);
-      for (final row in operatorsRows) {
-        expect(find.text(row), findsNothing, reason: row);
-      }
-      // Last: nothing under it.
-      final last = tester.getRect(find.text('Set up a service'));
-      expect(
-        tester.getRect(find.text('Licenses & trademarks')).top,
-        lessThan(last.top),
-      );
-
-      await harness.unmount(tester);
-    });
-
     testWidgets('the operator keeps every row of his (P1)', (tester) async {
       final harness = await pump(
         tester,
@@ -295,19 +265,6 @@ void main() {
         await harness.settle(tester);
         expect(router.state.uri.path, ServiceRoutes.settings, reason: location);
       }
-
-      await unmount(tester, harness, container);
-    });
-
-    testWidgets('the operator\'s album shelf sends her to Discover', (
-      tester,
-    ) async {
-      final (harness, router, container) = await pumpApp(tester);
-
-      router.go(ServiceRoutes.discoverMoreFromYourArtists);
-      await harness.settle(tester);
-
-      expect(router.state.uri.path, ServiceRoutes.discover);
 
       await unmount(tester, harness, container);
     });

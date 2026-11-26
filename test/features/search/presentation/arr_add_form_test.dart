@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/features/search/domain/arr_add_request.dart';
 import 'package:cupola/features/search/presentation/arr_add_form_provider.dart';
 import 'package:cupola/features/series/domain/sonarr_monitor.dart';
@@ -29,15 +28,6 @@ const _sonarrAway = ServiceInstance(
   service: ServiceKey.sonarr,
   label: 'Away',
   url: 'http://away.lan:8989',
-  credential: 'k',
-);
-
-/// A service with no add form at all, for the arm that used to be a `default:`.
-const _bazarr = ServiceInstance(
-  id: 'bazarr',
-  service: ServiceKey.bazarr,
-  label: 'Away',
-  url: 'http://away.lan:6767',
   credential: 'k',
 );
 
@@ -145,52 +135,6 @@ void main() {
     expect(state.isSubmitting, isFalse);
     expect(state.canSubmit, isTrue);
   });
-
-  test(
-    'a service with no add form is refused, not treated as another arr',
-    () async {
-      // `ArrAddRequest` is sealed so that an arr added later is a compile error
-      // rather than a plus over a sheet that cannot post. A `default:` arm here
-      // handed that guarantee straight back: it fetched one arr's profiles for
-      // whatever key arrived, and the sheet came up looking perfectly fillable.
-      // The Sonarr fake below is wired to the Bazarr id precisely so the defect
-      // would find it.
-      final container = ProviderContainer(
-        overrides: [
-          currentSettingsProvider.overrideWith(
-            (ref) => const SettingsModel(instances: [_sonarrLens, _bazarr]),
-          ),
-          sonarrServiceProvider.overrideWith(
-            (ref) => _FakeSonarr(profileId: 1, rootFolder: '/home/tv'),
-          ),
-          sonarrServiceForProvider(_bazarr.id).overrideWithValue(
-            _FakeSonarr(profileId: 9, rootFolder: '/away/tv'),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      const args = (instanceId: 'bazarr', service: ServiceKey.bazarr);
-      final sub = container.listen(arrAddFormProvider(args), (_, _) {});
-      addTearDown(sub.close);
-      await _settle();
-
-      final state = container.read(arrAddFormProvider(args));
-      expect(state.isLoading, isFalse);
-      expect(state.canSubmit, isFalse);
-      expect(state.profiles, isEmpty);
-      // "Bazarr", not "Bazarr · Away": there is one Bazarr in this model, and a
-      // connection is named only when there is a second to tell it apart from.
-      // The label on the fixture is left over from a sibling this test does not
-      // configure: exactly the state `SettingsModel.connectionTitle` exists to
-      // read past, since a real one is left behind by removing that sibling.
-      // Nothing was sent, and nothing claims a server went silent: an error
-      // nobody can attribute is amber, in the classified words.
-      expect(state.error, 'The request to Bazarr did not complete.');
-      expect(state.errorDetail, 'The request did not complete.');
-      expect(state.errorReason, ServiceFailureReason.unknown);
-    },
-  );
 
   test('a submit with nothing chosen refuses out loud', () async {
     // null is this method's word for "it is on the server now": a caller that

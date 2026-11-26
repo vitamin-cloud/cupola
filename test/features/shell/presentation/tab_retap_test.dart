@@ -12,7 +12,6 @@ import 'package:cupola/core/router.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/widgets/floating_bottom_nav_bar.dart';
-import 'package:cupola/features/discover/domain/discover_index.dart';
 
 import '../../../test_helpers/profiles/profiles.dart';
 
@@ -88,29 +87,6 @@ void main() {
     await tester.tap(tab('Home'));
     await harness.settle(tester);
     expect(refreshes.state, 1);
-
-    await close(tester, harness, container);
-  });
-
-  testWidgets('an index of Discover goes back to the lobby, then its top', (
-    tester,
-  ) async {
-    final (harness, container) = await start(tester);
-    final router = container.read(routerProvider);
-    router.go(ServiceRoutes.discover);
-    await harness.settle(tester);
-    router.push(ServiceRoutes.discoverIndex(DiscoverIndex.genres));
-    await harness.settle(tester);
-
-    await tester.tap(tab('Discover'));
-    await harness.settle(tester);
-    expect(router.state.uri.path, ServiceRoutes.discover);
-
-    pageList(tester).jumpTo(400);
-    await tester.pump();
-    await tester.tap(tab('Discover'));
-    await harness.settle(tester);
-    expect(pageList(tester).pixels, 0);
 
     await close(tester, harness, container);
   });

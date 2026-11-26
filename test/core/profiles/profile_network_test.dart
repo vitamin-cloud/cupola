@@ -17,14 +17,12 @@ import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/dockge/data/dockge_client.dart';
 import 'package:cupola/features/dockge/presentation/dockge_provider.dart';
-import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client.dart';
 import 'package:cupola/features/qbittorrent/presentation/qbittorrent_provider.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/stream/domain/models/stream_item.dart';
 import 'package:cupola/features/truenas/data/truenas_ws_client.dart';
 import 'package:cupola/features/truenas/presentation/truenas_provider.dart';
 
@@ -247,23 +245,6 @@ void main() {
       },
     );
 
-
-    test('Jellyfin answers its public probe and refuses the rest', () async {
-      final harness = await ProfileHarness.start(
-        Profiles.p1.withBehaviour(
-          WorldIds.jellyfin,
-          ConnectionBehaviour.refusesKey,
-        ),
-      );
-      final client = harness.container().read(jellyfinClientProvider);
-
-      expect(await client.probeVersion(), isNotNull);
-      expect(
-        await _failureOf(client.getSessionsOrThrow),
-        ServiceFailureReason.unauthorized,
-      );
-    });
-
     test('Seerr refuses with 403 behind a public status route', () async {
       // The household's Seerr, reached with the key: P2 signs in with an
       // account, which a refused key does not touch.
@@ -348,19 +329,6 @@ void main() {
       },
     );
 
-
-    test("Unraid's capability probe reads read-only", () async {
-      final harness = await ProfileHarness.start(
-        Profiles.p1.withConnection(
-          WorldConnections.unraid.withBehaviour(ConnectionBehaviour.readOnly),
-        ),
-      );
-      final grant = await harness.container().read(
-        connectionCapabilityProvider('unraid').future,
-      );
-      expect(grant.scope, CapabilityScope.readOnly);
-    });
-
     test(
       'an arr with one admin key refuses the write with 403 and still reads',
       () async {
@@ -381,8 +349,7 @@ void main() {
     );
   });
 
-  group('homeOnly', () {
-  });
+  group('homeOnly', () {});
 
   group('knownThroughAnother (P5)', () {
     test(
@@ -427,34 +394,7 @@ void main() {
     );
   });
 
-  group('matchNotVerified (P1)', () {
-    test(
-      'Jellyfin holds Elephants Dream under another TMDB id, so no match',
-      () async {
-        final harness = await ProfileHarness.start(Profiles.p1);
-        final jellyfin = harness.container().read(jellyfinClientProvider);
-
-        final unverified = (await jellyfin.lookupByExternalId(
-          tmdbId: '${WorldTitles.elephantsDream.tmdbId}',
-          kind: StreamItemKind.movie,
-        )).item;
-        final verified = (await jellyfin.lookupByExternalId(
-          tmdbId: '${WorldTitles.sintel.tmdbId}',
-          kind: StreamItemKind.movie,
-        )).item;
-
-        expect(unverified, isNull);
-        expect(verified?.title, WorldTitles.sintel.title);
-        // The server did answer with the item: the app's own check refused it.
-        expect(
-          harness.network
-              .requestsTo(WorldIds.jellyfin)
-              .where((r) => r.path == '/Items'),
-          hasLength(2),
-        );
-      },
-    );
-  });
+  group('matchNotVerified (P1)', () {});
 
   group('routes a test adds', () {
     test('answer ahead of the world, on the server they name only', () async {

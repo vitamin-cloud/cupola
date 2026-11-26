@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:cupola/core/utils/service_routes.dart';
-import 'package:cupola/core/widgets/not_configured_placeholder.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
 /// Every `Set up X` goes to the same place: the service's own setup form.
@@ -45,26 +44,4 @@ void main() {
     await tester.pumpAndSettle();
     return () => opened;
   }
-
-  testWidgets('a media server not set up names each one and opens its form', (
-    tester,
-  ) async {
-    final opened = await pumpRouted(
-      tester,
-      Scaffold(
-        body: Column(
-          children: [
-            NotConfiguredPlaceholder.forService(ServiceKey.jellyfin),
-            NotConfiguredPlaceholder.forService(ServiceKey.plex),
-          ],
-        ),
-      ),
-    );
-
-    expect(find.text('Set up Jellyfin'), findsOneWidget);
-    await tester.tap(find.text('Set up Plex'));
-    await tester.pumpAndSettle();
-
-    expect(opened()?.path, ServiceRoutes.setUp(ServiceKey.plex));
-  });
 }

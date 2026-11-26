@@ -7,7 +7,6 @@ import 'package:cupola/core/utils/arr_activity_display.dart';
 import 'package:cupola/core/utils/dynamic_map_utils.dart';
 import 'package:cupola/core/utils/image_utils.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/services/domain/arr_import.dart';
 import 'package:cupola/features/services/domain/download_client_faults.dart';
@@ -153,20 +152,9 @@ final servicesArrHistoryProvider = FutureProvider<ArrHistory>((ref) async {
           ref
               .watch(radarrServiceForProvider(source.instanceId))
               .getHistoryPage(pageSize: servicesHistoryPageSize),
-        ServiceKey.sonarr =>
-          ref
-              .watch(sonarrServiceForProvider(source.instanceId))
-              .getHistoryPage(pageSize: servicesHistoryPageSize),
-        // Lidarr's records DO arrive with their artist and their album:
-        // `LidarrService` overrides `getHistoryPage`, which this `getHistory`
-        // delegates through, and injects `includeArtist`/`includeAlbum` there.
-        // So the title resolves to the album (`arrPrimaryMediaTitle` reads
-        // `album` then `artist`) rather than falling back to the raw
-        // `sourceTitle`, and the tile's artwork is the album cover: see
-        // `_historyPosterUrl`.
         _ =>
           ref
-              .watch(lidarrServiceForProvider(source.instanceId))
+              .watch(sonarrServiceForProvider(source.instanceId))
               .getHistoryPage(pageSize: servicesHistoryPageSize),
       };
       return (
@@ -218,11 +206,7 @@ final servicesArrHistoryProvider = FutureProvider<ArrHistory>((ref) async {
   }
 
   final results = await Future.wait([
-    for (final service in const [
-      ServiceKey.radarr,
-      ServiceKey.sonarr,
-      ServiceKey.lidarr,
-    ])
+    for (final service in const [ServiceKey.radarr, ServiceKey.sonarr])
       for (final source in watchMergeConnections(ref, service)) from(source),
   ]);
 
@@ -265,14 +249,10 @@ ArrHistoryEntry _historyEntryFrom(
       ServiceKey.sonarr => intOrNull(
         mapOrNull(record['episode'])?['seasonNumber'] ?? record['seasonNumber'],
       ),
-      ServiceKey.lidarr => intOrNull(
-        record['albumId'] ?? mapOrNull(record['album'])?['id'],
-      ),
       _ => null,
     },
     detail: switch (service) {
       ServiceKey.sonarr => arrEpisodeCode(record),
-      ServiceKey.lidarr => arrArtistName(record),
       _ => null,
     },
     posterUrl: _historyPosterUrl(record, baseUrl: baseUrl, apiKey: apiKey),
@@ -394,7 +374,6 @@ final servicesArrivalsProvider = FutureProvider.autoDispose<ArrHistory>(
     events: const {
       ServiceKey.radarr: 'downloadFolderImported',
       ServiceKey.sonarr: 'downloadFolderImported',
-      ServiceKey.lidarr: 'trackFileImported',
     },
     keep: ArrImportOutcome.imported,
   ),
@@ -414,7 +393,6 @@ final servicesFailuresSinceProvider = FutureProvider.autoDispose<ArrHistory>(
     events: const {
       ServiceKey.radarr: 'downloadFailed',
       ServiceKey.sonarr: 'downloadFailed',
-      ServiceKey.lidarr: 'downloadFailed',
     },
     keep: ArrImportOutcome.failed,
     exactEvent: true,
@@ -448,7 +426,7 @@ Future<ArrHistory> _readHistorySince(
                 since,
                 queryParameters: {'eventType': event, 'includeMovie': true},
               ),
-        ServiceKey.sonarr =>
+        _ =>
           ref
               .watch(sonarrServiceForProvider(source.instanceId))
               .getHistorySince(
@@ -457,17 +435,6 @@ Future<ArrHistory> _readHistorySince(
                   'eventType': event,
                   'includeSeries': true,
                   'includeEpisode': true,
-                },
-              ),
-        _ =>
-          ref
-              .watch(lidarrServiceForProvider(source.instanceId))
-              .getHistorySince(
-                since,
-                queryParameters: {
-                  'eventType': event,
-                  'includeArtist': true,
-                  'includeAlbum': true,
                 },
               ),
       };

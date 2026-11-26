@@ -16,7 +16,6 @@ const _midWalk = {
   ServiceKey.radarr: ServiceRingState.connected,
   ServiceKey.sonarr: ServiceRingState.connected,
   ServiceKey.qbittorrent: ServiceRingState.connected,
-  ServiceKey.prowlarr: ServiceRingState.picked,
   ServiceKey.jellyfin: ServiceRingState.connected,
   ServiceKey.truenas: ServiceRingState.picked,
   ServiceKey.dockge: ServiceRingState.silent,
@@ -28,12 +27,8 @@ final _settled = {
     ServiceKey.seerr,
     ServiceKey.radarr,
     ServiceKey.sonarr,
-    ServiceKey.lidarr,
-    ServiceKey.bazarr,
     ServiceKey.qbittorrent,
-    ServiceKey.prowlarr,
     ServiceKey.jellyfin,
-    ServiceKey.plex,
     ServiceKey.truenas,
   ])
     key: ServiceRingState.connected,
@@ -52,16 +47,6 @@ void main() {
     'ServiceRing',
     width: 768,
     scenes: [
-      CatalogScene(
-        'ServiceRing · 268 · mid-walk, progress 0.5, Prowlarr active · unlit, '
-        'picked, connected with its spoke, silent drained with a collar',
-        (_) => const ServiceRing(
-          states: _midWalk,
-          diameter: 268,
-          progress: 0.5,
-          activeService: ServiceKey.prowlarr,
-        ),
-      ),
       CatalogScene(
         'Nothing set up (the Dashboard empty state, spin: true in the app) · '
         'then a settled stack with one service that did not answer, progress 1',
@@ -133,16 +118,6 @@ void main() {
         'tried has joined: the same lockup',
         (_) => const OnePunchline.closing(),
         width: 390,
-      ),
-      CatalogScene(
-        'ServiceRing on the desktop · onboarding at 268',
-        (_) => const ServiceRing(
-          states: _midWalk,
-          diameter: 268,
-          progress: 0.5,
-          activeService: ServiceKey.prowlarr,
-        ),
-        platform: CatalogPlatform.desktop,
       ),
       CatalogScene(
         'serviceRingDiameter at a 2× reading size, with the punchline: the '

@@ -33,40 +33,6 @@ Future<Map<String, ServiceKpi>> _figures(
 }
 
 void main() {
-  test('P6, a shared account\'s Plex: who is watching reads "—", owner '
-      'only, and the libraries still count', () async {
-    final harness = await ProfileHarness.start(Profiles.p6);
-    final figures = await _figures(harness, ServiceKey.plex);
-
-    expect(figures['Streams']!.value, ServiceKpi.unavailableValue);
-    expect(figures['Streams']!.note, 'owner only');
-    expect(figures['Transcodes']!.value, ServiceKpi.unavailableValue);
-    // The world's Plex has four library sections.
-    expect(figures['Libraries']!.value, '4');
-  });
-
-  test('the owner\'s Plex token counts every figure', () async {
-    final harness = await ProfileHarness.start(
-      Profiles.p1.withConnection(WorldConnections.plex),
-    );
-    final figures = await _figures(harness, ServiceKey.plex);
-
-    // Luca is watching Elephants Dream on his iPad.
-    expect(figures['Streams']!.value, '1');
-    expect(figures['Transcodes']!.value, '0');
-    expect(figures['Libraries']!.value, '4');
-  });
-
-  test('a token Plex refuses everywhere still takes the rail', () async {
-    final harness = await ProfileHarness.start(
-      Profiles.p1.withConnection(
-        WorldConnections.plex.withBehaviour(ConnectionBehaviour.refusesKey),
-      ),
-    );
-
-    await expectLater(_figures(harness, ServiceKey.plex), throwsA(anything));
-  });
-
   test('P2+J, a household member\'s Jellyfin: the libraries read "—", admin '
       'only, and her own playback counts as hers', () async {
     final harness = await ProfileHarness.start(Profiles.p2WithJellyfin);

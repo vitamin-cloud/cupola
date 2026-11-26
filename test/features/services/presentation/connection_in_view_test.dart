@@ -34,14 +34,8 @@ const _cabin = ServiceInstance(
   url: 'https://cabin.lan:8096',
   credential: 'k',
 );
-const _plex = ServiceInstance(
-  id: 'plex',
-  service: ServiceKey.plex,
-  url: 'https://plex.lan:32400',
-  credential: 'k',
-);
 
-const _twoJellyfin = SettingsModel(instances: [_home, _cabin, _plex]);
+const _twoJellyfin = SettingsModel(instances: [_home, _cabin]);
 
 /// The settings the test can change under the scope, as the app's own can.
 class _Settings extends Notifier<SettingsModel> {
@@ -146,41 +140,6 @@ Uri _at(String path, [String? i]) =>
     Uri(path: path, queryParameters: i == null ? null : {'i': i});
 
 void main() {
-  test('a link names a connection only if it is the service\'s', () {
-    expect(
-      namedConnectionOf(_twoJellyfin, ServiceKey.jellyfin, 'jellyfin-cabin01'),
-      'jellyfin-cabin01',
-    );
-    // Another service's, a removed one, a blank one and none.
-    expect(namedConnectionOf(_twoJellyfin, ServiceKey.jellyfin, 'plex'), '');
-    expect(namedConnectionOf(_twoJellyfin, ServiceKey.jellyfin, 'gone'), '');
-    expect(namedConnectionOf(_twoJellyfin, ServiceKey.jellyfin, ' '), '');
-    expect(namedConnectionOf(_twoJellyfin, ServiceKey.jellyfin, null), '');
-    expect(
-      namedConnectionOf(_twoJellyfin, ServiceKey.plex, 'jellyfin-cabin01'),
-      '',
-    );
-    // One with no address yet cannot be asked: the form between "add another"
-    // and typing it.
-    expect(
-      namedConnectionOf(
-        const SettingsModel(
-          instances: [
-            _home,
-            ServiceInstance(
-              id: 'jellyfin-blank11',
-              service: ServiceKey.jellyfin,
-              label: 'Half done',
-            ),
-          ],
-        ),
-        ServiceKey.jellyfin,
-        'jellyfin-blank11',
-      ),
-      '',
-    );
-  });
-
   testWidgets('a location that names a connection puts it in view, and the '
       'badge names it, with the lens left where it was', (tester) async {
     final location = ValueNotifier(_at('/jellyfin/activity', _cabin.id));
@@ -230,21 +189,6 @@ void main() {
       expect(seen.view?.instanceId, isEmpty, reason: dead);
       expect(_badgeSays(tester), 'Home', reason: dead);
     }
-  });
-
-  testWidgets('a connection removed from the settings while in view reads as '
-      'the lens', (tester) async {
-    final location = ValueNotifier(_at('/jellyfin/activity', _cabin.id));
-    final seen = _Seen();
-    final container = await _pump(tester, location: location, seen: seen);
-    expect(seen.view?.instanceId, _cabin.id);
-
-    container
-        .read(_settingsHolder.notifier)
-        .set(const SettingsModel(instances: [_home, _plex]));
-    await tester.pumpAndSettle();
-
-    expect(seen.view?.instanceId, isEmpty);
   });
 
   testWidgets('the lens sheet puts the choice in view, and moves the lens '
@@ -327,27 +271,5 @@ void main() {
     location.value = _at('/jellyfin/activity', _cabin.id);
     await tester.pumpAndSettle();
     expect(seen.view?.instanceId, _cabin.id);
-  });
-
-  testWidgets('what is in view is for that service alone, and for the visit '
-      'alone', (tester) async {
-    final location = ValueNotifier(_at('/jellyfin/activity', _cabin.id));
-    final seen = _Seen();
-    await _pump(tester, location: location, seen: seen);
-
-    final inside = tester.element(find.byType(InstanceLensBadge));
-    expect(ConnectionInView.maybeOf(inside, ServiceKey.jellyfin), isNotNull);
-    // Plex has no visit under here, so it reads its own lens.
-    expect(ConnectionInView.maybeOf(inside, ServiceKey.plex), isNull);
-
-    // A new visit is a new scope: nothing carries over.
-    await tester.pumpWidget(const SizedBox.shrink());
-    final fresh = _Seen();
-    await _pump(
-      tester,
-      location: ValueNotifier(_at('/jellyfin/overview')),
-      seen: fresh,
-    );
-    expect(fresh.view?.instanceId, isEmpty);
   });
 }

@@ -9,13 +9,11 @@ import 'package:cupola/core/utils/dot_separator.dart';
 import 'package:cupola/core/utils/dynamic_map_utils.dart';
 import 'package:cupola/core/utils/episode_code.dart';
 import 'package:cupola/core/utils/string_utils.dart';
-import 'package:cupola/features/bazarr/domain/models/bazarr_models.dart';
 import 'package:cupola/features/discover/domain/models/seerr_request.dart';
 import 'package:cupola/features/discover/domain/seerr_status.dart';
 import 'package:cupola/features/media/domain/media_copies.dart';
 import 'package:cupola/features/media/domain/media_reading.dart';
 import 'package:cupola/features/media/domain/media_rows.dart';
-import 'package:cupola/features/media/domain/media_subtitles.dart';
 import 'package:cupola/features/media/domain/quality_words.dart';
 import 'package:cupola/features/series/domain/models/sonarr_episode.dart';
 import 'package:cupola/features/series/domain/sonarr_status.dart';
@@ -285,19 +283,6 @@ List<MediaRowView> mediaRowViews(
           now: now,
         );
         return facts.isEmpty ? [view] : facts;
-      // Bazarr's languages over the episodes that have them.
-      case MediaBazarrCopy(series: _?, :final episodes?):
-        final words = _bazarrSeriesWords(episodes, _airedBySeason(rows, now));
-        return [
-          MediaRowView(
-            name: view.name,
-            detail: words.detail,
-            state: words.state,
-            tone: view.tone,
-            hollow: view.hollow,
-            connectionId: view.connectionId,
-          ),
-        ];
       case MediaStreamCopy(:final item?, :final episodes?)
           when item.kind == StreamItemKind.series:
         final line = _seasonsLine(episodes, _airedBySeason(rows, now));
@@ -438,40 +423,6 @@ String _spanOf(Map<int, List<int>> seasons, Map<int, int> aired) {
         '${formatSeasonCode(season)}$episodeCodeSpace'
             '${_ranges(seasons[season]!)}',
   ].join(dotSeparator);
-}
-
-/// What Bazarr says of a series from its episodes: the languages on disk and
-/// the episodes still wanting one (`English on disk · S2 E1–E3`), then what
-/// is wanted (`Italian wanted`). [aired] counts each season's aired
-/// episodes, so a season wanting everywhere is named whole.
-({String detail, String state}) _bazarrSeriesWords(
-  List<BazarrEpisode> episodes,
-  Map<int, int> aired,
-) {
-  final wanting = [
-    for (final episode in episodes)
-      if (episode.missingLanguages.isNotEmpty) episode,
-  ];
-  final present = mediaLanguageWords(mediaSeriesLanguagesOnDisk(episodes));
-  final span = wanting.isEmpty
-      ? ''
-      : _spanOf({
-          for (final season in {for (final e in wanting) e.season})
-            season: [
-              for (final e in wanting)
-                if (e.season == season) e.episode,
-            ],
-        }, aired);
-  return (
-    detail: [
-      if (present.isNotEmpty) '$present on disk',
-      if (span.isNotEmpty) span,
-    ].join(dotSeparator),
-    state: wanting.isEmpty
-        ? 'Nothing wanted'
-        : '${mediaLanguageWords(wanting.expand((e) => e.missingLanguages))} '
-              'wanted',
-  );
 }
 
 /// `E4–E5`, `E6, E8–E10`: [numbers] as runs.
@@ -684,24 +635,7 @@ MediaRowView? _answeredView(
         tone: status.tone,
         progress: status.progress,
       );
-    case MediaBazarrCopy(:final movie?):
-      return view(
-        detail: mediaLanguageCodes(movie.presentLanguages),
-        state: movie.missingLanguages.isEmpty
-            ? 'Nothing wanted'
-            : '${mediaLanguageCodes(movie.missingLanguages)} wanted',
-        tone: StatusTone.neutral,
-      );
-    case MediaBazarrCopy(:final series?):
-      final missing = series.episodeMissingCount ?? 0;
-      return view(
-        detail: '',
-        state: missing == 0
-            ? 'Nothing wanted'
-            : '${countLabel(missing, 'episode')} wanted',
-        tone: StatusTone.neutral,
-      );
-    case MediaBazarrCopy() || null:
+    case null:
       return null;
     case final MediaSeerrRecord record:
       final status = seerrMediaStatus(

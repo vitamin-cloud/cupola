@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/demo/demo_session.dart';
-import 'package:cupola/demo/world/fakes/client_fakes.dart';
 import 'package:cupola/demo/world/profiles.dart';
 
 /// The world once it lives: what a client is told stays done, and time moves
@@ -187,37 +186,6 @@ void main() {
         network.life!.byId(WorldDownloads.elephantsDream4k.id)!.progress,
         before!.progress,
       );
-    });
-
-    test('Transmission stops a torrent by its id', () async {
-      Future<List<Map<String, Object?>>> list() async {
-        final reply =
-            await send(
-                  'POST',
-                  '${WorldHosts.transmission}/transmission/rpc',
-                  json: {'method': 'torrent-get', 'arguments': {}},
-                  headers: {
-                    'x-transmission-session-id': TransmissionFake.sessionId,
-                  },
-                )
-                as Map;
-        return ((reply['arguments'] as Map)['torrents'] as List)
-            .cast<Map<String, Object?>>();
-      }
-
-      final first = (await list()).first;
-      await send(
-        'POST',
-        '${WorldHosts.transmission}/transmission/rpc',
-        json: {
-          'method': 'torrent-stop',
-          'arguments': {
-            'ids': [first['id']],
-          },
-        },
-        headers: {'x-transmission-session-id': TransmissionFake.sessionId},
-      );
-      expect((await list()).first['status'], 0);
     });
   });
 }

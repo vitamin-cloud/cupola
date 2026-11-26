@@ -28,15 +28,6 @@ enum NavTab {
     routePath: ServiceRoutes.home,
   ),
 
-  /// The catalogue: browsed at rest, searched by typing (it took the Search
-  /// tab's place, and its search with it).
-  discover(
-    label: 'Discover',
-    icon: Icons.explore_outlined,
-    selectedIcon: Icons.explore_rounded,
-    railIcon: Symbols.explore_rounded,
-    routePath: ServiceRoutes.discover,
-  ),
   activity(
     label: 'Activity',
     // The pulse line, as drawn in the brand's tab bar: Material Symbols has
@@ -102,7 +93,8 @@ enum NavTab {
   /// The requester's has no control room in it: Home · Discover · Requests.
   /// Settings is in neither (see [NavTab]).
   static List<NavTab> barFor(Audience audience) => switch (audience) {
-    Audience.operator => const [home, discover, activity, stack],
-    Audience.requester => const [home, discover, requests],
+    // This fork: no Discover tab.
+    Audience.operator => const [home, activity, stack],
+    Audience.requester => const [home, requests],
   };
 }

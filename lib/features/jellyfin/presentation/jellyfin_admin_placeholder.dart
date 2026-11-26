@@ -6,15 +6,6 @@ import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
-/// What a Jellyfin read only an administrator may make says, reached with a
-/// household member's token: the placeholder's title, and the Overview's
-/// Libraries region on its own.
-///
-/// [needsAdministratorTitle] builds the same sentence for any server of the
-/// family, and this is what it builds for Jellyfin, kept as a constant because
-/// tests assert it verbatim.
-const jellyfinNeedsAdministratorTitle = 'Needs a Jellyfin administrator';
-
 /// The title of the administrator placeholder for [service], by its name.
 ///
 /// The article follows the name (`a Jellyfin`, `an Emby`): a title that reads

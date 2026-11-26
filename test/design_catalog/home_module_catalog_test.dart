@@ -11,7 +11,6 @@ import 'package:cupola/core/last_known/last_known_store.dart';
 import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/status/media_names.dart';
 import 'package:cupola/core/theme.dart';
-import 'package:cupola/features/discover/domain/library_calendar.dart';
 import 'package:cupola/features/discover/presentation/library_calendar_provider.dart';
 import 'package:cupola/features/home/data/stack_lights.dart';
 import 'package:cupola/features/home/data/storage.dart';
@@ -23,13 +22,11 @@ import 'package:cupola/features/home/presentation/widgets/storage_module.dart';
 import 'package:cupola/features/home/data/answered_requests.dart';
 import 'package:cupola/features/home/data/home_last_known.dart';
 import 'package:cupola/features/home/data/last_known/arrived_last_known.dart';
-import 'package:cupola/features/home/data/last_known/coming_up_last_known.dart';
 import 'package:cupola/features/home/data/last_known/downloads_last_known.dart';
 import 'package:cupola/features/home/presentation/widgets/home_as_of_line.dart';
 import 'package:cupola/features/home/data/resume.dart';
 import 'package:cupola/features/home/domain/needs_you.dart';
 import 'package:cupola/features/home/presentation/widgets/arrived_module.dart';
-import 'package:cupola/features/home/presentation/widgets/coming_up_module.dart';
 import 'package:cupola/features/home/presentation/widgets/continue_watching_module.dart';
 import 'package:cupola/features/home/presentation/widgets/downloads_module.dart';
 import 'package:cupola/features/home/presentation/widgets/home_module_frame.dart';
@@ -42,16 +39,13 @@ import 'package:cupola/features/services/domain/dashboard_decision.dart';
 import 'package:cupola/features/services/domain/in_flight.dart';
 import 'package:cupola/features/services/domain/source_coverage.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
-import 'package:cupola/features/onboarding/data/known_candidates_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
-import 'package:cupola/features/settings/domain/connection_candidate.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/stream/domain/models/stream_item.dart';
 import 'package:cupola/features/stream/domain/models/stream_session.dart';
 import 'package:cupola/features/stream/presentation/stream_activity_provider.dart';
 
 import '../test_helpers/settings_scope.dart';
-import 'calendar_world.dart';
 import 'catalog.dart';
 
 final _now = DateTime(2026, 9, 29, 20, 53);
@@ -226,52 +220,6 @@ StreamActivityRow _playing(
   ),
 );
 
-/// A playback only Tracearr sees: Luca's Elephants Dream on a Plex Cupola is
-/// not connected to, marked as coming through Tracearr.
-StreamActivityRow _through(
-  String user,
-  String title,
-  String device,
-  int minutesLeft,
-  double progress,
-) => StreamActivityRow(
-  service: ServiceKey.plex,
-  instanceId: 'tracearr',
-  connectionName: null,
-  session: StreamSession(
-    id: '$user-$title',
-    userName: user,
-    title: title,
-    subtitle: null,
-    deviceLabel: device,
-    posterPath: null,
-    playMethod: StreamPlayMethod.directPlay,
-    transcodeReasons: const [],
-    bitrate: null,
-    bitrateIsNominal: true,
-    progress: progress,
-    isPaused: false,
-    remaining: Duration(minutes: minutesLeft),
-  ),
-);
-
-final _tracearrSettings = settingsWithServices(const [
-  ServiceKey.jellyfin,
-]);
-
-/// The calendar of the boards' household, as Coming up reads it.
-LibraryCalendar _calendar(
-  List<CalendarEvent> events, {
-  List<CalendarSilence> silent = const [],
-}) => LibraryCalendar(
-  window: CalendarWorld.window,
-  events: events,
-  answered: const ['Radarr', 'Radarr 4K', 'Sonarr'],
-  silent: silent,
-  kinds: const {CalendarKind.movie, CalendarKind.episode, CalendarKind.album},
-  readAt: CalendarWorld.now,
-);
-
 ArrHistoryEntry _arrival(
   String title, {
   required Duration ago,
@@ -388,9 +336,6 @@ StackLights _lights(
       ServiceKey.seerr,
       ServiceKey.radarr,
       ServiceKey.sonarr,
-      ServiceKey.lidarr,
-      ServiceKey.prowlarr,
-      ServiceKey.bazarr,
       ServiceKey.qbittorrent,
       ServiceKey.jellyfin,
       ServiceKey.truenas,
@@ -472,26 +417,6 @@ void main() {
         width: 390,
       ),
       CatalogScene(
-        'HomeModuleFrame.silent · away from home, its service has no address '
-        'away: a grey line over the last drawing, no band, no Retry',
-        (_) => LastKnownWords(
-          words: 'As of 20:41',
-          child: HomeModuleFrame.silent(
-            title: 'Arrived',
-            coverage: SourceCoverage.failure(
-              ServiceKey.lidarr,
-              const ClassifiedFailure(ServiceFailureReason.onlyAtHome),
-            ),
-            onRetry: () {},
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Text('Sintel · Elephants Dream · Spring'),
-            ),
-          ),
-        ),
-        width: 390,
-      ),
-      CatalogScene(
         'HomeModuleFrame.needsService · switched on in Edit Home without its '
         'service: dimmed, a target, the service named',
         (_) => HomeModuleFrame.needsService(
@@ -556,38 +481,6 @@ void main() {
         width: 390,
       ),
       CatalogScene(
-        'Needs you · connections that failed alike lead as one sentence, '
-        'counted once',
-        (_) => NeedsYouLine(
-          needs: _needs(
-            decisions: [
-              for (final service in [
-                ServiceKey.seerr,
-                ServiceKey.radarr,
-                ServiceKey.sonarr,
-                ServiceKey.lidarr,
-                ServiceKey.prowlarr,
-                ServiceKey.qbittorrent,
-              ])
-                DashboardDecision(
-                  kind: DecisionKind.connectionFault,
-                  id: 'connection-${service.name}',
-                  service: service,
-                  title:
-                      '${service.title} was reached but did not reply in '
-                      'time',
-                  detail: '',
-                  occurredAt: null,
-                  failureReason: ServiceFailureReason.timeout,
-                ),
-              _fault(DecisionKind.failingIndexer, 'media'),
-            ],
-          ),
-          onTap: () {},
-        ),
-        width: 390,
-      ),
-      CatalogScene(
         'Needs you · a service that did not answer leads, in red, with its '
         'time and Retry',
         (_) => NeedsYouLine(
@@ -608,39 +501,6 @@ void main() {
         'service adds, then All services',
         (_) => const SetUpNextModule(),
         width: 390,
-      ),
-      CatalogScene(
-        'Set up next · what Seerr and Prowlarr know comes first, its line led '
-        'by a key; Radarr 4K is added beside the Radarr set up',
-        (_) => const SetUpNextModule(),
-        width: 390,
-        overrides: [
-          foundCandidatesProvider.overrideWith(
-            (ref) async => const [
-              ConnectionCandidate(
-                service: ServiceKey.radarr,
-                name: 'Radarr 4K',
-                reportedUrl: 'http://nas.lan:7879',
-                source: CandidateSource(
-                  service: ServiceKey.seerr,
-                  connectionId: 'seerr',
-                  url: 'http://nas.lan:5055',
-                ),
-                apiKey: 'catalog-key',
-              ),
-              ConnectionCandidate(
-                service: ServiceKey.lidarr,
-                name: 'Lidarr',
-                reportedUrl: 'http://nas.lan:8686',
-                source: CandidateSource(
-                  service: ServiceKey.prowlarr,
-                  connectionId: 'prowlarr',
-                  url: 'http://nas.lan:9696',
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
       CatalogScene(
         'Downloads · what moves, how far and how long; the stuck one in '
@@ -776,61 +636,6 @@ void main() {
         ],
       ),
       CatalogScene(
-        'Now playing · with Tracearr: the Jellyfin playback is one row, the '
-        'Plex playback only Tracearr sees says so first on its line, and '
-        'the header names it once',
-        (_) => const HomeNowPlayingModule(),
-        width: 390,
-        overrides: [
-          currentSettingsProvider.overrideWith((ref) => _tracearrSettings),
-          streamActivityProvider.overrideWith(
-            (ref) async => [
-              _playing('Anna', 'Sintel', 'Living room TV', 9, 0.4),
-              _through(
-                'Luca',
-                'Elephants Dream',
-                'Plex for iOS\u00A0· iPad',
-                7,
-                0.6,
-              ),
-            ],
-          ),
-          streamActivityOfflineProvider.overrideWith(
-            (ref) async => const <StreamOfflineSource>[],
-          ),
-        ],
-      ),
-      CatalogScene(
-        'Now playing · an Emby playback beside a Jellyfin one: each row the '
-        'same shape, and the line under the heading names both servers',
-        (_) => const HomeNowPlayingModule(),
-        width: 390,
-        overrides: [
-          currentSettingsProvider.overrideWith(
-            (ref) => settingsWithServices(const [
-              ServiceKey.jellyfin,
-              ServiceKey.emby,
-            ]),
-          ),
-          streamActivityProvider.overrideWith(
-            (ref) async => [
-              _playing('Anna', 'Sintel', 'Living room TV', 9, 0.4),
-              _playing(
-                'Luca',
-                'Cosmos Laundromat',
-                'iPhone',
-                5,
-                0.8,
-                service: ServiceKey.emby,
-              ),
-            ],
-          ),
-          streamActivityOfflineProvider.overrideWith(
-            (ref) async => const <StreamOfflineSource>[],
-          ),
-        ],
-      ),
-      CatalogScene(
         'Continue watching · the series, the episode and how long is left, '
         'over an ink bar',
         (_) => const HomeContinueWatchingModule(),
@@ -875,40 +680,6 @@ void main() {
               rows: const <ResumeRow>[],
               coverage: SourceCoverage.none,
               viewerMissing: const ['jellyfin'],
-            ),
-          ),
-        ],
-      ),
-      CatalogScene(
-        'Coming up · today to Friday, three rows, the day leading and an '
-        'episode\'s time in its status',
-        (_) => const HomeComingUpModule(),
-        width: 390,
-        overrides: [
-          currentSettingsProvider.overrideWith((ref) => _clientSettings),
-          libraryCalendarProvider.overrideWith(
-            (ref) async => _calendar(CalendarWorld.events),
-          ),
-        ],
-      ),
-      CatalogScene(
-        'Coming up · Lidarr did not answer, and nothing else by Friday: named, '
-        'then the calm line',
-        (_) => const HomeComingUpModule(),
-        width: 390,
-        overrides: [
-          currentSettingsProvider.overrideWith((ref) => _clientSettings),
-          libraryCalendarProvider.overrideWith(
-            (ref) async => _calendar(
-              [CalendarWorld.disc],
-              silent: const [
-                (
-                  service: ServiceKey.lidarr,
-                  connectionId: 'lidarr',
-                  name: 'Lidarr',
-                  error: ClassifiedFailure(ServiceFailureReason.unreachable),
-                ),
-              ],
             ),
           ),
         ],
@@ -987,37 +758,6 @@ void main() {
           ),
           servicesArrivalsProvider.overrideWith(
             (ref) => Completer<ArrHistory>().future,
-          ),
-        ],
-      ),
-      CatalogScene(
-        'Last known · a cold start: Coming up as it was last drawn, a download '
-        'as the state it was in with no figure, under the Home\'s one line',
-        (_) => const Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [HomeAsOfLine(), HomeComingUpModule()],
-        ),
-        width: 390,
-        overrides: [
-          currentSettingsProvider.overrideWith((ref) => _clientSettings),
-          calendarClockProvider.overrideWithValue(() => _now),
-          lastKnownStoreProvider.overrideWithValue(
-            LastKnownStore.memory()..write(
-              homeLastKnownKey(Audience.operator.name, comingUpLastKnown),
-              validity: homeLastKnownValidity(
-                _clientSettings,
-                comingUpLastKnown.services,
-              ),
-              schema: comingUpLastKnown.schema,
-              data: comingUpLastKnown.encode(
-                _calendar(CalendarWorld.events),
-                _keep,
-              ),
-              takenAt: _now.subtract(const Duration(minutes: 47)),
-            ),
-          ),
-          libraryCalendarProvider.overrideWith(
-            (ref) => Completer<LibraryCalendar>().future,
           ),
         ],
       ),
@@ -1227,47 +967,6 @@ void main() {
             (ref) async => (
               pools: _pools.take(1).toList(),
               coverage: SourceCoverage.answeredBy(ServiceKey.truenas),
-            ),
-          ),
-        ],
-      ),
-      CatalogScene(
-        'Text at 200% · Continue watching, Coming up and Arrived',
-        (_) => const Column(
-          children: [
-            HomeContinueWatchingModule(),
-            HomeComingUpModule(),
-            HomeArrivedModule(),
-          ],
-        ),
-        width: 390,
-        textScale: catalogTextScale,
-        overrides: [
-          currentSettingsProvider.overrideWith((ref) => _clientSettings),
-          homeResumeProvider.overrideWith(
-            (ref) async => (
-              rows: [
-                _resume(
-                  'The Second Cycle',
-                  'Cosmos Laundromat · S2 E3',
-                  season: 2,
-                  episode: 3,
-                  runtimeMinutes: 24,
-                  atMinute: 19,
-                ),
-              ],
-              coverage: SourceCoverage.answeredBy(ServiceKey.jellyfin),
-              viewerMissing: const <String>[],
-            ),
-          ),
-          libraryCalendarProvider.overrideWith(
-            (ref) async => _calendar(CalendarWorld.events),
-          ),
-          arrivalsClockProvider.overrideWithValue(() => _now),
-          servicesArrivalsProvider.overrideWith(
-            (ref) async => (
-              entries: _week,
-              coverage: SourceCoverage.answeredBy(ServiceKey.radarr),
             ),
           ),
         ],

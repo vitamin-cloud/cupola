@@ -50,33 +50,6 @@ void main() {
     return container.read(desktopRailServicesProvider);
   }
 
-  test('a fault without a count keeps its light, silence is red, the rest '
-      'say nothing', () {
-    final services = read(const [
-      (service: ServiceKey.radarr, light: StackLight.answering),
-      (service: ServiceKey.sonarr, light: StackLight.fault),
-      (service: ServiceKey.truenas, light: StackLight.silent),
-      (service: ServiceKey.lidarr, light: StackLight.checking),
-    ]);
-
-    expect(services, [
-      (service: ServiceKey.radarr, tone: null, state: null, count: null),
-      (
-        service: ServiceKey.sonarr,
-        tone: StatusTone.warning,
-        state: 'a fault',
-        count: null,
-      ),
-      (
-        service: ServiceKey.truenas,
-        tone: StatusTone.error,
-        state: 'did not answer',
-        count: null,
-      ),
-      (service: ServiceKey.lidarr, tone: null, state: null, count: null),
-    ]);
-  });
-
   test('the things to fix are counted per service, each group by its size', () {
     final services = read(
       const [

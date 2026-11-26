@@ -403,19 +403,6 @@ void main() {
       expect(_requester(_anna).showsControlRoom, isFalse);
     });
 
-    test('service names: the requester reads only the players', () {
-      for (final service in ServiceKey.values) {
-        expect(_operator(_anna).namesService(service), isTrue);
-        expect(
-          _requester(_anna).namesService(service),
-          service == ServiceKey.jellyfin ||
-              service == ServiceKey.plex ||
-              service == ServiceKey.emby,
-          reason: service.name,
-        );
-      }
-    });
-
     test('the voice of a failure', () {
       expect(_operator(_key).faultVoice, FaultVoice.full);
       expect(_operator(_anna).faultVoice, FaultVoice.full);

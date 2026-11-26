@@ -51,33 +51,17 @@ enum DecisionSource {
   /// Seerr's requests nobody has approved.
   requests([ServiceKey.seerr]),
 
-  /// Prowlarr's failing indexers.
-  indexers([ServiceKey.prowlarr]),
-
   /// The transfers that stopped being transfers. One source and not eight: a
   /// stall is joined across an \*arr and the client moving its bytes, and read
   /// apart the same stall would be two decisions until the second arrived.
-  queue([
-    ServiceKey.radarr,
-    ServiceKey.sonarr,
-    ServiceKey.lidarr,
-    ServiceKey.readarr,
-    ServiceKey.qbittorrent,
-  ]),
+  queue([ServiceKey.radarr, ServiceKey.sonarr, ServiceKey.qbittorrent]),
 
   /// The storage servers' own alerts: TrueNAS's at warning or worse, and
   /// Unraid's flagged slots and unread notifications at warning or alert.
-  storage([ServiceKey.truenas, ServiceKey.unraid]),
+  storage([ServiceKey.truenas]),
 
-  /// The \*arrs' own health checks that report an error, and Bazarr's health
-  /// issues (every one of which stops it working).
-  health([
-    ServiceKey.radarr,
-    ServiceKey.sonarr,
-    ServiceKey.lidarr,
-    ServiceKey.readarr,
-    ServiceKey.bazarr,
-  ]),
+  /// The \*arrs' own health checks that report an error.
+  health([ServiceKey.radarr, ServiceKey.sonarr]),
 
   /// Connections that answered with a refusal or a fault: a refused key, a
   /// gateway answering in a service's place, a server error. Read off the

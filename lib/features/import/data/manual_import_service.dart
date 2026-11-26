@@ -112,7 +112,6 @@ class ManualImportService {
       queryParameters: {
         'folder': folder,
         'filterExistingFiles': filterExistingFiles,
-        if (service == ServiceKey.lidarr) 'replaceExistingFiles': false,
       },
       // The server walks the folder, parses each release name and probes every
       // file with MediaInfo before it answers: minutes, not seconds.
@@ -133,11 +132,7 @@ class ManualImportService {
   }) async {
     final response = await client.get(
       '$_prefix/manualimport',
-      queryParameters: {
-        'downloadId': downloadId,
-        'filterExistingFiles': true,
-        if (service == ServiceKey.lidarr) 'replaceExistingFiles': false,
-      },
+      queryParameters: {'downloadId': downloadId, 'filterExistingFiles': true},
       receiveTimeout: kSlowScanReceiveTimeout,
     );
     return jsonObjects(response.data, ManualImportItem.fromJson);
@@ -257,8 +252,6 @@ class ManualImportService {
       data: {
         'name': 'ManualImport',
         'importMode': importMode.apiValue,
-        if (service == ServiceKey.lidarr)
-          'replaceExistingFiles': replaceExistingFiles,
         'files': files
             .map((item) => item.toCommandFileJson(service))
             .toList(growable: false),
@@ -276,7 +269,6 @@ class ManualImportService {
     return switch (service) {
       ServiceKey.radarr => 'movie/lookup',
       ServiceKey.sonarr => 'series/lookup',
-      ServiceKey.lidarr => 'artist/lookup',
       _ => throw ArgumentError('${service.title} does not support lookup'),
     };
   }
@@ -285,7 +277,6 @@ class ManualImportService {
     return switch (service) {
       ServiceKey.radarr => 'movie',
       ServiceKey.sonarr => 'series',
-      ServiceKey.lidarr => 'artist',
       _ => throw ArgumentError('${service.title} does not support lookup'),
     };
   }

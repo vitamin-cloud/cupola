@@ -6,8 +6,6 @@ import 'package:cupola/core/utils/percent_format.dart';
 import 'package:cupola/core/utils/string_utils.dart';
 import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/core/widgets/page_title.dart';
-import 'package:cupola/features/emby/presentation/emby_provider.dart';
-import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/settings/data/connection_reach_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -346,21 +344,9 @@ class _HandoffButton extends ConsumerWidget {
     // Plex's web client addresses an item by server identity as well as by key, so
     // without the machine identifier there is no URL to build. The button is absent
     // rather than broken.
-    final machineId = switch (service) {
-      ServiceKey.plex =>
-        ref
-            .watch(plexCapabilitiesForProvider(instanceId))
-            .value
-            ?.machineIdentifier,
-      // Emby's link names the server too, but works without it.
-      ServiceKey.emby => ref.watch(embyServerIdProvider(instanceId)).value,
-      _ => null,
-    };
+    // Plex's machine identifier was the only server id this needed.
+    const String? machineId = null;
     if (baseUrl.isEmpty) return const SizedBox.shrink();
-    if (service == ServiceKey.plex &&
-        (machineId == null || machineId.isEmpty)) {
-      return const SizedBox.shrink();
-    }
 
     final resuming = item.isInProgress;
     final label = resuming

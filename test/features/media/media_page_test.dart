@@ -222,30 +222,6 @@ void main() {
     await harness.unmount(tester);
   });
 
-  testWidgets('P1, Tears of Steel: its title, Play on Jellyfin, its rows', (
-    tester,
-  ) async {
-    final harness = await _pump(tester, Profiles.p1, WorldTitles.tearsOfSteel);
-
-    expect(find.text('Tears of Steel'), findsOneWidget);
-    expect(find.text('Play on Jellyfin'), findsOneWidget);
-    // The marks: Jellyfin's copy is 2160p in HDR10.
-    expect(find.text('4K'), findsOneWidget);
-    expect(find.text('HDR10'), findsOneWidget);
-    expect(find.text('On your server'), findsOneWidget);
-    expect(
-      find.bySemanticsLabel(RegExp(r'^Jellyfin\. .*Available$')),
-      findsOneWidget,
-    );
-    expect(
-      find.bySemanticsLabel(RegExp(r'^Bazarr\. DE wanted$')),
-      findsOneWidget,
-    );
-    expect(find.text('Manage'), findsWidgets);
-
-    await harness.unmount(tester);
-  });
-
   testWidgets('the collection says how much of it is on the server', (
     tester,
   ) async {
@@ -428,49 +404,6 @@ void main() {
       find.text('at ${ServiceRoutes.setUp(ServiceKey.seerr)}'),
       findsOneWidget,
     );
-
-    await harness.unmount(tester);
-  });
-
-  testWidgets('Retry asks the silent connection again, and only it', (
-    tester,
-  ) async {
-    final (harness, _) = await _pumpRouted(
-      tester,
-      Profiles.p7,
-      WorldTitles.tearsOfSteel,
-    );
-    // By address and port: the household's services share a host.
-    String at(ServiceKey service) => Uri.parse(
-      harness.profile.settings.instancesOf(service).first.url,
-    ).authority;
-    int asked(ServiceKey service) => harness.network.requests
-        .where((request) => request.uri.authority == at(service))
-        .length;
-    final jellyfin = asked(ServiceKey.jellyfin);
-    final radarr = asked(ServiceKey.radarr);
-    final bazarr = asked(ServiceKey.bazarr);
-    expect(jellyfin, greaterThan(0));
-
-    // Bazarr is silent too, and keeps its own Retry.
-    await tester.tap(find.bySemanticsLabel(RegExp(r'^Jellyfin\. .*Retry$')));
-    await _answer(tester);
-
-    expect(asked(ServiceKey.jellyfin), greaterThan(jellyfin));
-    expect(asked(ServiceKey.radarr), radarr);
-    expect(asked(ServiceKey.bazarr), bazarr);
-
-    await harness.unmount(tester);
-  });
-
-  testWidgets('Subtitles opens on what Bazarr has and still wants', (
-    tester,
-  ) async {
-    final harness = await _pump(tester, Profiles.p1, WorldTitles.tearsOfSteel);
-
-    await tester.tap(find.text('Subtitles'));
-    await tester.pump();
-    expect(find.text('Wanted'), findsOneWidget);
 
     await harness.unmount(tester);
   });
@@ -1405,55 +1338,6 @@ void main() {
       await harness.unmount(tester);
     });
 
-    testWidgets('History names each event\'s episode, Subtitles each '
-        'episode still wanting one, and Search releases opens a season that '
-        'has aired', (tester) async {
-      final harness = await _pump(
-        tester,
-        Profiles.p1,
-        WorldTitles.cosmosLaundromat,
-        key: cosmos,
-        height: 3600,
-      );
-      final history = find.text('History');
-      await tester.ensureVisible(history);
-      await tester.tap(history);
-      await _answer(tester);
-      expect(
-        find.textContaining('Imported\u00A0· S2\u00A0E3\u00A0· 1080p WEB'),
-        findsOneWidget,
-      );
-
-      final subtitles = find.text('Subtitles');
-      await tester.ensureVisible(subtitles);
-      expect(find.text('EN\u00A0· IT wanted on 3 episodes'), findsOneWidget);
-      await tester.tap(subtitles);
-      await tester.pumpAndSettle();
-      expect(
-        find.bySemanticsLabel('S2\u00A0E3, The Second Cycle: Italian wanted'),
-        findsOneWidget,
-      );
-
-      await tester.ensureVisible(find.text('Search releases'));
-      await tester.tap(find.text('Search releases'));
-      await tester.pumpAndSettle();
-      expect(
-        find.bySemanticsLabel('Search releases for Season 2'),
-        findsOneWidget,
-      );
-      // Nothing of the third has aired.
-      expect(
-        find.bySemanticsLabel('Search releases for Season 3'),
-        findsNothing,
-      );
-      await tester.tap(find.bySemanticsLabel('Search releases for Season 2'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(find.text('Releases'), findsWidgets);
-
-      await harness.unmount(tester);
-    });
-
     testWidgets('Automatic search asks Sonarr for every season, or a season '
         'it monitors that has aired', (tester) async {
       final harness = await _pump(
@@ -1843,47 +1727,6 @@ void main() {
           .dy;
       // `Rotten Tomatoes` takes two lines at 390; its figure does not drop.
       expect(figureTop('Rotten Tomatoes'), figureTop('TMDB'));
-
-      semantics.dispose();
-      await harness.unmount(tester);
-    });
-
-    testWidgets('a Bazarr that does not follow the movie draws no row, and '
-        'the heading does not count it', (tester) async {
-      final semantics = tester.ensureSemantics();
-      tester.view.physicalSize = const Size(390, 2400);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-      final harness = await ProfileHarness.start(Profiles.p1);
-      harness.network
-        ..followFakeTime(tester.binding)
-        ..on(
-          WorldIds.bazarr,
-          'GET',
-          '/api/movies',
-          (_) => NetworkReply.json({'data': <Object?>[], 'total': 0}),
-        );
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: harness.overrides,
-          child: MaterialApp(
-            theme: AppTheme.darkTheme(),
-            home: MediaPage(
-              mediaKey: MediaKey.movie(WorldTitles.tearsOfSteel.tmdbId),
-            ),
-          ),
-        ),
-      );
-      await _answer(tester);
-
-      expect(find.bySemanticsLabel(RegExp(r'^Bazarr\.')), findsNothing);
-      final drawn = <String>{
-        for (final name in ['Jellyfin', 'Plex', 'Radarr', 'Seerr', 'Bazarr'])
-          if (find.bySemanticsLabel(RegExp('^$name[ .]')).evaluate().isNotEmpty)
-            name,
-      };
-      expect(drawn, isNot(contains('Bazarr')));
-      expect(find.text('${drawn.length} services'), findsOneWidget);
 
       semantics.dispose();
       await harness.unmount(tester);

@@ -165,37 +165,6 @@ Future<ServerCertificate?> probeServerCertificate(
   );
 }
 
-/// Builds a Dio [IOHttpClientAdapter] pinned to [pinnedFingerprint] for
-/// [baseUrl]'s own origin, or null when [pinnedFingerprint] is null/empty.
-///
-/// The one place every Dio-based client threads a stored fingerprint (ADR-6)
-/// through to [buildPinnedHttpClient]: `ApiClient` and the four per-service
-/// clients that build their own `Dio` (qBittorrent, SABnzbd, NZBGet, Unraid)
-/// all call this rather than deriving the origin's host/port themselves, so
-/// there is exactly one place that rule can drift. A null return means "leave
-/// this Dio's adapter at its default", which is what keeps every unpinned
-/// connection: the overwhelming majority, including every service reached
-/// over a certificate the OS already trusts; byte-identical to how it
-/// behaved before ADR-6.
-IOHttpClientAdapter? pinnedHttpClientAdapterFor(
-  String baseUrl, {
-  String? pinnedFingerprint,
-}) {
-  final pin = pinnedFingerprint?.trim() ?? '';
-  if (pin.isEmpty) return null;
-
-  final origin = Uri.parse(baseUrl);
-  return IOHttpClientAdapter(
-    createHttpClient: () => buildPinnedHttpClient(
-      pinnedFingerprint: pin,
-      pinnedHost: origin.host,
-      pinnedPort: origin.hasPort
-          ? origin.port
-          : (origin.scheme == 'https' ? 443 : 80),
-    ),
-  );
-}
-
 /// Returns true if [host]:[port] presents a certificate the platform already
 /// trusts (standard verification succeeds). Returns false when the handshake
 /// fails specifically because the certificate is untrusted; rethrows other
@@ -289,4 +258,35 @@ bool isPlainHttpAnswer(String head) {
   if (status == null) return false;
   if (status.group(1) != '400') return true;
   return !RegExp(r'https|ssl', caseSensitive: false).hasMatch(head);
+}
+
+/// Builds a Dio [IOHttpClientAdapter] pinned to [pinnedFingerprint] for
+/// [baseUrl]'s own origin, or null when [pinnedFingerprint] is null/empty.
+///
+/// The one place every Dio-based client threads a stored fingerprint (ADR-6)
+/// through to [buildPinnedHttpClient]: `ApiClient` and the four per-service
+/// clients that build their own `Dio` (qBittorrent, SABnzbd, NZBGet, Unraid)
+/// all call this rather than deriving the origin's host/port themselves, so
+/// there is exactly one place that rule can drift. A null return means "leave
+/// this Dio's adapter at its default", which is what keeps every unpinned
+/// connection: the overwhelming majority, including every service reached
+/// over a certificate the OS already trusts; byte-identical to how it
+/// behaved before ADR-6.
+IOHttpClientAdapter? pinnedHttpClientAdapterFor(
+  String baseUrl, {
+  String? pinnedFingerprint,
+}) {
+  final pin = pinnedFingerprint?.trim() ?? '';
+  if (pin.isEmpty) return null;
+
+  final origin = Uri.parse(baseUrl);
+  return IOHttpClientAdapter(
+    createHttpClient: () => buildPinnedHttpClient(
+      pinnedFingerprint: pin,
+      pinnedHost: origin.host,
+      pinnedPort: origin.hasPort
+          ? origin.port
+          : (origin.scheme == 'https' ? 443 : 80),
+    ),
+  );
 }

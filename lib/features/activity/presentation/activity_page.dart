@@ -26,38 +26,25 @@ import 'package:cupola/features/activity/domain/activity_history.dart';
 import 'package:cupola/features/activity/domain/activity_readout.dart';
 import 'package:cupola/features/activity/domain/activity_download.dart';
 import 'package:cupola/features/activity/domain/activity_tab.dart';
-import 'package:cupola/features/activity/domain/request_filters.dart';
-import 'package:cupola/core/capability/role_gate_provider.dart';
-import 'package:cupola/features/activity/data/household_requests.dart';
-import 'package:cupola/features/activity/domain/everyones_requests.dart';
 import 'package:cupola/features/activity/presentation/widgets/activity_download_row.dart';
 import 'package:cupola/features/activity/presentation/widgets/activity_history_row.dart';
 import 'package:cupola/features/activity/presentation/widgets/activity_section.dart';
 import 'package:cupola/features/activity/presentation/widgets/download_table.dart';
-import 'package:cupola/features/activity/presentation/widgets/everyone_request_row.dart';
-import 'package:cupola/features/activity/presentation/widgets/requests_board.dart';
 import 'package:cupola/features/activity/presentation/widgets/import_done_card.dart';
 import 'package:cupola/features/activity/presentation/widgets/needs_you_cards.dart';
 import 'package:cupola/features/activity/presentation/widgets/violation_rows.dart';
 import 'package:cupola/features/discover/domain/models/seerr_request.dart';
 import 'package:cupola/features/discover/presentation/discover_provider.dart';
-import 'package:cupola/features/home/data/answered_requests.dart';
 import 'package:cupola/features/home/domain/downloads.dart';
-import 'package:cupola/features/home/domain/home_module.dart';
 import 'package:cupola/features/home/presentation/widgets/home_module_parts.dart';
 import 'package:cupola/features/home/presentation/widgets/home_well.dart';
-import 'package:cupola/features/home/presentation/widgets/now_playing_module.dart';
 import 'package:cupola/features/import/presentation/import_service_picker_sheet.dart';
 import 'package:cupola/features/release_search/presentation/release_searches_body.dart';
-import 'package:cupola/features/requests/domain/my_requests.dart';
-import 'package:cupola/features/services/domain/dashboard_decision.dart';
 import 'package:cupola/features/services/domain/source_coverage.dart';
-import 'package:cupola/features/services/presentation/dashboard_retry.dart';
 import 'package:cupola/features/services/presentation/nothing_set_up.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/stream/presentation/stream_activity_provider.dart';
 import 'package:cupola/core/widgets/screen_title.dart';
 
 /// The services Activity reads: the queues, the clients, the requests and
@@ -69,29 +56,13 @@ import 'package:cupola/core/widgets/screen_title.dart';
 final _activityServices = [
   ServiceKey.radarr,
   ServiceKey.sonarr,
-  ServiceKey.lidarr,
-  ServiceKey.readarr,
   ServiceKey.qbittorrent,
   ServiceKey.seerr,
   ...sessionServices,
 ];
 
 /// The arrs whose History tab the page's foot leads to.
-const _historyServices = [
-  ServiceKey.sonarr,
-  ServiceKey.radarr,
-  ServiceKey.lidarr,
-  ServiceKey.readarr,
-];
-
-/// How many downloads All draws before the way to Downloads.
-const _allDownloadsLimit = 5;
-
-/// How many waiting downloads All draws before the way to Downloads.
-const _allUpNextLimit = 3;
-
-/// How many of today's imports All draws before the way to History.
-const _allFinishedLimit = 5;
+const _historyServices = [ServiceKey.sonarr, ServiceKey.radarr];
 
 /// The artwork that lights Activity: the poster of the first download stuck,
 /// else of the first one moving; null for the lamp.
@@ -108,27 +79,15 @@ final activityRoomSourceProvider = Provider.autoDispose<String?>((ref) {
 
 /// Activity: what is moving, what is stuck, who asked and who is watching.
 ///
-/// One page with four views, each at its own address ([ActivityTab]): All,
-/// Downloads, Requests and History. A view is a choice, never a filter on
+/// One page with two views, each at its own address ([ActivityTab]): History,
+/// at Activity's own, and Downloads. A view is a choice, never a filter on
 /// top of another. The page has no app bar: its name, the line under it and
 /// the views scroll with it, as the Home's day does.
 class ActivityPage extends ConsumerWidget {
-  const ActivityPage({
-    super.key,
-    required this.tab,
-    this.requestsOf,
-    this.requestFilters = RequestFilters.none,
-  });
+  const ActivityPage({super.key, required this.tab});
 
   /// The view the address names.
   final ActivityTab tab;
-
-  /// The Seerr connection the Requests view reads (`?i=`), or null for
-  /// every one.
-  final String? requestsOf;
-
-  /// The Requests view's filters, from the address.
-  final RequestFilters requestFilters;
 
   /// How stale the page may be before returning to it earns a refetch: the
   /// Home's two minutes, for the same reads.
@@ -230,16 +189,10 @@ class ActivityPage extends ConsumerWidget {
   }
 
   List<Widget> _sectionsOf(ActivityTab tab) => switch (tab) {
-    ActivityTab.all => const [
-      _NeedsYouSection(),
-      _EveryonesRequestsSection(),
-      _WatchingNowSection(),
-      _DownloadsSection(limit: _allDownloadsLimit),
-      _UpNextSection(limit: _allUpNextLimit),
-      _FinishedTodaySection(),
-      _HistoryFoot(),
-    ],
     ActivityTab.downloads => [
+      // What needs a hand (a stuck download, a failing check, a disk):
+      // nothing at all when nothing does.
+      const _NeedsYouSection(),
       ReleaseSearchesGroup(
         heading: (count) => _GroupHeading(
           title: 'Searching',
@@ -248,17 +201,6 @@ class ActivityPage extends ConsumerWidget {
       ),
       const _DownloadsSection(),
       const _UpNextSection(),
-    ],
-    ActivityTab.requests => [
-      RequestsBoard(
-        key: ValueKey(requestsOf),
-        only: requestsOf,
-        filters: requestFilters,
-        address: Uri(
-          path: ServiceRoutes.activityRequests,
-          queryParameters: {'i': ?requestsOf},
-        ),
-      ),
     ],
     ActivityTab.history => const [
       _HistoryDays(),
@@ -528,7 +470,6 @@ class _NeedsYouSectionState extends ConsumerState<_NeedsYouSection> {
   @override
   Widget build(BuildContext context) {
     final decisions = ref.watch(dashboardDecisionsProvider);
-    final answered = ref.watch(answeredRequestsProvider);
     final acted = ref.watch(actedFaultsProvider);
     final entries = faultEntriesOf(
       decisions.decisions.where((decision) => decision.isFault),
@@ -546,23 +487,13 @@ class _NeedsYouSectionState extends ConsumerState<_NeedsYouSection> {
       }
     }
     _shown = cards;
-    final waiting = [
-      for (final decision in decisions.decisions)
-        if (decision.kind == DecisionKind.pendingRequest &&
-            !answered.containsKey(decision.id))
-          decision,
-    ];
-    final requests = [...waiting, for (final a in answered.values) ?a.decision];
     // Tracearr's unseen violations of severity high: blue, between the faults
     // and the requests, and never in the count of faults.
     final flagged = violationsOf(decisions.decisions);
     final coverage = decisions.coverage;
     // The import a Review sent reports itself here, first.
     final report = ref.watch(importReportProvider);
-    if (cards.isEmpty &&
-        requests.isEmpty &&
-        flagged.count == 0 &&
-        report == null) {
+    if (cards.isEmpty && flagged.count == 0 && report == null) {
       final note = coverage.failed.isEmpty ? null : coverageNote(coverage);
       if (note == null) return const SizedBox.shrink();
       return ActivitySection(
@@ -581,7 +512,7 @@ class _NeedsYouSectionState extends ConsumerState<_NeedsYouSection> {
     final blue = statusToneColor(scheme, StatusTone.info, surface: room.slab);
     final meta = needsYouMeta(
       faults: entries.length,
-      requests: waiting.length,
+      requests: 0,
       violations: flagged.count,
       violationsFloor: flagged.floor,
     );
@@ -593,11 +524,7 @@ class _NeedsYouSectionState extends ConsumerState<_NeedsYouSection> {
     final wide =
         AppBreakpoints.isDesktopShell(context) ||
         MediaQuery.sizeOf(context).width >= AppBreakpoints.touchSplit;
-    if (wide &&
-        (cards.isNotEmpty ||
-            report != null ||
-            waiting.isNotEmpty ||
-            flagged.count > 0)) {
+    if (wide && (cards.isNotEmpty || report != null || flagged.count > 0)) {
       return ActivitySection(
         title: 'Needs you',
         meta: meta.isEmpty ? null : meta,
@@ -619,12 +546,6 @@ class _NeedsYouSectionState extends ConsumerState<_NeedsYouSection> {
               divided: index > 0 || report != null,
             ),
           ...violationRows,
-          if (waiting.isNotEmpty)
-            RequestsWaitRow(
-              requests: waiting,
-              divided: cards.isNotEmpty || report != null,
-              onReview: () => context.go(ActivityTab.requests.location),
-            ),
         ],
       );
     }
@@ -653,14 +574,10 @@ class _NeedsYouSectionState extends ConsumerState<_NeedsYouSection> {
                 entry: entry,
                 divided: index > 0 || report != null,
               ),
-            if (cards.isEmpty && report == null) ...[
-              ...violationRows,
-              ...requestRowsOf(requests, answered, blue),
-            ],
+            if (cards.isEmpty && report == null) ...violationRows,
           ],
         ),
-        if ((cards.isNotEmpty || report != null) &&
-            (requests.isNotEmpty || flagged.count > 0))
+        if ((cards.isNotEmpty || report != null) && flagged.count > 0)
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.gutter,
@@ -668,128 +585,7 @@ class _NeedsYouSectionState extends ConsumerState<_NeedsYouSection> {
               AppSpacing.gutter,
               0,
             ),
-            child: ActivitySlab(
-              children: [
-                ...violationRows,
-                ...requestRowsOf(requests, answered, blue),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-/// Everyone's requests: the latest that move or arrived, who asked them, and
-/// the way to all of them. Every Seerr's, as the Requests view reads them, so
-/// the count on the link is the count there.
-class _EveryonesRequestsSection extends ConsumerWidget {
-  const _EveryonesRequestsSection();
-
-  static const _title = "Everyone's requests";
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reads = ref.watch(householdRequestsProvider(null));
-    if (reads.isEmpty) return const SizedBox.shrink();
-    final now = ref.watch(arrivalsClockProvider)();
-    final household = householdRequestsOf(
-      reads,
-      now: now,
-      gateOf: (id) => ref.watch(roleGateOfProvider(id)),
-      named: reads.length > 1,
-    );
-    if (household.pending) return const SizedBox.shrink();
-    final failures = [
-      for (final source in household.failed)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-          child: BriefFailureLine.line(
-            error: source.read.error!,
-            service: ServiceKey.seerr,
-            instanceId: source.instanceId,
-            onRetry: () =>
-                retryDashboardServices(ref, const [ServiceKey.seerr]),
-          ),
-        ),
-    ];
-    if (household.isEmpty) {
-      if (failures.isEmpty) return const SizedBox.shrink();
-      return ActivitySection(title: _title, children: failures);
-    }
-    final connectionOf = Map<SeerrRequest, String?>.identity()
-      ..addEntries([
-        for (final entry in household.rest)
-          MapEntry(entry.mine.request, entry.connection),
-      ]);
-    final namesWhoOf = Map<SeerrRequest, bool>.identity()
-      ..addEntries([
-        for (final entry in household.rest)
-          MapEntry(entry.mine.request, entry.namesWho),
-      ]);
-    final requests = MyRequests([
-      for (final entry in household.rest) entry.mine,
-    ]);
-    final rows = everyonesLatest(requests);
-    // Seerr's own count: a page or a Seerr that did not arrive leaves the
-    // rows short of the household's requests, and their number is then a
-    // floor, never the total. What is tallied over them (how many are being
-    // fetched, how many were declined) is left unsaid rather than understated.
-    final figure = '${household.total}${household.floor ? '+' : ''}';
-    final summary = household.whole ? everyonesSummary(requests) : '';
-
-    return ActivitySection(
-      title: _title,
-      meta: household.totalLabel,
-      children: [
-        ...failures,
-        for (final (index, mine) in rows.indexed)
-          EveryoneRequestRow(
-            key: ValueKey(mine.request.id),
-            mine: mine,
-            now: now,
-            divided: index > 0 || failures.isNotEmpty,
-            connection: connectionOf[mine.request],
-            namesWho: namesWhoOf[mine.request] ?? false,
-          ),
-        ActivitySlabLink(
-          label: figure == '1' ? 'All requests' : 'All $figure requests',
-          meta: summary.isEmpty ? null : summary,
-          divided: rows.isNotEmpty || failures.isNotEmpty,
-          onTap: () => context.go(ActivityTab.requests.location),
-        ),
-      ],
-    );
-  }
-}
-
-/// Who is watching, on every service that says so: the Home's rows.
-class _WatchingNowSection extends ConsumerWidget {
-  const _WatchingNowSection();
-
-  static const _title = 'Watching now';
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(currentSettingsProvider);
-    if (!HomeModule.nowPlaying.services.any(settings.isServiceConfigured)) {
-      return const SizedBox.shrink();
-    }
-    final sessions = ref.watch(streamActivityProvider).value;
-    if (sessions == null || sessions.isEmpty) return const SizedBox.shrink();
-    return ActivitySection(
-      title: _title,
-      meta: streamServersLabel(sessions),
-      semanticLabel: [
-        _title,
-        sessions.length == 1 ? '1 playing' : '${sessions.length} playing',
-      ].join(', '),
-      children: [
-        for (final (index, row) in sessions.indexed)
-          NowPlayingRow(
-            key: ValueKey('${row.instanceId}-${row.session.id}'),
-            row: row,
-            divided: index > 0,
+            child: ActivitySlab(children: violationRows),
           ),
       ],
     );
@@ -797,12 +593,9 @@ class _WatchingNowSection extends ConsumerWidget {
 }
 
 /// Downloads: what is moving and what is stuck, as their queues order them,
-/// the stuck ones after, then on Downloads those stopped on purpose. On All
-/// at most [limit], with the way to the rest.
+/// the stuck ones after, then those stopped on purpose.
 class _DownloadsSection extends ConsumerWidget {
-  const _DownloadsSection({this.limit});
-
-  final int? limit;
+  const _DownloadsSection();
 
   static const _title = 'Downloads';
 
@@ -842,16 +635,10 @@ class _DownloadsSection extends ConsumerWidget {
       for (final item in queue.items)
         if (item.fault == null && item.held) item,
     ];
-    if (moving.isEmpty && stuck.isEmpty && (limit != null || stopped.isEmpty)) {
-      // On All a quiet queue is the header's to say; Downloads says it in
-      // its own place.
-      if (limit != null) return const SizedBox.shrink();
+    if (moving.isEmpty && stuck.isEmpty && stopped.isEmpty) {
       return const _NothingDownloading();
     }
-    final cap = limit;
-    final rows = cap == null
-        ? [...moving, ...stuck, ...stopped]
-        : downloadRowsOf(moving, stuck, limit: cap);
+    final rows = [...moving, ...stuck, ...stopped];
     final requests = ref.watch(downloadAskersProvider);
     final total = moving.length + stuck.length + stopped.length;
     final meta = [
@@ -918,11 +705,9 @@ final downloadAskersProvider = Provider.autoDispose<List<SeerrRequest>>((ref) {
 });
 
 /// Up next: the downloads waiting their turn, in the order they will start,
-/// with when where the client says. On All at most [limit].
+/// with when where the client says.
 class _UpNextSection extends ConsumerWidget {
-  const _UpNextSection({this.limit});
-
-  final int? limit;
+  const _UpNextSection();
 
   static const _title = 'Up next';
 
@@ -939,8 +724,7 @@ class _UpNextSection extends ConsumerWidget {
         if (item.isActive && item.queued) item,
     ];
     if (queued.isEmpty) return const SizedBox.shrink();
-    final cap = limit;
-    final rows = cap == null ? queued : queued.take(cap).toList();
+    final rows = queued;
     final count = coveredFigure(queued.length, queue.coverage);
     final meta = '$count queued';
     final now = ref.watch(stallClockProvider)();
@@ -1005,43 +789,6 @@ class _NothingDownloading extends ConsumerWidget {
             ],
           ),
         ),
-      ],
-    );
-  }
-}
-
-/// Finished today: what the libraries imported since midnight, newest
-/// first, with the file each became.
-class _FinishedTodaySection extends ConsumerWidget {
-  const _FinishedTodaySection();
-
-  static const _title = 'Finished today';
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final read = ref.watch(servicesArrivalsProvider).value;
-    if (read == null) return const SizedBox.shrink();
-    final now = ref.watch(arrivalsClockProvider)();
-    final today = finishedTodayOf(read.entries, now: now);
-    if (today.isEmpty) return const SizedBox.shrink();
-    final shown = today.take(_allFinishedLimit).toList(growable: false);
-    final count = coveredFigure(today.length, read.coverage);
-    return ActivitySection(
-      title: _title,
-      meta: count,
-      semanticLabel: '$_title, $count',
-      children: [
-        for (final (index, entry) in shown.indexed)
-          ActivityHistoryRow(
-            key: ValueKey('${entry.instanceId}-${entry.id}'),
-            entry: entry,
-            divided: index > 0,
-          ),
-        if (today.length > shown.length)
-          ActivitySlabLink(
-            label: 'All of today in History',
-            onTap: () => context.go(ActivityTab.history.location),
-          ),
       ],
     );
   }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/features/discover/domain/library_calendar.dart';
 import 'package:cupola/features/discover/presentation/library_calendar_provider.dart';
@@ -107,26 +106,5 @@ void main() {
     expect(find.text('Coming up'), findsOne);
     expect(find.text('Nothing comes out or airs by Friday'), findsOne);
     expect(find.text('The calendar has the rest of the month.'), findsOne);
-  });
-
-  testWidgets('a connection that did not answer is named over the rows', (
-    tester,
-  ) async {
-    await pump(
-      tester,
-      _calendar(
-        [_movie('Sprite Fright', 29)],
-        silent: const [
-          (
-            service: ServiceKey.lidarr,
-            connectionId: 'lidarr',
-            name: 'Lidarr',
-            error: ClassifiedFailure(ServiceFailureReason.unreachable),
-          ),
-        ],
-      ),
-    );
-    expect(find.textContaining('Lidarr did not answer'), findsOne);
-    expect(find.text('Sprite Fright'), findsOne);
   });
 }

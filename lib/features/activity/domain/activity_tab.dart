@@ -9,19 +9,11 @@ import 'package:cupola/core/utils/service_routes.dart';
 /// notification and the back gesture land on the same one, and returning
 /// to the tab finds it where it was left.
 enum ActivityTab {
-  /// Needs you, the requests, who is watching, the downloads, what waits and
-  /// what finished today.
-  all('All', ServiceRoutes.activity),
+  /// This fork: History first, at Activity's own address; then Downloads.
+  /// No All, no Requests.
+  history('History', ServiceRoutes.activity),
 
-  /// What is downloading, the searches still running, and what waits its
-  /// turn.
-  downloads('Downloads', ServiceRoutes.activityDownloads),
-
-  /// The household's requests: the ones waiting for an answer, then all.
-  requests('Requests', ServiceRoutes.activityRequests),
-
-  /// The last seven days, by day: what was imported and what failed.
-  history('History', ServiceRoutes.activityHistory);
+  downloads('Downloads', ServiceRoutes.activityDownloads);
 
   const ActivityTab(this.label, this.location);
 

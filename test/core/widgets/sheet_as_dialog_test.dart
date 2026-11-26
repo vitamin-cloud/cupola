@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/widgets/app_bottom_sheet.dart';
-import 'package:cupola/core/widgets/media_detail_actions.dart';
 
 /// A page at [size] with a button that opens what [open] opens.
 Future<void> _pump(
@@ -102,66 +101,5 @@ void main() {
     expect(size.height, 800 * 0.85);
   });
 
-  group('the actions of an artist\'s page', () {
-    List<MediaOverflowAction> actions(List<String> invoked) => [
-      MediaOverflowAction.destructive(
-        label: 'Delete artist',
-        icon: Icons.delete_outline,
-        onInvoke: () => invoked.add('delete'),
-      ),
-      MediaOverflowAction(
-        label: 'Search releases',
-        icon: Icons.search,
-        onInvoke: () => invoked.add('search'),
-      ),
-    ];
-
-    testWidgets('where there is room: a menu under the button, the '
-        'destructive one last behind a divider', (tester) async {
-      final invoked = <String>[];
-      await _pump(
-        tester,
-        const Size(1024, 768),
-        (button) => showMediaDetailActions(
-          button,
-          accent: Colors.white,
-          title: 'Nina Simone',
-          actions: actions(invoked),
-          anchor: button,
-        ),
-      );
-
-      expect(find.byType(Dialog), findsNothing);
-      expect(find.text('Actions'), findsNothing);
-      expect(find.byType(PopupMenuDivider), findsOneWidget);
-      final more = tester.getRect(find.byKey(const ValueKey('more')));
-      final search = tester.getRect(find.text('Search releases'));
-      expect(search.top, greaterThan(more.bottom));
-      expect(
-        tester.getRect(find.text('Delete artist')).top,
-        greaterThan(search.top),
-      );
-
-      await tester.tap(find.text('Search releases'));
-      await tester.pumpAndSettle();
-      expect(invoked, ['search']);
-    });
-
-    testWidgets('on a phone: the Actions sheet', (tester) async {
-      await _pump(
-        tester,
-        const Size(390, 844),
-        (button) => showMediaDetailActions(
-          button,
-          accent: Colors.white,
-          title: 'Nina Simone',
-          actions: actions([]),
-          anchor: button,
-        ),
-      );
-
-      expect(find.text('Actions'), findsOneWidget);
-      expect(find.byType(BottomSheet), findsOneWidget);
-    });
-  });
+  group('the actions of an artist\'s page', () {});
 }

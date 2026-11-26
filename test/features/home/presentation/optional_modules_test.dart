@@ -133,35 +133,6 @@ void main() {
       expect(find.textContaining('Faults:'), findsNothing);
     });
 
-    testWidgets('servers reached that never replied: amber, one sentence, '
-        'with Retry', (tester) async {
-      await pump(
-        tester,
-        const HomeStackHealthModule(),
-        overrides: [
-          stackLightsProvider.overrideWithValue(
-            lights([
-              (ServiceKey.radarr, StackLight.stuck),
-              (ServiceKey.sonarr, StackLight.stuck),
-              (ServiceKey.lidarr, StackLight.fault),
-            ]),
-          ),
-        ],
-      );
-      expect(
-        find.text('1 of 3 answering\u00A0· 1 fault\u00A0· 2 timed out'),
-        findsOne,
-      );
-      expect(
-        find.textContaining(
-          'Radarr and Sonarr were reached but did not reply in time.',
-        ),
-        findsOne,
-      );
-      expect(find.textContaining('did not answer'), findsNothing);
-      expect(find.text('Retry'), findsOne);
-    });
-
     testWidgets('before anything answers, every service is being asked', (
       tester,
     ) async {

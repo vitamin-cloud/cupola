@@ -26,7 +26,6 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 String? _posterOf(ServiceKey service, ManualImportItem item) {
   final payload = switch (service) {
     ServiceKey.radarr => item.movie,
-    ServiceKey.lidarr => item.artist,
     _ => item.series,
   };
   final images = payload?['images'];
@@ -598,7 +597,6 @@ class _BlockedImportNeedYouRowState
         NeedYouKind.identity => (
           switch (service) {
             ServiceKey.radarr => 'Which movie?',
-            ServiceKey.lidarr => 'Which album?',
             _ => 'Which series?',
           },
           amber,
@@ -873,7 +871,6 @@ class _BlockedImportNeedYouRowState
           ),
           child: Text(switch (service) {
             ServiceKey.radarr => 'Pick the movie',
-            ServiceKey.lidarr => 'Pick the album',
             _ => 'Pick the series',
           }),
         ),

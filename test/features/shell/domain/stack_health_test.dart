@@ -353,34 +353,6 @@ void main() {
       return container;
     }
 
-    test('an unreachable service is both counted and named', () {
-      final container = containerWith({
-        ServiceKey.radarr: (
-          total: 1,
-          offline: 0,
-          faulted: 0,
-          stuck: 0,
-          checking: 0,
-          onlyAtHome: 0,
-        ),
-        ServiceKey.lidarr: (
-          total: 2,
-          offline: 2,
-          faulted: 0,
-          stuck: 0,
-          checking: 0,
-          onlyAtHome: 0,
-        ),
-      });
-
-      final health = container.read(stackHealthProvider);
-      final named = container.read(unreachableServicesProvider);
-
-      expect(health.unreachable, 1);
-      expect(named, [ServiceKey.lidarr]);
-      expect(named.length, health.unreachable);
-    });
-
     test('a service that timed out is counted apart, and never named as '
         'silent', () {
       final container = containerWith({

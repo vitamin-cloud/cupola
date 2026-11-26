@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cupola/features/home/domain/storage.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/truenas/domain/models/pool.dart';
-import 'package:cupola/features/unraid/domain/models/unraid_models.dart';
 
 const _tb = 1024 * 1024 * 1024 * 1024;
 
@@ -104,57 +103,6 @@ void main() {
       );
       expect(pool.percent, isNull);
       expect(pool.capacity, isNull);
-    });
-  });
-
-  group('an Unraid array', () {
-    UnraidArray array({
-      String state = 'STARTED',
-      List<UnraidDisk> disks = const [],
-    }) => UnraidArray(
-      state: state,
-      usedFraction: 0.5,
-      usedBytes: 4 * _tb,
-      totalBytes: 8 * _tb,
-      disks: disks,
-    );
-
-    test('started with every drive fine: healthy', () {
-      final pool = storagePoolOfUnraid(
-        array(
-          disks: const [UnraidDisk(name: 'disk1', status: 'DISK_OK', temp: 34)],
-        ),
-        instanceId: 'tower',
-      );
-      expect(pool.name, 'Array');
-      expect(pool.healthy, isTrue);
-      expect(pool.stateLine, 'Healthy');
-      expect(pool.capacity, '4.0 of 8.0\u00A0TB');
-    });
-
-    test('a flagged drive and a hot one, each in a sentence', () {
-      final pool = storagePoolOfUnraid(
-        array(
-          disks: const [
-            UnraidDisk(name: 'disk3', status: 'DISK_DSBL', temp: null),
-            UnraidDisk(name: 'parity', status: 'DISK_OK', temp: 47),
-            UnraidDisk(name: 'disk4', status: 'DISK_NP', temp: null),
-          ],
-        ),
-        instanceId: 'tower',
-      );
-      expect(pool.healthy, isFalse);
-      expect(pool.state, 'Started');
-      expect(pool.disks, ['Disk 3 is disabled', 'Parity is at 47\u00A0°C']);
-    });
-
-    test('stopped is said, and not healthy', () {
-      final pool = storagePoolOfUnraid(
-        array(state: 'STOPPED'),
-        instanceId: 'tower',
-      );
-      expect(pool.healthy, isFalse);
-      expect(pool.state, 'Stopped');
     });
   });
 }

@@ -142,18 +142,11 @@ abstract class ServiceFake {
 ServiceFake serviceFakeFor(ServiceKey service) => switch (service) {
   ServiceKey.radarr => const RadarrFake(),
   ServiceKey.sonarr => const SonarrFake(),
-  ServiceKey.lidarr => const LidarrFake(),
-  ServiceKey.readarr => const ReadarrFake(),
-  ServiceKey.prowlarr => const ProwlarrFake(),
-  ServiceKey.bazarr => const BazarrFake(),
   ServiceKey.seerr => const SeerrFake(),
   ServiceKey.jellyfin => const JellyfinFake(),
-  ServiceKey.plex => const PlexFake(),
-  ServiceKey.emby => const EmbyFake(),
   ServiceKey.qbittorrent => const QbittorrentFake(),
   ServiceKey.truenas => const TrueNasFake(),
   ServiceKey.dockge => const DockgeFake(),
-  ServiceKey.unraid => const UnraidFake(),
 };
 
 /// Whether [request] is [method] [path] exactly.

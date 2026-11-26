@@ -20,8 +20,6 @@ import 'package:cupola/features/series/presentation/series_screen.dart';
 import 'package:cupola/features/services/domain/service_summary.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/services/presentation/stack_screen.dart';
-import 'package:cupola/features/settings/domain/connection_address.dart';
-import 'package:cupola/features/settings/data/service_verification.dart';
 import 'package:cupola/features/settings/domain/connection_access.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
@@ -37,17 +35,6 @@ Future<ServiceSummary> _probe(ConfigProfile profile, String id) async {
     )).future,
   );
 }
-
-Future<ServiceDiagnosis> _test(ConfigProfile profile, String id) async {
-  await ProfileHarness.start(profile);
-  return diagnoseInstance(
-    profile.connection(id).instance,
-    profile.settings,
-    route: ConnectionRoute.home,
-  );
-}
-
-const _token = (id: 'world-any.access', secret: 'world-any-cf-secret');
 
 void main() {
   group('P8 on Home', () {
@@ -192,7 +179,6 @@ void main() {
       expect(await fetch(WorldIds.sonarr), 302);
     });
   });
-
 
   group('a proxy password in front of Jellyfin', () {
     const password = ProxyPassword(username: 'matt', password: 'proxy-pw');

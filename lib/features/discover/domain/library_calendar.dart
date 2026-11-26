@@ -15,9 +15,7 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 /// What the calendar dates, each kind its chip and the service it comes from.
 enum CalendarKind {
   movie('Movies', 'movies', ServiceKey.radarr),
-  episode('Series', 'episodes', ServiceKey.sonarr),
-  album('Music', 'albums', ServiceKey.lidarr),
-  book('Books', 'books', ServiceKey.readarr);
+  episode('Series', 'episodes', ServiceKey.sonarr);
 
   const CalendarKind(this.chip, this.plural, this.service);
 
@@ -317,8 +315,6 @@ class CalendarEvent {
         _ => 'Movie',
       },
       CalendarKind.episode => 'Episode',
-      CalendarKind.album => 'Album',
-      CalendarKind.book => 'Book',
     };
     return (lead: word, under: 'all day');
   }
@@ -354,17 +350,6 @@ class CalendarEvent {
           ),
         };
         return _capitalised(standing);
-      case CalendarKind.album:
-      case CalendarKind.book:
-        standing = switch (state.stand) {
-          CalendarStand.inFlight =>
-            '$outWord\u00A0· ${state.words(notYet: '', outWord: outWord)}',
-          _ => state.words(
-            notYet: StateWord.notOutYet.inline,
-            outWord: outWord,
-          ),
-        };
-        return [?byline, standing].join(dotSeparator);
     }
   }
 
@@ -401,14 +386,6 @@ class CalendarEvent {
               : '${region == null ? 'movie ' : ''}out $release',
           if (region case final region?) 'in $region',
         ].join(' '),
-      ].join(', '),
-      CalendarKind.album => [
-        title,
-        'album${byline == null ? '' : ' by $byline'}',
-      ].join(', '),
-      CalendarKind.book => [
-        title,
-        'book${byline == null ? '' : ' by $byline'}',
       ].join(', '),
     };
     final standing = switch (state.stand) {
@@ -821,38 +798,6 @@ Iterable<CalendarEvent> _eventsOf(
           _ => null,
         },
       );
-    case CalendarKind.album:
-    case CalendarKind.book:
-      final day = arrCalendarDate(record['releaseDate']);
-      if (day == null || !window.contains(day)) return;
-      final album = kind == CalendarKind.album;
-      final parent = mapOrNull(record[album ? 'artist' : 'author']);
-      final parentId =
-          intOrNull(record[album ? 'artistId' : 'authorId']) ??
-          intOrNull(parent?['id']);
-      final title = stringOrNull(record['title']) ?? (album ? 'Album' : 'Book');
-      final statistics = mapOrNull(record['statistics']);
-      final files = intOrNull(
-        statistics?[album ? 'trackFileCount' : 'bookFileCount'],
-      );
-      final foreign = stringOrNull(
-        record[album ? 'foreignAlbumId' : 'foreignBookId'],
-      );
-      yield CalendarEvent(
-        identity: '${kind.name}:${foreign ?? '${title.toLowerCase()}:$day'}',
-        kind: kind,
-        day: day,
-        title: title,
-        byline: stringOrNull(parent?[album ? 'artistName' : 'authorName']),
-        poster:
-            art(_list(record['images']), const ['cover', 'poster']) ??
-            art(_list(parent?['images']), const ['poster', 'cover']),
-        sources: sources,
-        state: stateOf(day: day, onDisk: (files ?? 0) > 0),
-        target: parentId == null || reading.connectionId.isEmpty
-            ? null
-            : CalendarShelfTarget(service, reading.connectionId, parentId),
-      );
   }
 }
 
@@ -1015,8 +960,6 @@ String calendarEventShort(CalendarEvent event) => switch (event.kind) {
     [event.title, ?event.code].join(' '),
     if (event.airsAt case final at?) 'at ${formatClockTime(at)}',
   ].join(' '),
-  CalendarKind.album => '${event.title}, album',
-  CalendarKind.book => '${event.title}, book',
 };
 
 /// A thing's first line in a day of the month's grid: `22:00 S2 E5`,
@@ -1070,10 +1013,6 @@ String calendarDaySummary(List<CalendarEvent> events) {
       (CalendarMark.seriesFinale, _) => 'the series finale of ${event.title}',
       _ => [event.title, ?event.code].join(' '),
     },
-    CalendarKind.album =>
-      event.byline == null ? 'an album' : 'an album by ${event.byline}',
-    CalendarKind.book =>
-      event.byline == null ? 'a book' : 'a book by ${event.byline}',
   };
   final named = [for (final event in events.take(3)) phrase(event)];
   final rest = events.length - named.length;
@@ -1266,8 +1205,6 @@ String calendarBandWords(CalendarEvent event) => switch (event.kind) {
       if (event.airsAt case final at?) 'at ${formatClockTime(at)}',
     ].join(' '),
   ].where((part) => part.isNotEmpty).join(dotSeparator),
-  CalendarKind.album => '${event.title}\u00A0· album',
-  CalendarKind.book => '${event.title}\u00A0· book',
 };
 
 /// What follows a thing's name in the page's answer: `, on digital`,
@@ -1278,8 +1215,6 @@ String calendarAnswerTail(CalendarEvent event) => switch (event.kind) {
     if (event.code case final code?) ' $code',
     if (event.airsAt case final at?) ' at ${formatClockTime(at)}',
   ].join(),
-  CalendarKind.album => ', album',
-  CalendarKind.book => ', book',
 };
 
 /// TMDB's release types the calendar dates a movie by, and their words.

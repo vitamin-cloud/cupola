@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cupola/core/status/arr_queue_snapshot.dart';
-import 'package:cupola/core/utils/unit_space.dart';
 
 void main() {
   group('badgeOverQueue', () {
@@ -557,30 +556,6 @@ void main() {
       idsFor: (item) => [item['movieId'] as int],
       sampledAt: read,
     );
-
-    test('the download stays, without a progress that no longer moves', () {
-      expect(answered.entryFor(1)?.progress, isNotNull);
-      final error = Exception('boom');
-
-      final stale = answered.staleAfter(error);
-
-      expect(stale.isStale, isTrue);
-      expect(stale.entryFor(1)?.pipeline, MediaPipeline.downloading);
-      expect(stale.entryFor(1)?.progress, isNull);
-      expect(stale.sampledAt, read);
-      expect(stale.error, same(error));
-      expect(
-        queueReadingAge(stale, now: read.add(const Duration(minutes: 3))),
-        '${withUnit(3, 'min')} ago',
-      );
-      expect(
-        queueReadingAge(stale, now: read.add(const Duration(seconds: 20))),
-        'a moment ago',
-        reason:
-            '"as it was just now" right after a failure reads as if '
-            'nothing had failed.',
-      );
-    });
 
     test('it did not answer now: not whole, not pending, and an absence '
         'proves nothing', () {

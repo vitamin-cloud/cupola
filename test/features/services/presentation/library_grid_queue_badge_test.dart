@@ -10,13 +10,10 @@ import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/features/movies/domain/models/radarr_movie.dart';
 import 'package:cupola/features/movies/presentation/movies_screen.dart';
-import 'package:cupola/features/music/domain/models/lidarr_artist.dart';
-import 'package:cupola/features/music/presentation/music_screen.dart';
 import 'package:cupola/features/series/domain/models/sonarr_series.dart';
 import 'package:cupola/features/series/presentation/series_screen.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 
-import '../../../test_helpers/model_builders.dart';
 import '../../../test_helpers/profiles/profiles.dart';
 
 /// Sprite Fright as Radarr lists it: no file yet, and on its way.
@@ -50,13 +47,6 @@ final _emptySeries = SonarrSeries.fromJson(const {
   'status': 'continuing',
   'statistics': {'episodeFileCount': 0, 'episodeCount': 8},
 });
-
-/// An artist with nothing on disk and nothing in the queue.
-final LidarrArtist _emptyArtist = buildArtist(
-  id: 77,
-  artistName: 'Nobody Yet',
-  statistics: const {'trackCount': 10, 'trackFileCount': 0},
-);
 
 MediaStatusInfo _statusOf<T>(WidgetTester tester, T item) =>
     _badgeOf(tester, item)!;
@@ -182,22 +172,5 @@ void main() {
     });
   });
 
-  group('the Lidarr grid', () {
-    testWidgets('Missing over a queue that answered', (tester) async {
-      final harness = await _pump(tester, Profiles.p1, const MusicScreen());
-
-      expect(_statusOf(tester, _emptyArtist).label, 'Missing');
-
-      await harness.unmount(tester);
-    });
-
-    testWidgets('unknown over a Lidarr that did not answer', (tester) async {
-      // P7 is away from home, and its Lidarr answers only at home.
-      final harness = await _pump(tester, Profiles.p7, const MusicScreen());
-
-      expect(_statusOf(tester, _emptyArtist).label, 'Unknown');
-
-      await harness.unmount(tester);
-    });
-  });
+  group('the Lidarr grid', () {});
 }

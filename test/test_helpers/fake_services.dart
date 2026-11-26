@@ -22,17 +22,10 @@ import 'package:cupola/features/discover/domain/seerr_arr_server.dart';
 import 'package:cupola/features/discover/domain/seerr_search.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/movies/domain/models/radarr_movie.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
-import 'package:cupola/features/music/domain/models/lidarr_album.dart';
-import 'package:cupola/features/music/domain/models/lidarr_artist.dart';
-import 'package:cupola/features/music/domain/models/lidarr_search_hit.dart';
-import 'package:cupola/features/music/domain/models/lidarr_track.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/series/domain/models/sonarr_episode.dart';
 import 'package:cupola/features/series/domain/models/sonarr_series.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-
-export 'fake_bazarr_service.dart';
 
 ApiClient _client(String baseUrl) => ApiClient(baseUrl: baseUrl, apiKey: 'key');
 
@@ -214,141 +207,6 @@ class FakeSonarrService extends SonarrService {
     String term, {
     CancelToken? cancelToken,
     bool reportFailure = false,
-  }) async => const [];
-
-  @override
-  Future<List<dynamic>> getQueue({
-    Map<String, dynamic>? queryParameters,
-  }) async => const [];
-
-  @override
-  Future<List<dynamic>> getHistory({
-    int page = 1,
-    int pageSize = 20,
-    Map<String, dynamic>? queryParameters,
-  }) async => const [];
-
-  @override
-  Future<List<dynamic>> getAllHistory({
-    Map<String, dynamic>? queryParameters,
-    void Function(List<dynamic> records)? onProgress,
-  }) async => const [];
-
-  Future<List<dynamic>> getBlocklist() async => const [];
-
-  Future<List<dynamic>> getMissing({
-    int page = 1,
-    int pageSize = 20,
-    Map<String, dynamic>? queryParameters,
-  }) async => const [];
-
-  Future<List<dynamic>> getCutoff({
-    int page = 1,
-    int pageSize = 20,
-    Map<String, dynamic>? queryParameters,
-  }) async => const [];
-
-  @override
-  Future<List<dynamic>> getAllMissing({
-    Map<String, dynamic>? queryParameters,
-  }) async => const [];
-
-  @override
-  Future<List<dynamic>> getAllCutoff({
-    Map<String, dynamic>? queryParameters,
-  }) async => const [];
-
-  /// The walk with its account of itself, inverted like the others: a scripted
-  /// [getAllMissing] is the whole wanted list, so its total is its length.
-  @override
-  Future<ArrRecordPage> getAllMissingPage({
-    Map<String, dynamic>? queryParameters,
-  }) async {
-    final records = await getAllMissing(queryParameters: queryParameters);
-    return ArrRecordPage(records: records, total: records.length);
-  }
-
-  /// See [FakeRadarrService.getHistoryPage]: the fakes invert the production
-  /// delegation, so a subclass scripting the record-only getter is still what a
-  /// page caller reaches.
-  @override
-  Future<ArrRecordPage> getHistoryPage({
-    int page = 1,
-    int pageSize = 20,
-    Map<String, dynamic>? queryParameters,
-  }) async => ArrRecordPage(
-    records: await getHistory(
-      page: page,
-      pageSize: pageSize,
-      queryParameters: queryParameters,
-    ),
-    total: null,
-  );
-
-  @override
-  Future<ArrRecordPage> getMissingPage({
-    int page = 1,
-    int pageSize = 20,
-    Map<String, dynamic>? queryParameters,
-  }) async => ArrRecordPage(
-    records: await getMissing(page: page, pageSize: pageSize),
-    total: null,
-  );
-
-  @override
-  Future<ArrRecordPage> getCutoffPage({
-    int page = 1,
-    int pageSize = 20,
-    Map<String, dynamic>? queryParameters,
-  }) async => ArrRecordPage(
-    records: await getCutoff(page: page, pageSize: pageSize),
-    total: null,
-  );
-
-  /// The walks, inverted the same way. A scripted queue is the whole queue:
-  /// the walk a fake stands in for reached its end, so its total is its
-  /// length, the figure Activity read before a walk could say how far it got.
-  @override
-  Future<ArrRecordPage> getQueuePage({
-    Map<String, dynamic>? queryParameters,
-  }) async {
-    final records = await getQueue(queryParameters: queryParameters);
-    return ArrRecordPage(records: records, total: records.length);
-  }
-
-  @override
-  Future<ArrRecordPage> getBlocklistPage() async {
-    final records = await getBlocklist();
-    return ArrRecordPage(records: records, total: records.length);
-  }
-}
-
-class FakeLidarrService extends LidarrService {
-  FakeLidarrService() : super(_client('https://lidarr.example.com'));
-
-  @override
-  Future<List<LidarrArtist>> getArtists() async => const [];
-
-  /// See [FakeRadarrService.getMoviesOrThrow].
-  @override
-  Future<List<LidarrArtist>> getArtistsOrThrow() async => getArtists();
-
-  @override
-  Future<LidarrArtist?> getArtistById(int artistId) async => null;
-
-  @override
-  Future<List<LidarrAlbum>> getAlbums(int artistId) async => const [];
-
-  @override
-  Future<List<LidarrTrack>> getTracks(int albumId) async => const [];
-
-  @override
-  Future<List<Map<String, dynamic>>> getQualityProfiles() async => const [];
-
-  @override
-  Future<List<LidarrSearchHit>> search(
-    String term, {
-    CancelToken? cancelToken,
   }) async => const [];
 
   @override

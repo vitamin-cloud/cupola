@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show ProviderBase;
 
-import 'package:cupola/core/capability/connection_capability.dart';
 import 'package:cupola/core/lifecycle/gated_poll.dart';
 import 'package:cupola/core/providers/provider_retry.dart';
-import 'package:cupola/features/plex/presentation/plex_capability.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
@@ -124,11 +122,7 @@ List<({StreamConnection key, String? name})> _streamConnections(Ref ref) {
 /// account's token: not a server that is down or refused, one whose sessions
 /// only the owner sees. Asks the probe.
 Future<bool> _ownerOnly(Ref ref, StreamConnection key, Object error) async =>
-    key.service == ServiceKey.plex &&
-    await plexSessionsOwnerOnly(
-      () => ref.watch(connectionCapabilityProvider(key.instanceId).future),
-      error,
-    );
+    false;
 
 /// Every live playback across every connection of the media servers and of
 /// Tracearr, most expensive first, each said once.

@@ -355,12 +355,6 @@ void main() {
         platform: CatalogPlatform.desktop,
       ),
       _scene(
-        'Play with · an Emby title · Emby\'s own app, then Emby in the '
-        'browser, and no Jellyfin player among them',
-        () => _playWith(ServiceKey.emby),
-        height: 460,
-      ),
-      _scene(
         'Play with · a Jellyfin title, for contrast · its own apps and '
         'Jellyfin in the browser, and nothing from Emby',
         () => _playWith(ServiceKey.jellyfin),

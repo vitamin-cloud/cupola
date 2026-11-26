@@ -187,39 +187,6 @@ void main() {
 
   group('Lidarr queue payload', () {
     final records = _records('lidarr/queue.json');
-
-    test('albums index independently of artists', () {
-      final byAlbum = ArrQueueSnapshot.fromQueueItems(
-        records,
-        idsFor: (item) => [
-          ?intOrNull(mapOrNull(item['album'])?['id'] ?? item['albumId']),
-        ],
-      );
-
-      expect(byAlbum.entryFor(401)?.pipeline, MediaPipeline.downloading);
-      expect(byAlbum.entryFor(402)?.pipeline, MediaPipeline.queued);
-      expect(byAlbum.entryFor(403)?.pipeline, MediaPipeline.importPending);
-      // Album D is already imported.
-      expect(byAlbum.entryFor(404), isNull);
-    });
-
-    test(
-      'a record naming only its album still resolves via album.artistId',
-      () {
-        final byArtist = ArrQueueSnapshot.fromQueueItems(
-          records,
-          idsFor: (item) => [
-            ?intOrNull(
-              mapOrNull(item['artist'])?['id'] ??
-                  mapOrNull(item['album'])?['artistId'] ??
-                  item['artistId'],
-            ),
-          ],
-        );
-
-        expect(byArtist.entryFor(302)?.pipeline, MediaPipeline.queued);
-      },
-    );
   });
 
   group('Seerr media payloads', () {

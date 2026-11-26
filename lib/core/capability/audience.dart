@@ -40,18 +40,13 @@ Audience audienceOf(Iterable<AudienceConnection> connections) {
           return Audience.operator;
         }
         requester = true;
-      case ServiceKey.jellyfin || ServiceKey.plex || ServiceKey.emby:
+      case ServiceKey.jellyfin:
         continue;
       case ServiceKey.radarr ||
           ServiceKey.sonarr ||
-          ServiceKey.lidarr ||
           ServiceKey.qbittorrent ||
-          ServiceKey.bazarr ||
           ServiceKey.truenas ||
-          ServiceKey.dockge ||
-          ServiceKey.prowlarr ||
-          ServiceKey.readarr ||
-          ServiceKey.unraid:
+          ServiceKey.dockge:
         return Audience.operator;
     }
   }

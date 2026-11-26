@@ -1,6 +1,5 @@
 import 'package:cupola/core/status/arr_queue_snapshot.dart';
 import 'package:cupola/core/utils/dynamic_map_utils.dart';
-import 'package:cupola/features/bazarr/domain/models/bazarr_models.dart';
 import 'package:cupola/features/discover/domain/models/discover_detail_model.dart';
 import 'package:cupola/features/discover/domain/seerr_arr_server.dart';
 import 'package:cupola/features/discover/domain/seerr_media_copy.dart';
@@ -114,34 +113,6 @@ class MediaStreamCopy {
   /// for a movie, and when the read of them did not answer: then nothing is
   /// said of any episode, never that the server lacks it.
   final List<StreamItem>? episodes;
-}
-
-/// What Bazarr holds for one arr copy of a title.
-///
-/// Bazarr follows one Radarr and one Sonarr, and its ids are theirs: a title
-/// is matched to a copy by the copy's id and checked against the copy's path,
-/// or its title and year, so the 4K Radarr's film 12 is never read as the
-/// other Radarr's film 12.
-class MediaBazarrCopy {
-  const MediaBazarrCopy({
-    required this.arrConnectionId,
-    this.movie,
-    this.series,
-    this.episodes,
-  });
-
-  /// The Radarr or Sonarr connection whose copy Bazarr covers.
-  final String arrConnectionId;
-
-  /// The film Bazarr follows, for a film.
-  final BazarrMovie? movie;
-
-  /// The series Bazarr follows, for a series.
-  final BazarrSeries? series;
-
-  /// The series' episodes with their languages; null when they could not be
-  /// read, and the row counts what is wanted instead.
-  final List<BazarrEpisode>? episodes;
 }
 
 /// What one Seerr knows of a title: its record, and the arr servers it

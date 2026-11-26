@@ -86,7 +86,6 @@ class HomeStorageModule extends ConsumerWidget {
               pool: pool,
               divided: index > 0,
               onTap: () => context.go(switch (pool.service) {
-                ServiceKey.unraid => ServiceRoutes.unraidArray,
                 _ => ServiceRoutes.truenasPool(pool.name),
               }),
             ),

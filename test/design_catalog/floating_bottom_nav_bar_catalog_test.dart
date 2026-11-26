@@ -85,16 +85,6 @@ void main() {
         activity: _activity(faults: 3, requests: 2),
       ),
       _scene(
-        'Only answers wait · blue: 2 requests and a finished search',
-        _operatorBar.indexOf(NavTab.discover),
-        activity: _activity(requests: 2, searches: 1),
-      ),
-      _scene(
-        'A count past nine reads 9+',
-        _operatorBar.indexOf(NavTab.discover),
-        activity: _activity(faults: 18),
-      ),
-      _scene(
         'On Activity itself · no number: the page says it, larger',
         _operatorBar.indexOf(NavTab.activity),
       ),

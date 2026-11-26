@@ -14,21 +14,6 @@ typedef ActivityDay = ({
   List<ArrHistoryEntry> entries,
 });
 
-/// The imports of [now]'s day, newest first: Finished today.
-List<ArrHistoryEntry> finishedTodayOf(
-  Iterable<ArrHistoryEntry> entries, {
-  required DateTime now,
-}) {
-  final today = _dayOf(now);
-  return _newestFirst([
-    for (final entry in entries)
-      if (entry.outcome == ArrImportOutcome.imported &&
-          entry.at != null &&
-          _dayOf(entry.at!.toLocal()) == today)
-        entry,
-  ]);
-}
-
 /// When the newest import of [entries] landed, or null with none.
 DateTime? lastImportOf(Iterable<ArrHistoryEntry> entries) {
   DateTime? last;

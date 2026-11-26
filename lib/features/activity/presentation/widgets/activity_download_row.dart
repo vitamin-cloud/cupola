@@ -367,14 +367,6 @@ Future<bool> openArrTitle(
             id,
             instanceId: instance,
           ),
-          ServiceKey.lidarr => ServiceRoutes.lidarrArtist(
-            id,
-            instanceId: instance,
-          ),
-          ServiceKey.readarr => ServiceRoutes.readarrAuthor(
-            id,
-            instanceId: instance,
-          ),
           _ => null,
         };
   if (location == null) return false;

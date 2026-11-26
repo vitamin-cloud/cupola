@@ -148,51 +148,6 @@ bool _refusedAsMade(Object error) => switch (error) {
   _ => false,
 };
 
-/// Handles [error] if it is a permission refusal: marks the connection in
-/// [capability] read-only and raises the refusal toast, whose one action is
-/// that connection's settings form. Returns whether it handled [error], so a
-/// hand-written `catch` skips its own generic toast.
-///
-/// Not a failure toast, and not red: nothing broke. The service answered the
-/// question the probe asked: this credential may read and not change this:
-/// and from here on every write for the connection draws dimmed and the page
-/// banner says why.
-///
-/// Call it only with a mounted [context]; after an `await`, check
-/// `context.mounted` first, or use [markCapabilityRefusal] alone.
-bool reportCapabilityRefusal(
-  BuildContext context,
-  WidgetRef ref,
-  CapabilityTarget capability,
-  Object error,
-) {
-  if (!markCapabilityRefusal(
-    ProviderScope.containerOf(context, listen: false),
-    capability,
-    error,
-  )) {
-    return false;
-  }
-  showCapabilityRefusal(context, capability);
-  return true;
-}
-
-/// The ledger half of [reportCapabilityRefusal]: records the refusal and says
-/// whether [error] was one. Takes the [container] rather than a ref, which
-/// dies with its widget, so it runs even when the page that started the write
-/// has gone.
-bool markCapabilityRefusal(
-  ProviderContainer container,
-  CapabilityTarget capability,
-  Object error,
-) {
-  if (!isPermissionRefusal(error)) return false;
-  container
-      .read(capabilityScopeProvider.notifier)
-      .markReadOnly(capability.connectionId);
-  return true;
-}
-
 /// The toast half of [reportCapabilityRefusal].
 void showCapabilityRefusal(BuildContext context, CapabilityTarget capability) {
   final router = GoRouter.maybeOf(context);

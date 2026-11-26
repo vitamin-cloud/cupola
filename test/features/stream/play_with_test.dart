@@ -68,7 +68,9 @@ Future<ProviderContainer> _pump(
   final container = ProviderContainer(
     overrides: [
       streamAppLauncherProvider.overrideWithValue(launcher),
-      jellyfinServerIdProvider.overrideWith((ref, instanceId) async => 'srv1'),
+      jellyfinProviders.serverId.overrideWith(
+        (ref, instanceId) async => 'srv1',
+      ),
       streamPlayerChoiceProvider.overrideWith(() => _Remembered(remembered)),
     ],
   );
@@ -218,25 +220,6 @@ void main() {
     expect(find.text('Could not open Swiftfin'), findsOneWidget);
   }, variant: TargetPlatformVariant.only(TargetPlatform.iOS));
 
-  testWidgets('Plex keeps its browser link, with no sheet', (tester) async {
-    final launcher = _FakeLauncher(installed: {'swiftfin'});
-    await _pump(
-      tester,
-      launcher: launcher,
-      server: const ServiceInstance(
-        id: 'plex-1',
-        service: ServiceKey.plex,
-        url: 'https://plex.example.com',
-        credential: 'k',
-      ),
-    );
-
-    await _play(tester);
-
-    expect(find.text('Play with'), findsNothing);
-    expect(launcher.opened.single, _webUrl);
-  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
-
   testWidgets('on a desktop there is no sheet: the browser, as today', (
     tester,
   ) async {
@@ -256,7 +239,9 @@ void main() {
     final container = ProviderContainer(
       overrides: [
         streamAppLauncherProvider.overrideWithValue(launcher),
-        jellyfinServerIdProvider.overrideWith((ref, instanceId) async => null),
+        jellyfinProviders.serverId.overrideWith(
+          (ref, instanceId) async => null,
+        ),
         streamPlayerChoiceProvider.overrideWith(() => _Remembered(null)),
       ],
     );

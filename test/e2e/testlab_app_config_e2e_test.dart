@@ -154,7 +154,6 @@ void main() {
     );
   });
 
-
   test('a service the profile does not have reads as not set up', () async {
     final document = await _writeConfiguration('P2');
     final app = await _readWithTheApp(document);
@@ -183,7 +182,6 @@ void main() {
       );
     }
   });
-
 
   test('P7 reaches its servers at the address away from home', () async {
     final document = await _writeConfiguration('P7');

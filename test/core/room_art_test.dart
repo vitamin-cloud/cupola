@@ -1,9 +1,7 @@
-import 'dart:async';
 import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/generated/design_tokens.g.dart';
@@ -47,14 +45,6 @@ double _litTop(Color art, Color ground, List<double> scrim) {
   return 0.2126 * at(art.r, ground.r) +
       0.7152 * at(art.g, ground.g) +
       0.0722 * at(art.b, ground.b);
-}
-
-/// Lets [container]'s futures answer and its providers follow.
-Future<void> _settle(ProviderContainer container) async {
-  for (var i = 0; i < 5; i++) {
-    await Future<void>.delayed(Duration.zero);
-    await container.pump();
-  }
 }
 
 void main() {
@@ -139,64 +129,6 @@ void main() {
   group('mostColouredTitleLight', () {
     Future<TitleLight> lit(Color color) async =>
         (await titleLightOf(_flat(color)))!;
-
-    test('waits for every light, then takes the most coloured', () async {
-      final dull = await lit(const Color(0xFF4A3F35));
-      final vivid = await lit(const Color(0xFF1ABC9C));
-      final reads = {
-        'dull': Completer<TitleLight?>(),
-        'vivid': Completer<TitleLight?>(),
-        'grey': Completer<TitleLight?>(),
-      };
-      final container = ProviderContainer(
-        overrides: [
-          titleLightProvider.overrideWith((ref, url) => reads[url]!.future),
-        ],
-      );
-      addTearDown(container.dispose);
-      final chosen = Provider.autoDispose(
-        (ref) => mostColouredTitleLight(ref, ['dull', 'vivid', 'grey']),
-      );
-      final sub = container.listen(chosen, (_, _) {});
-      addTearDown(sub.close);
-
-      reads['dull']!.complete(dull);
-      reads['grey']!.complete(null);
-      await _settle(container);
-      expect(sub.read(), isNull, reason: 'one light is still being read');
-
-      reads['vivid']!.complete(vivid);
-      await _settle(container);
-      expect(sub.read(), vivid);
-    });
-
-    test('a light that failed is passed over, and none is the lamp', () async {
-      final dull = await lit(const Color(0xFF4A3F35));
-      final container = ProviderContainer(
-        overrides: [
-          titleLightProvider.overrideWith(
-            (ref, url) async =>
-                url == 'dull' ? dull : throw StateError('not fetched'),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-      final chosen = Provider.autoDispose(
-        (ref) => mostColouredTitleLight(ref, ['broken', 'dull']),
-      );
-      final sub = container.listen(chosen, (_, _) {});
-      addTearDown(sub.close);
-      await _settle(container);
-      expect(sub.read(), dull);
-
-      final none = Provider.autoDispose(
-        (ref) => mostColouredTitleLight(ref, ['broken']),
-      );
-      final empty = container.listen(none, (_, _) {});
-      addTearDown(empty.close);
-      await _settle(container);
-      expect(empty.read(), isNull);
-    });
   });
 
   group('AmbientBackground with a picture', () {

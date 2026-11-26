@@ -127,47 +127,7 @@ void main() {
     });
   });
 
-  group('the words of a folded row', () {
-    test('stuck downloads and failed imports, with a floor spoken aloud', () {
-      expect(stuckDownloadsWords(3).headline, '3 downloads stuck');
-      expect(stuckDownloadsWords(3).spoken, '3 downloads stuck');
-      expect(
-        stuckDownloadsWords(50, floor: true).headline,
-        '50+ downloads stuck',
-      );
-      expect(
-        stuckDownloadsWords(50, floor: true).spoken,
-        'at least 50 downloads stuck',
-      );
-      expect(failedImportsWords(2).headline, '2 imports failed');
-      expect(
-        failedImportsWords(2, floor: true).spoken,
-        'at least 2 imports failed',
-      );
-    });
-  });
+  group('the words of a folded row', () {});
 
-  group('an arr queue record as a download', () {
-    test('is named by the client\'s id, else by its own', () {
-      expect(
-        arrQueueRecordDownloadKey({'id': 4, 'downloadId': ' ABC '}),
-        'ABC',
-      );
-      expect(arrQueueRecordDownloadKey({'id': 4, 'downloadId': ' '}), '4');
-      expect(arrQueueRecordDownloadKey({'id': 4}), '4');
-    });
-
-    test('with neither an id nor a client id has no page', () {
-      expect(arrQueueRecordDownloadKey(const {}), isNull);
-      expect(arrQueueRecordDownloadKey({'id': 0}), isNull);
-      expect(arrQueueRecordDoor(const {}, instanceId: 'radarr'), isNull);
-    });
-
-    test('opens on the connection that read it', () {
-      expect(
-        arrQueueRecordDoor({'id': 4}, instanceId: 'radarr'),
-        const AttentionDoor.download(instanceId: 'radarr', key: '4'),
-      );
-    });
-  });
+  group('an arr queue record as a download', () {});
 }

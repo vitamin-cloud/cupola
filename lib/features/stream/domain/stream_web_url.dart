@@ -28,28 +28,8 @@ Uri? streamItemWebUrl({
     ServiceKey.jellyfin => Uri.tryParse(
       '$root/web/index.html#!/details?id=$itemId',
     ),
-    ServiceKey.plex => _plexWebUrl(root, itemId, serverId),
-    // Emby's web client lives under `/web`, not `/emby`: `root` carries no
-    // API base path.
-    ServiceKey.emby => _embyWebUrl(root, itemId, serverId),
     // Plex's spelling is the one a media server left unnamed here would have
     // been given, and it is wrong for any other: each names its own.
     _ => throw UnimplementedError('${service.name} has no web client link'),
   };
-}
-
-Uri? _plexWebUrl(String root, String itemId, String? machineId) {
-  if (machineId == null || machineId.isEmpty) return null;
-  final key = Uri.encodeComponent('/library/metadata/$itemId');
-  return Uri.tryParse(
-    '$root/web/index.html#!/server/$machineId/details?key=$key',
-  );
-}
-
-Uri? _embyWebUrl(String root, String itemId, String? serverId) {
-  final id = Uri.encodeQueryComponent(itemId);
-  final server = serverId == null || serverId.isEmpty
-      ? ''
-      : '&serverId=${Uri.encodeQueryComponent(serverId)}';
-  return Uri.tryParse('$root/web/index.html#!/item?id=$id$server');
 }

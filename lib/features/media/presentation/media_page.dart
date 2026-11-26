@@ -35,14 +35,10 @@ import 'package:cupola/core/utils/url_utils.dart';
 import 'package:cupola/core/utils/snack_bar_helper.dart';
 import 'package:cupola/core/widgets/failure_remedy.dart';
 import 'package:cupola/core/widgets/widgets.dart';
-import 'package:cupola/features/bazarr/domain/models/bazarr_models.dart';
 import 'package:cupola/features/discover/presentation/widgets/discover_videos_button.dart';
-import 'package:cupola/features/bazarr/presentation/widgets/bazarr_detail_sections.dart';
 import 'package:cupola/features/media/presentation/media_episode_sheet.dart';
 import 'package:cupola/features/media/presentation/media_report_row.dart';
 import 'package:cupola/features/media/presentation/open_media.dart';
-import 'package:cupola/features/emby/presentation/emby_provider.dart';
-import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/release_search/domain/release_search_target.dart';
 import 'package:cupola/features/release_search/presentation/release_search_entry.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
@@ -172,13 +168,6 @@ class _MediaPageState extends ConsumerState<MediaPage> {
     String title,
   ) async {
     final machineId = switch (server.service) {
-      ServiceKey.plex =>
-        ref
-            .read(plexCapabilitiesForProvider(server.id))
-            .value
-            ?.machineIdentifier,
-      // Emby's link names the server too, and works when it does not answer.
-      ServiceKey.emby => await _embyServerId(server.id),
       _ => null,
     };
     if (!mounted) return;
@@ -197,14 +186,6 @@ class _MediaPageState extends ConsumerState<MediaPage> {
       title: title,
       webUrl: target,
     );
-  }
-
-  Future<String?> _embyServerId(String instanceId) async {
-    try {
-      return await ref.read(embyServerIdProvider(instanceId).future);
-    } catch (_) {
-      return null;
-    }
   }
 
   /// The Seerr "More like this" is read through: the first one set up, while
@@ -539,26 +520,6 @@ class _MediaPageState extends ConsumerState<MediaPage> {
         retryMediaRow(ref, mediaKey, row);
       }
     }
-  }
-
-  /// The episodes Bazarr follows for a series, and the Sonarr whose copy
-  /// they are; null without them.
-  ({String arr, List<BazarrEpisode> episodes})? _bazarrEpisodesOf(
-    List<MediaRow> rows,
-  ) {
-    for (final row in rows) {
-      if (row case MediaConnectionRow(
-        reading: MediaReadingAnswered(:final answer),
-      )) {
-        if (answer.value case MediaBazarrCopy(
-          :final arrConnectionId,
-          :final episodes?,
-        )) {
-          return (arr: arrConnectionId, episodes: episodes);
-        }
-      }
-    }
-    return null;
   }
 
   /// Brings Manage into view.
@@ -1275,11 +1236,6 @@ class _MediaPageState extends ConsumerState<MediaPage> {
         }
       }
     }
-    // Bazarr follows one Sonarr: its languages, when it is the one shown.
-    final bazarr = _bazarrEpisodesOf(rows);
-    final subtitles = bazarr == null || bazarr.arr != sonarr?.connection.id
-        ? null
-        : {for (final e in bazarr.episodes) e.sonarrEpisodeId: e};
     final tvId = mediaKey.tmdbId;
     AppBottomSheet.showScrollable<void>(
       context: context,
@@ -1301,7 +1257,6 @@ class _MediaPageState extends ConsumerState<MediaPage> {
                 : (connectionId: seerr, tvId: tvId),
             report: (key: mediaKey, focus: focus),
             server: server,
-            subtitles: subtitles,
             light: light,
             onPlay: (item) {
               final on = server;
@@ -1444,7 +1399,6 @@ class _MediaPageState extends ConsumerState<MediaPage> {
           copies: held,
           title: MediaIdentity.of(rows)?.title ?? '',
           mediaKey: mediaKey,
-          subtitles: _bazarrEpisodesOf(rows),
           onChanged: () => _readArrsAgain(rows),
           more: seerr,
         ),
@@ -1510,12 +1464,6 @@ class _MediaPageState extends ConsumerState<MediaPage> {
             summary: summaries.history,
             body: (context) => _History(rows: rows, settings: settings),
           ),
-          if (summaries.subtitles case final subtitles?)
-            MediaManageRow(
-              title: 'Subtitles',
-              summary: subtitles,
-              body: (context) => _Subtitles(rows: rows, settings: settings),
-            ),
           MediaManageRow(
             title: 'Search releases',
             summary: summaries.search,
@@ -3201,58 +3149,6 @@ class _CopyControlsState extends ConsumerState<_CopyControls> {
             widget.onChanged();
           },
         ),
-      ],
-    );
-  }
-}
-
-/// Subtitles, open: each Bazarr's languages for the movie, the ones on disk
-/// and the ones it is still looking for.
-class _Subtitles extends StatelessWidget {
-  const _Subtitles({required this.rows, required this.settings});
-
-  final List<MediaRow> rows;
-  final SettingsModel settings;
-
-  @override
-  Widget build(BuildContext context) {
-    final room = CupolaRoom.of(context);
-    final copies = [
-      for (final row in rows)
-        if (row case MediaConnectionRow(
-          :final connection,
-          reading: MediaReadingAnswered(:final answer),
-        ))
-          if (answer.value case MediaBazarrCopy(:final movie?))
-            (connection: connection, movie: movie),
-    ];
-    Widget label(String text) => Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.s),
-      child: Text(
-        text,
-        style: AppType.label.copyWith(color: room.inkSecondary),
-      ),
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final copy in copies) ...[
-          if (copies.length > 1)
-            label(
-              settings.connectionTitle(
-                copy.connection.id,
-                copy.connection.service,
-              ),
-            ),
-          if (copy.movie.presentLanguages.isNotEmpty) ...[
-            label('On disk'),
-            BazarrSubtitleLanguageWrap(languages: copy.movie.presentLanguages),
-          ],
-          if (copy.movie.missingLanguages.isNotEmpty) ...[
-            label('Wanted'),
-            BazarrSubtitleLanguageWrap(languages: copy.movie.missingLanguages),
-          ],
-        ],
       ],
     );
   }

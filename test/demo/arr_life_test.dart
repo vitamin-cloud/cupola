@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/demo/demo_session.dart';
-import 'package:cupola/demo/world/fakes/arr_fakes.dart';
 import 'package:cupola/demo/world/profiles.dart';
 
 /// The arrs once the world lives: a film or a series added, monitored, let
@@ -270,97 +269,6 @@ void main() {
       expect(allowed, ['Album', 'EP']);
     });
 
-    test('an artist added is in the library, and reads its albums a moment '
-        'later', () async {
-      final added =
-          await send(
-                'POST',
-                '$lidarr/artist',
-                json: {
-                  'artistName': 'Elbow',
-                  'foreignArtistId': 'lookup-elbow',
-                  'monitored': true,
-                  'addOptions': {
-                    'monitor': 'all',
-                    'searchForMissingAlbums': true,
-                  },
-                },
-              )
-              as Map;
-      expect(added['id'], 2);
-      expect(added['artistName'], 'Elbow');
-      // After the world's own artist and the shelf the library holds.
-      final library = (await list(
-        '$lidarr/artist',
-      )).map((a) => a['artistName']).toList();
-      expect(library.first, 'Jan Morgenstern');
-      expect(library.last, 'Elbow');
-      expect(library, hasLength(LidarrFake.shelfCount + 2));
-      expect(((await send('GET', '$lidarr/artist/2')) as Map)['id'], 2);
-
-      // Lidarr has not read the albums yet.
-      expect(await list('$lidarr/album?artistId=2'), isEmpty);
-      network.elapse(const Duration(seconds: 10));
-      final albums = await list('$lidarr/album?artistId=2');
-      expect(albums.single['title'], 'Debut');
-      expect(albums.single['artistId'], 2);
-
-      // Adding it again finds it, as Lidarr's 400 would refuse it: the world
-      // does not hold it twice.
-      await send(
-        'POST',
-        '$lidarr/artist',
-        json: {'artistName': 'Elbow', 'foreignArtistId': 'lookup-elbow'},
-      );
-      expect(
-        await list('$lidarr/artist'),
-        hasLength(LidarrFake.shelfCount + 2),
-      );
-    });
-
-    test('the editor sets some artists and removes others, and the library '
-        'says so', () async {
-      Future<Map<String, Object?>> artist(int id) async =>
-          (await list('$lidarr/artist')).firstWhere((a) => a['id'] == id);
-
-      // Two artists of the shelf: monitored, on profile 1.
-      expect((await artist(1001))['monitored'], isTrue);
-      expect((await artist(1002))['qualityProfileId'], 1);
-
-      await send(
-        'PUT',
-        '$lidarr/artist/editor',
-        json: {
-          'artistIds': [1001, 1002],
-          'monitored': false,
-          'qualityProfileId': 2,
-        },
-      );
-
-      // What was sent was set on the ones named, and nothing else was.
-      for (final id in [1001, 1002]) {
-        expect((await artist(id))['monitored'], isFalse);
-        expect((await artist(id))['qualityProfileId'], 2);
-        expect((await artist(id))['monitorNewItems'], 'all');
-      }
-      expect((await artist(1003))['monitored'], isTrue);
-
-      await send(
-        'DELETE',
-        '$lidarr/artist/editor',
-        json: {
-          'artistIds': [1001],
-          'deleteFiles': false,
-          'addImportListExclusion': false,
-        },
-      );
-
-      final library = (await list('$lidarr/artist')).map((a) => a['id']);
-      expect(library, isNot(contains(1001)));
-      expect(library, contains(1002));
-      expect(library, hasLength(LidarrFake.shelfCount));
-    });
-
     test('a search for an artist is a command Lidarr takes', () async {
       final command =
           await send(
@@ -443,35 +351,6 @@ void main() {
       );
       expect(await list('$lidarr/album?artistId=2'), hasLength(1));
     });
-
-    test(
-      'an album added under the world\'s own artist is under artist 1',
-      () async {
-        final added =
-            await send(
-                  'POST',
-                  '$lidarr/album',
-                  json: {
-                    'title': 'Sintel Live',
-                    'foreignAlbumId': 'mb-sintel-live',
-                    'artist': {
-                      'artistName': 'Jan Morgenstern',
-                      'foreignArtistId': 'b3c7d8e9-0000-4000-8000-00000000jm01',
-                    },
-                  },
-                )
-                as Map;
-        expect((added['artist'] as Map)['id'], 1);
-        expect(
-          await list('$lidarr/artist'),
-          hasLength(LidarrFake.shelfCount + 1),
-        );
-        expect(
-          (await list('$lidarr/album?artistId=1')).last['title'],
-          'Sintel Live',
-        );
-      },
-    );
 
     test('monitors the albums it is told to, and takes the search', () async {
       await send(

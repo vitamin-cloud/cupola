@@ -37,9 +37,7 @@ void main() {
     });
   });
 
-  group('Nginx Proxy Manager', () {
-
-  });
+  group('Nginx Proxy Manager', () {});
 
   test('anything else is not a refusal', () {
     expect(isPermissionRefusal(Exception('boom')), isFalse);

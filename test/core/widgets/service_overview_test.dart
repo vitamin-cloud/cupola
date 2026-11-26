@@ -7,7 +7,6 @@ import 'package:cupola/core/room_art.dart';
 import 'package:cupola/core/widgets/ambient_background.dart';
 import 'package:cupola/core/widgets/service_overview.dart';
 import 'package:cupola/features/services/domain/attention_door.dart';
-import 'package:cupola/features/services/domain/service_tab.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 
 import '../../test_helpers/overview_shell.dart';
@@ -428,21 +427,6 @@ void main() {
       return shell;
     }
 
-    testWidgets('a tab door switches the branch, as the tab bar does', (
-      tester,
-    ) async {
-      final shell = await pumpDoors(tester, ServiceKey.prowlarr, {
-        'tab': const AttentionDoor.tab(ServiceTab.indexers),
-      });
-      expect(shell.tab, ServiceTab.overview);
-
-      await tester.tap(find.text('tab'));
-      await tester.pumpAndSettle();
-
-      expect(shell.tab, ServiceTab.indexers);
-      expect(find.text('tab Indexers'), findsOneWidget);
-    });
-
     testWidgets('a download door pushes that download\'s page, with its '
         'connection and its key in the address', (tester) async {
       final shell = await pumpDoors(tester, ServiceKey.qbittorrent, {
@@ -468,103 +452,9 @@ void main() {
 
       expect(shell.location, '/stack/dockge/stacks/stack/immich');
     });
-
-    testWidgets('outside a router a door does nothing and does not throw', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Builder(
-            builder: (context) => TextButton(
-              onPressed: () {
-                for (final door in const [
-                  AttentionDoor.tab(ServiceTab.indexers),
-                  AttentionDoor.download(instanceId: 'qb', key: 'abc'),
-                  AttentionDoor.page(location: '/x', hint: 'opens x'),
-                ]) {
-                  openAttentionDoor(context, ServiceKey.prowlarr, door);
-                }
-              },
-              child: const Text('go'),
-            ),
-          ),
-        ),
-      );
-
-      await tester.tap(find.text('go'));
-      expect(tester.takeException(), isNull);
-    });
-
-    test(
-      'the hint names the service and the tab, or says it is a download',
-      () {
-        expect(
-          attentionDoorHint(
-            ServiceKey.prowlarr,
-            const AttentionDoor.tab(ServiceTab.indexers),
-          ),
-          'opens the Prowlarr Indexers tab',
-        );
-        expect(
-          attentionDoorHint(
-            ServiceKey.qbittorrent,
-            const AttentionDoor.download(instanceId: 'qb', key: 'abc'),
-          ),
-          'opens this download',
-        );
-        expect(
-          attentionDoorHint(
-            ServiceKey.dockge,
-            const AttentionDoor.page(location: '/x', hint: 'opens immich'),
-          ),
-          'opens immich',
-        );
-      },
-    );
   });
 
   group('ServiceOverviewSection', () {
-    testWidgets('the link names the service and the tab it opens', (
-      tester,
-    ) async {
-      // The link's glyph is "→", which a screen reader says as "rightwards
-      // arrow". The destination has to arrive as a hint or it does not arrive.
-      await tester.pumpWidget(
-        _host(
-          const ServiceOverviewSection(
-            service: ServiceKey.prowlarr,
-            title: 'Indexers',
-            destination: ServiceTab.indexers,
-            child: Text('body'),
-          ),
-        ),
-      );
-
-      final handle = tester.ensureSemantics();
-      final hints = tester
-          .widgetList<Semantics>(find.byType(Semantics))
-          .map((s) => s.properties.hint)
-          .whereType<String>();
-      expect(hints, contains('opens the Prowlarr Indexers tab'));
-      handle.dispose();
-    });
-
-    testWidgets('a section with no destination offers no link', (tester) async {
-      // A region whose rows belong to several tabs at once has nowhere single
-      // to send anyone, so it draws no affordance rather than a dead one.
-      await tester.pumpWidget(
-        _host(
-          const ServiceOverviewSection(
-            service: ServiceKey.bazarr,
-            title: 'Needs attention',
-            child: Text('body'),
-          ),
-        ),
-      );
-
-      expect(find.textContaining('→'), findsNothing);
-    });
-
     testWidgets('bleed leaves the body on the window edge', (tester) async {
       // The poster-rail shape: the row runs off the column while its first tile
       // still aligns to it, so the section must NOT inset the body.

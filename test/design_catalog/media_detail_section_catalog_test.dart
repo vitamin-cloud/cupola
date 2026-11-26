@@ -184,61 +184,6 @@ Widget _row(List<Widget> children) => Row(
   ],
 );
 
-Widget _labels(BuildContext context) {
-  final bazarr = ServiceKey.bazarr.accent;
-  Widget column(Widget child) => SizedBox(width: 358, child: child);
-  final refresh = IconButton(
-    icon: const Icon(Icons.refresh_rounded, size: 20),
-    tooltip: 'Refresh from Bazarr',
-    onPressed: () {},
-  );
-  return Wrap(
-    spacing: 24,
-    runSpacing: 16,
-    children: [
-      column(
-        MediaDetailSectionLabel(
-          label: 'Overview',
-          accent: ServiceKey.radarr.accent,
-        ),
-      ),
-      column(
-        MediaDetailSectionLabel(
-          label: 'Seasons',
-          accent: ServiceKey.sonarr.accent,
-          count: '41 of 45 on disk',
-        ),
-      ),
-      column(
-        MediaDetailSectionLabel(
-          label: 'Missing subtitles',
-          accent: bazarr,
-          action: refresh,
-        ),
-      ),
-      column(
-        MediaDetailSectionLabel(
-          label: 'Other releases from the same production company',
-          accent: ServiceKey.lidarr.accent,
-          count: '12 albums',
-        ),
-      ),
-      column(
-        MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: const TextScaler.linear(1.5)),
-          child: MediaDetailSectionLabel(
-            label: 'Missing subtitles',
-            accent: bazarr,
-            action: refresh,
-          ),
-        ),
-      ),
-    ],
-  );
-}
-
 void main() {
   catalogCard(
     'MediaDetailSection',
@@ -287,13 +232,6 @@ void main() {
         ]),
       ),
       CatalogScene(
-        'MediaDetailSectionLabel · plain, with a count, with a trailing '
-        'control, a long label on two lines, and 1.5× reading size · the '
-        'page accent (the lamp) resolved to ink; the control drops under '
-        'the label past 1.4×, leading-aligned',
-        _labels,
-      ),
-      CatalogScene(
         'MediaDetailView.body · Radarr in a 1280 desktop window · two tracks '
         'past 1140: the slots named in sideTrack stand in the 380 column, '
         'band and manifest stay wide',
@@ -308,11 +246,6 @@ void main() {
         'Text at 200% · the Radarr page on a phone: the manifest, the '
         'synopsis and the reference at twice the reading size',
         (_) => _row([_phone(_radarrPage(), height: 1400)]),
-        textScale: catalogTextScale,
-      ),
-      CatalogScene(
-        'Text at 200% · MediaDetailSectionLabel in each form',
-        _labels,
         textScale: catalogTextScale,
       ),
     ],

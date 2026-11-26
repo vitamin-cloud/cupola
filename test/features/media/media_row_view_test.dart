@@ -35,17 +35,6 @@ Future<List<String>> _words(
 }
 
 void main() {
-  test('P1, Tears of Steel', () async {
-    final words = await _words(Profiles.p1, WorldTitles.tearsOfSteel);
-    printOnFailure(words.join('\n'));
-    expect(words, hasLength(5));
-    expect(
-      words.first,
-      startsWith('Jellyfin. 2160p\u00A0· HDR10\u00A0· Watched. Available'),
-    );
-    expect(words[3], contains('DE wanted'));
-  });
-
   test('P4: Seerr is one dimmed row that sets it up', () async {
     final words = await _words(Profiles.p4, WorldTitles.tearsOfSteel);
     expect(

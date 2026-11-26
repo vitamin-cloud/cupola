@@ -599,10 +599,6 @@ String streamLibraryCountLine(
   final (one, many) = switch (kind) {
     StreamLibraryKind.movies => ('movie', 'movies'),
     StreamLibraryKind.shows => ('series', 'series'),
-    StreamLibraryKind.music when service == ServiceKey.plex => (
-      'artist',
-      'artists',
-    ),
     StreamLibraryKind.music => ('album', 'albums'),
     StreamLibraryKind.photos ||
     StreamLibraryKind.other ||

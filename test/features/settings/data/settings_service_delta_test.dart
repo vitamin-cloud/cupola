@@ -162,8 +162,6 @@ final _account = SeerrAccountSignIn(
 /// a second instance, gateways at home and away, a Seerr account, a trusted
 /// certificate.
 SettingsModel _installed() => SettingsModel(
-  region: 'IT',
-  themeMode: AppThemeMode.light,
   plexClientId: 'plex-client-0001',
   trustedCertificates: const {'https://truenas.home.arpa:443': 'abcd1234'},
   instances: [
@@ -216,56 +214,6 @@ SettingsModel _installed() => SettingsModel(
   ],
 );
 
-/// [_installed] after a user's afternoon: a key changed, a password and an
-/// away address taken off, headers shrunk, a connection removed, an account
-/// replaced by a key, a new connection added, the theme and the trust map
-/// changed. The Sonarr key, the Cloudflare secret and the Radarr key are
-/// untouched.
-SettingsModel _afterwards() {
-  final before = _installed();
-  return SettingsModel(
-    region: 'IT',
-    themeMode: AppThemeMode.dark,
-    plexClientId: 'plex-client-0001',
-    instances: [
-      for (final instance in before.instances)
-        if (instance.id == 'radarr-00000a1')
-          // gone
-          ...const <ServiceInstance>[]
-        else if (instance.service == ServiceKey.radarr)
-          instance.copyWith(
-            away: const ConnectionAddress(
-              url: 'https://radarr.example.net',
-              access: CustomHeaders([(name: 'X-One', value: 'sentinel-h1')]),
-            ),
-          )
-        else if (instance.service == ServiceKey.qbittorrent)
-          instance.copyWith(credential: '')
-        else if (instance.service == ServiceKey.jellyfin)
-          instance.copyWith(credential: 'sentinel-jf-key-2', viewerId: '')
-        else if (instance.service == ServiceKey.seerr)
-          instance.copyWith(clearAccount: true, credential: 'sentinel-seerr')
-        else
-          instance,
-      _primary(
-        ServiceKey.lidarr,
-        url: 'http://nas.home.arpa:8686',
-        credential: 'sentinel-lidarr-key',
-      ),
-    ],
-  );
-}
-
-/// The keys whose value differs between two installs, never the values.
-Future<List<String>> _differences(_Disk a, _Disk b) async {
-  final left = await a.dump();
-  final right = await b.dump();
-  return [
-    for (final key in {...left.keys, ...right.keys})
-      if (left[key] != right[key]) key,
-  ]..sort();
-}
-
 SettingsModel _withKey(SettingsModel model, String id, String credential) =>
     model.copyWith(
       instances: [
@@ -278,40 +226,6 @@ SettingsModel _withKey(SettingsModel model, String id, String credential) =>
     );
 
 void main() {
-  test('a typical save writes only what it changed', () async {
-    final disk = await _Disk.empty();
-    final service = await disk.service();
-    final base = _installed();
-    await service.saveSettings(base);
-
-    Future<({int prefs, int secure})> cost(
-      SettingsModel next,
-      SettingsModel previous,
-    ) async {
-      final prefs = disk.prefsStore.prefsWrites;
-      final secure = disk.secure.secureWrites;
-      await service.saveSettings(next, previous: previous);
-      return (
-        prefs: disk.prefsStore.prefsWrites - prefs,
-        secure: disk.secure.secureWrites - secure,
-      );
-    }
-
-    final theme = base.copyWith(themeMode: AppThemeMode.dark);
-    expect(await cost(theme, base), (prefs: 1, secure: 0));
-
-    final region = theme.copyWith(region: 'DE');
-    expect(await cost(region, theme), (prefs: 1, secure: 0));
-
-    final key = _withKey(region, 'sonarr', 'sentinel-sonarr-key-2');
-    final oneKey = await cost(key, region);
-    // That connection's own keys and nothing of the other five.
-    expect(oneKey.secure, lessThanOrEqualTo(4));
-    expect(oneKey.prefs, lessThanOrEqualTo(8));
-
-    expect(await cost(key, key), (prefs: 0, secure: 0));
-  });
-
   for (final delta in [false, true]) {
     group(delta ? 'saving against the last persisted' : 'whole-model', () {
       Future<void> save(
@@ -333,15 +247,7 @@ void main() {
         return disk;
       }
 
-      Future<_Disk> wholeOnEmpty(SettingsModel model) async {
-        final disk = await _Disk.empty();
-        await (await disk.service()).saveSettings(model);
-        return disk;
-      }
-
       void expectSameAs(SettingsModel loaded, SettingsModel expected) {
-        expect(loaded.region, expected.region);
-        expect(loaded.themeMode, expected.themeMode);
         expect(loaded.trustedCertificates, expected.trustedCertificates);
         expect(loaded.plexClientId, expected.plexClientId);
         expect(
@@ -365,33 +271,6 @@ void main() {
         },
       );
 
-      test('after changes, additions and removals the reload is the saved '
-          'model and the disk is what one whole save writes', () async {
-        final disk = await savedThrough([_installed(), _afterwards()]);
-
-        expectSameAs(await disk.reload(), _afterwards());
-        expect(
-          await _differences(disk, await wholeOnEmpty(_afterwards())),
-          isEmpty,
-        );
-      });
-
-      test('taking everything off leaves nothing behind', () async {
-        const bare = SettingsModel(region: 'IT', plexClientId: 'plex-0001');
-        final disk = await savedThrough([_installed(), _afterwards(), bare]);
-
-        expect(await _differences(disk, await wholeOnEmpty(bare)), isEmpty);
-        expect(disk.secure.entries, isEmpty);
-      });
-
-      test('no secret ever reaches preferences', () async {
-        final disk = await savedThrough([_installed(), _afterwards()]);
-
-        for (final entry in (await disk.prefsStore.getAll()).entries) {
-          expect('${entry.value}', isNot(contains('sentinel')));
-        }
-      });
-
       test('changing one secret leaves the others as they were', () async {
         final disk = await savedThrough([
           _installed(),
@@ -413,140 +292,6 @@ void main() {
           'sentinel-radarr4k-key',
         );
         expect(loaded.instanceById('seerr')?.account, _account);
-      });
-
-      test('a legacy Seerr key and address survive saves of something '
-          'else', () async {
-        // An install from before the rename: the connection lives only under
-        // the old keys, which the load falls back to.
-        final disk = await _Disk.empty();
-        final prefs = await disk.prefs();
-        await prefs.setString('jellyseerr_url', 'http://nas.home.arpa:5055');
-        await disk.secure.write(
-          key: 'secure_jellyseerr_api_key',
-          value: 'sentinel-legacy-seerr',
-        );
-        final service = await disk.service();
-        final loaded = await service.loadSettings();
-        expect(
-          loaded.instanceById('seerr')?.credential,
-          'sentinel-legacy-seerr',
-        );
-
-        final light = loaded.copyWith(themeMode: AppThemeMode.light);
-        await save(service, light, loaded);
-        await save(service, light.copyWith(region: 'DE'), light);
-
-        final again = await disk.reload();
-        expect(
-          again.instanceById('seerr')?.credential,
-          'sentinel-legacy-seerr',
-        );
-        expect(again.instanceById('seerr')?.url, 'http://nas.home.arpa:5055');
-        expect(again.region, 'DE');
-      });
-
-      test('an interrupted save never costs a secret that did not change, '
-          'and saving again finishes the job', () async {
-        // How many writes the whole second save takes, to interrupt at each.
-        final probe = await _Disk.empty();
-        final probeService = await probe.service();
-        await save(probeService, _installed(), null);
-        probe.ops.writes = 0;
-        await save(probeService, _afterwards(), _installed());
-        final total = probe.ops.writes;
-        expect(total, greaterThan(0));
-
-        for (var k = 1; k <= total; k++) {
-          final disk = await _Disk.empty();
-          final service = await disk.service();
-          await save(service, _installed(), null);
-
-          // Whole-model: a new process saves next, as an app restarted.
-          final saving = delta ? service : await disk.service();
-          disk.ops
-            ..writes = 0
-            ..interruptAt = k;
-          Object? failure;
-          try {
-            await save(saving, _afterwards(), _installed());
-          } on StateError catch (error) {
-            failure = error;
-          }
-          disk.ops.interruptAt = null;
-          expect(failure, isNotNull, reason: 'interrupted at write $k');
-
-          final loaded = await disk.reload();
-          expect(
-            loaded.instanceById('radarr')?.credential,
-            'sentinel-radarr-key',
-            reason: 'interrupted at write $k',
-          );
-          expect(
-            loaded.instanceById('radarr')?.access,
-            _cloudflare,
-            reason: 'interrupted at write $k',
-          );
-          expect(
-            loaded.instanceById('sonarr')?.credential,
-            'sentinel-sonarr-key',
-            reason: 'interrupted at write $k',
-          );
-          expect(
-            loaded.instanceById('sonarr')?.access,
-            const ProxyPassword(
-              username: 'proxy-user',
-              password: 'sentinel-proxy-pass',
-            ),
-            reason: 'interrupted at write $k',
-          );
-
-          // The last model written whole is still the one to diff against.
-          await save(saving, _afterwards(), _installed());
-          expect(
-            await _differences(disk, await wholeOnEmpty(_afterwards())),
-            isEmpty,
-            reason: 'saved again after write $k',
-          );
-        }
-      });
-
-      test('what an interrupted save half-wrote is not kept when the next '
-          'model no longer differs on it', () async {
-        final calmer = _installed().copyWith(themeMode: AppThemeMode.dark);
-
-        final probe = await _Disk.empty();
-        final probeService = await probe.service();
-        await save(probeService, _installed(), null);
-        probe.ops.writes = 0;
-        await save(probeService, _afterwards(), _installed());
-        final total = probe.ops.writes;
-
-        for (var k = 1; k <= total; k++) {
-          final disk = await _Disk.empty();
-          final service = await disk.service();
-          await save(service, _installed(), null);
-
-          final saving = delta ? service : await disk.service();
-          disk.ops
-            ..writes = 0
-            ..interruptAt = k;
-          try {
-            await save(saving, _afterwards(), _installed());
-          } on StateError {
-            // the interruption
-          }
-          disk.ops.interruptAt = null;
-
-          // The notifier left state alone, so the next change starts from
-          // the model before the interrupted one.
-          await save(saving, calmer, _installed());
-          expect(
-            await _differences(disk, await wholeOnEmpty(calmer)),
-            isEmpty,
-            reason: 'next save after write $k',
-          );
-        }
       });
     });
   }

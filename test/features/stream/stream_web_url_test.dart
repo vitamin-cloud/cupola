@@ -31,37 +31,6 @@ void main() {
     );
   });
 
-  test('Plex opens the metadata key on its machine, and none without one', () {
-    expect(
-      urlOf(ServiceKey.plex).toString(),
-      'https://media.example.com/web/index.html#!/server/srv-1/details'
-      '?key=%2Flibrary%2Fmetadata%2Fit-9',
-    );
-    expect(urlOf(ServiceKey.plex, machineId: null), isNull);
-    expect(urlOf(ServiceKey.plex, machineId: ''), isNull);
-  });
-
-  test('Emby opens the item page and names its server', () {
-    expect(
-      urlOf(ServiceKey.emby).toString(),
-      'https://media.example.com/web/index.html#!/item?id=it-9'
-      '&serverId=srv-1',
-    );
-  });
-
-  test('Emby keeps a working link when the server did not say its id', () {
-    for (final id in [null, '']) {
-      expect(
-        urlOf(ServiceKey.emby, machineId: id).toString(),
-        'https://media.example.com/web/index.html#!/item?id=it-9',
-      );
-    }
-  });
-
-  test('Emby\'s link leaves the API base path out', () {
-    expect(urlOf(ServiceKey.emby)!.path, '/web/index.html');
-  });
-
   test('a service that is no media server has no web client link', () {
     for (final service in ServiceKey.values.where((s) => !s.isMediaServer)) {
       expect(urlOf(service), isNull, reason: service.name);

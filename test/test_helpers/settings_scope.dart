@@ -106,11 +106,10 @@ SettingsModel settingsWithServices(List<ServiceKey> configured) {
   return settings;
 }
 
-/// The four services that can appear in the global Activity feed.
+/// The services that can appear in the global Activity feed.
 const activityServiceKeys = [
   ServiceKey.radarr,
   ServiceKey.sonarr,
-  ServiceKey.lidarr,
   ServiceKey.seerr,
 ];
 
@@ -133,66 +132,30 @@ SettingsModel settingsWith({
   String radarrApiKey = '',
   String sonarrUrl = '',
   String sonarrApiKey = '',
-  String lidarrUrl = '',
-  String lidarrApiKey = '',
-  String bazarrUrl = '',
-  String bazarrApiKey = '',
   String truenasUrl = '',
   String truenasApiKey = '',
-  String prowlarrUrl = '',
-  String prowlarrApiKey = '',
-  String readarrUrl = '',
-  String readarrApiKey = '',
-  String sabnzbdUrl = '',
-  String sabnzbdApiKey = '',
-  String unraidUrl = '',
-  String unraidApiKey = '',
   String jellyfinUrl = '',
   String jellyfinApiKey = '',
-  String embyUrl = '',
-  String embyApiKey = '',
   String qbittorrentUrl = '',
   String qbittorrentUsername = '',
   String qbittorrentPassword = '',
-  String transmissionUrl = '',
-  String transmissionUsername = '',
-  String transmissionPassword = '',
-  String npmUrl = '',
-  String npmUsername = '',
-  String npmPassword = '',
   String dockgeUrl = '',
   String dockgeUsername = '',
   String dockgePassword = '',
-  String nzbgetUrl = '',
-  String nzbgetUsername = '',
-  String nzbgetPassword = '',
-  String plexUrl = '',
-  String plexToken = '',
   String jellyfinUserId = '',
-  String embyUserId = '',
   String plexClientId = '',
   Map<String, String> trustedCertificates = const {},
-  String region = 'US',
-  AppThemeMode themeMode = AppThemeMode.system,
 }) {
   var settings = SettingsModel(
     instances: instances,
     plexClientId: plexClientId,
     trustedCertificates: trustedCertificates,
-    region: region,
-    themeMode: themeMode,
   );
   settings = _api(settings, ServiceKey.seerr, seerrUrl, seerrApiKey);
   settings = _api(settings, ServiceKey.radarr, radarrUrl, radarrApiKey);
   settings = _api(settings, ServiceKey.sonarr, sonarrUrl, sonarrApiKey);
-  settings = _api(settings, ServiceKey.lidarr, lidarrUrl, lidarrApiKey);
-  settings = _api(settings, ServiceKey.bazarr, bazarrUrl, bazarrApiKey);
   settings = _api(settings, ServiceKey.truenas, truenasUrl, truenasApiKey);
-  settings = _api(settings, ServiceKey.prowlarr, prowlarrUrl, prowlarrApiKey);
-  settings = _api(settings, ServiceKey.readarr, readarrUrl, readarrApiKey);
-  settings = _api(settings, ServiceKey.unraid, unraidUrl, unraidApiKey);
   settings = _api(settings, ServiceKey.jellyfin, jellyfinUrl, jellyfinApiKey);
-  settings = _api(settings, ServiceKey.emby, embyUrl, embyApiKey);
   settings = _cred(
     settings,
     ServiceKey.qbittorrent,
@@ -207,12 +170,8 @@ SettingsModel settingsWith({
     dockgeUsername,
     dockgePassword,
   );
-  settings = _api(settings, ServiceKey.plex, plexUrl, plexToken);
   if (jellyfinUserId.isNotEmpty) {
     settings = settings.copyWithViewer(ServiceKey.jellyfin, jellyfinUserId);
-  }
-  if (embyUserId.isNotEmpty) {
-    settings = settings.copyWithViewer(ServiceKey.emby, embyUserId);
   }
   return settings;
 }

@@ -8,25 +8,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cupola/core/api/api_client.dart';
 import 'package:cupola/core/network/cert_trust.dart';
 import 'package:cupola/core/network/connection_failure.dart';
-import 'package:cupola/features/bazarr/data/bazarr_service.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/dockge/data/dockge_client.dart';
 import 'package:cupola/features/dockge/data/dockge_service.dart';
-import 'package:cupola/features/emby/data/emby_client.dart';
 import 'package:cupola/features/jellyfin/data/jellyfin_client.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/plex/data/plex_client.dart';
-import 'package:cupola/features/prowlarr/data/prowlarr_service.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_service.dart';
-import 'package:cupola/features/readarr/data/readarr_service.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
-import 'package:cupola/features/stream/domain/models/stream_item.dart';
-import 'package:cupola/features/stream/domain/stream_external_match.dart';
 import 'package:cupola/features/truenas/data/truenas_service.dart';
 import 'package:cupola/features/truenas/data/truenas_ws_client.dart';
-import 'package:cupola/features/unraid/data/unraid_client.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
 
 /// Disposable transport smoke for the full macOS/OrbStack laboratory.
 ///
@@ -74,46 +65,6 @@ void main() {
     expect(await service.getQueue(), isA<List>());
   });
 
-  test('Lidarr REST + artist parser', () async {
-    final client = _arr('http://127.0.0.1:8686');
-    addTearDown(client.close);
-    final service = LidarrService(client);
-    final status = await client.get('/api/v1/system/status');
-    expect(status.data, isA<Map>());
-    expect(await service.getArtistsOrThrow(), isNotEmpty);
-    expect(await service.getQueue(), isA<List>());
-  });
-
-  test('Readarr REST + author parser', () async {
-    final client = _arr('http://127.0.0.1:8787');
-    addTearDown(client.close);
-    final service = ReadarrService(client);
-    final status = await client.get('/api/v1/system/status');
-    expect(status.data, isA<Map>());
-    expect(await service.getAuthorsOrThrow(), isA<List>());
-    expect(await service.getQueue(), isA<List>());
-  });
-
-  test('Prowlarr REST + indexer parser', () async {
-    final client = _arr('http://127.0.0.1:9696');
-    addTearDown(client.close);
-    final service = ProwlarrService(client);
-    final status = await client.get('/api/v1/system/status');
-    expect(status.data, isA<Map>());
-    expect(await service.getHealth(), isA<List>());
-    expect(await service.getIndexers(), isA<List>());
-  });
-
-  test('Bazarr REST + badges parser', () async {
-    final client = _arr('http://127.0.0.1:6767');
-    addTearDown(client.close);
-    final service = BazarrService(client);
-    final badges = await service.getBadges();
-    expect(badges, isNotNull);
-    expect((await service.getSeries()).data, isA<List>());
-    expect((await service.getMovies()).data, isA<List>());
-  });
-
   test('qBittorrent form auth + torrent parser', () async {
     final client = QbittorrentClient(
       url: 'http://127.0.0.1:8080',
@@ -135,9 +86,6 @@ void main() {
     );
   });
 
-
-
-
   test('Jellyfin token auth + library parser', () async {
     final client = JellyfinClient(
       baseUrl: 'http://127.0.0.1:8096',
@@ -153,42 +101,6 @@ void main() {
     expect(await client.getSessions(), isA<List>());
   });
 
-  test('Emby API key auth + library parser', () async {
-    final client = EmbyClient(
-      baseUrl: 'http://127.0.0.1:8097',
-      apiKey: credentials['CUPOLA_TESTLAB_EMBY_TOKEN']!,
-      userId: credentials['CUPOLA_TESTLAB_EMBY_USER_ID']!,
-    );
-    addTearDown(client.close);
-    expect(await client.verifyCredential(), isTrue);
-    expect(await client.probeVersion(), isNotEmpty);
-    expect(await client.getLibraries(), isNotEmpty);
-    expect(await client.getSessions(), isA<List>());
-  });
-
-
-  test('Plex token auth + identity parser', () async {
-    final client = PlexClient(
-      url: 'http://127.0.0.1:32400',
-      token: credentials['CUPOLA_TESTLAB_PLEX_TOKEN']!,
-      clientIdentifier: 'cupola-testlab-e2e',
-    );
-    addTearDown(client.close);
-    expect(await client.verifyCredential(), isTrue);
-    expect(await client.probeVersion(), isNotEmpty);
-    expect(await client.getIdentity(), isNotNull);
-    expect(await client.getLibraries(), isNotEmpty);
-    // A real server filters `?guid=` on its own guid only: the external id
-    // reaches the title through the server's matcher. Needs the server online
-    // to Plex's metadata, and The Matrix in its Films library.
-    final lookup = await client.lookupByExternalId(
-      tmdbId: '603',
-      kind: StreamItemKind.movie,
-    );
-    expect(lookup.outcome, StreamLookupOutcome.found, reason: 'Plex');
-    expect(lookup.item?.title, 'The Matrix');
-  });
-
   test('Dockge Socket.IO login + stack list', () async {
     final client = DockgeClient(
       baseUrl: 'http://127.0.0.1:5001',
@@ -202,7 +114,6 @@ void main() {
     await service.fetchVersion();
     expect(await service.fetchStacks(), isA<List>());
   });
-
 
   test('TrueNAS WebSocket JSON-RPC over TLS + dashboard parser', () async {
     // The address a person saves: https://, with the self-signed certificate
@@ -284,38 +195,6 @@ void main() {
       ),
       reason: 'a port nothing listens on',
     );
-  });
-
-  test('Unraid GraphQL + dashboard parsers', () async {
-    final client = UnraidClient(
-      url: 'http://127.0.0.1:8480',
-      apiKey: 'test-key',
-    );
-    addTearDown(client.close);
-    expect(await client.testConnection(), isTrue);
-    expect((await client.getArray()).state, isNotEmpty);
-    expect(await client.getDockerContainers(), isA<List>());
-    expect(await client.getNotifications(), isNotNull);
-  });
-
-
-  test('Plex wrong-token probe is explicit when auth is disabled', () async {
-    final client = PlexClient(
-      url: 'http://127.0.0.1:32400',
-      token: 'wrong-token',
-      clientIdentifier: 'cupola-testlab-invalid-auth',
-    );
-    addTearDown(client.close);
-    final accepted = await client.verifyCredential();
-    if (accepted) {
-      markTestSkipped(
-        'The disposable Plex container is running with local authentication '
-        'disabled; a wrong token cannot be rejected. Use a claimed/authenticated '
-        'Plex server to verify token rejection.',
-      );
-      return;
-    }
-    expect(accepted, isFalse, reason: 'Plex');
   });
 }
 

@@ -4,12 +4,8 @@ import 'package:cupola/core/models/media_preview.dart';
 import 'package:cupola/core/title_light.dart';
 import 'package:cupola/core/utils/arr_model_helpers.dart';
 import 'package:cupola/core/utils/image_utils.dart';
-import 'package:cupola/features/bazarr/domain/models/bazarr_models.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_overview_provider.dart';
-import 'package:cupola/features/bazarr/presentation/bazarr_provider.dart';
 import 'package:cupola/features/discover/presentation/seerr_overview_provider.dart';
 import 'package:cupola/features/home/domain/downloads.dart';
-import 'package:cupola/features/media/presentation/arr_public_poster.dart';
 import 'package:cupola/features/movies/domain/models/radarr_movie.dart';
 import 'package:cupola/features/movies/presentation/radarr_overview_provider.dart';
 import 'package:cupola/features/series/presentation/sonarr_overview_provider.dart';
@@ -29,12 +25,10 @@ import 'package:cupola/features/stream/presentation/stream_session_poster.dart';
 final _litByWhatTheyHold = {
   ServiceKey.radarr,
   ServiceKey.sonarr,
-  ServiceKey.lidarr,
   ServiceKey.seerr,
   ...mediaServers,
   // Tracearr's, by the first stream it sees: the ids it holds name the title
   // without asking a media server for them.
-  ServiceKey.bazarr,
 };
 
 /// The artwork that lights [service]'s room: the poster of its first download
@@ -64,16 +58,6 @@ final serviceRoomSourceProvider = Provider.autoDispose
         return title == null
             ? null
             : ref.watch(streamSessionPosterProvider(title)).value;
-      }
-      if (service == ServiceKey.bazarr) {
-        final wanted = ref.watch(bazarrDashboardWantedProvider).value;
-        final title = [
-          for (final item in wanted ?? const <BazarrWantedItem>[])
-            ?bazarrArrTitleOf(item),
-        ].firstOrNull;
-        return title == null
-            ? null
-            : ref.watch(arrPublicPosterByIdProvider(title)).value;
       }
       if (service == ServiceKey.seerr) {
         final trending = ref.watch(seerrOverviewTrendingProvider).value;

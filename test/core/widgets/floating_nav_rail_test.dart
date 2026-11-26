@@ -103,52 +103,6 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('the lit section is the one selected, and a tap reports its '
-      'place', (tester) async {
-    final handle = tester.ensureSemantics();
-    final taps = <int>[];
-    await pump(tester, selected: 1, onSelected: taps.add);
-
-    expect(
-      tester.getSemantics(find.bySemanticsLabel(RegExp(r'^Discover\n'))),
-      matchesSemantics(
-        label: 'Discover\nTab 2 of 4',
-        isButton: true,
-        isSelected: true,
-        hasSelectedState: true,
-        isEnabled: true,
-        hasEnabledState: true,
-        hasTapAction: true,
-      ),
-    );
-    await tester.tap(find.text('Stack'));
-    await tester.tap(find.text('Home'));
-    expect(taps, [3, 0]);
-    handle.dispose();
-  });
-
-  testWidgets('a count is drawn in ink and spoken with its section', (
-    tester,
-  ) async {
-    final handle = tester.ensureSemantics();
-    await pump(tester, activity: 12);
-
-    expect(
-      find.descendant(
-        of: find.byKey(const ValueKey('floating-nav-badge')),
-        matching: find.text('9+'),
-      ),
-      findsOne,
-    );
-    expect(
-      find.bySemanticsLabel(
-        'Activity, 12 finished searches to look at\nTab 3 of 4',
-      ),
-      findsOne,
-    );
-    handle.dispose();
-  });
-
   testWidgets('in Settings no section is lit', (tester) async {
     await pump(tester, selected: -1);
 

@@ -10,12 +10,7 @@ void main() {
     for (final suggestion in setUpNextOf(setUp.contains)) suggestion.title,
   ];
 
-  const rest = {
-    ServiceKey.seerr,
-    ServiceKey.radarr,
-    ServiceKey.sonarr,
-    ServiceKey.bazarr,
-  };
+  const rest = {ServiceKey.seerr, ServiceKey.radarr, ServiceKey.sonarr};
 
   test('without a media server, one is suggested', () {
     expect(titles(rest), [Lexicon.setUp(ServiceKey.jellyfin.title)]);

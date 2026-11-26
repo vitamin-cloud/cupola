@@ -60,7 +60,7 @@ String? credentialScopeQualifier(ServiceKey service, CapabilityGrant grant) {
     // A Plex token that reads the server and not who is watching belongs to
     // an account the owner shared the server with, and Plex users know that
     // as a shared account rather than as a narrower token.
-    return service == ServiceKey.plex ? 'shared account' : 'limited $noun';
+    return 'limited $noun';
   }
   return null;
 }
@@ -127,7 +127,7 @@ ConnectionPresentation describeConnection(
 /// and a password.
 String refusedCredentialOf(ServiceKey service) {
   if (!service.usesApiKey) return kRefusedSignIn;
-  return service == ServiceKey.plex ? 'token' : kRefusedCredential;
+  return kRefusedCredential;
 }
 
 /// A failure resolved into everything a surface draws: its tone, a glyph, the
@@ -321,9 +321,7 @@ String? cleartextRefusal(
   bool optional = false,
 }) {
   if (UrlUtils.cleartextWarning(rawUrl) == null) return null;
-  final credential = !service.usesApiKey
-      ? 'password'
-      : (service == ServiceKey.plex ? 'token' : 'key');
+  final credential = !service.usesApiKey ? 'password' : ('key');
   return "Stack doesn't send your $credential over plain http across the "
       'internet. ${optional ? 'Use its https address, or leave this empty.' : 'Use its https address.'}';
 }

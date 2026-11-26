@@ -35,23 +35,12 @@ void main() {
     connectionId: 'seerr',
     url: 'http://seerr.lan:5055',
   );
-  const fromProwlarr = CandidateSource(
-    service: ServiceKey.prowlarr,
-    connectionId: 'prowlarr',
-    url: 'http://nas.lan:9696',
-  );
   const fourK = ConnectionCandidate(
     service: ServiceKey.radarr,
     name: 'Radarr 4K',
     reportedUrl: 'http://nas.lan:7879',
     source: fromSeerr,
     apiKey: 'found-4k-key',
-  );
-  const sonarr = ConnectionCandidate(
-    service: ServiceKey.sonarr,
-    name: 'Sonarr',
-    reportedUrl: 'http://nas.lan:8989',
-    source: fromProwlarr,
   );
 
   Future<void> pump(
@@ -74,10 +63,7 @@ void main() {
         ),
         initialActiveInstancesProvider.overrideWithValue(const {}),
         knownCandidatesProvider.overrideWith(
-          (ref, id) async => [
-            if (id == 'seerr') fourK,
-            if (id == 'prowlarr') sonarr,
-          ],
+          (ref, id) async => [if (id == 'seerr') fourK],
         ),
       ],
     );
@@ -131,25 +117,6 @@ void main() {
     );
     // Filled in is not saved: leaving asks first.
     expect(find.text('Unsaved changes'), findsOneWidget);
-  });
-
-  testWidgets('Prowlarr gives no key: the address is filled in, the key is '
-      'asked for', (tester) async {
-    await pump(
-      tester,
-      service: ServiceKey.sonarr,
-      from: 'prowlarr',
-      name: 'Sonarr',
-    );
-
-    expect(holds(tester, sonarr.proposal!.url), isTrue);
-    expect(
-      find.text(
-        'Prowlarr knows this Sonarr: its address is filled in. Paste its '
-        'key, test it, then save.',
-      ),
-      findsOneWidget,
-    );
   });
 
   testWidgets('a name the source no longer knows fills in nothing', (

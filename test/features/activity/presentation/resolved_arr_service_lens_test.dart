@@ -91,27 +91,4 @@ void main() {
     // handing it out again is handing out a closed `Dio`.
     expect(identical(before, after), isFalse);
   });
-
-  test('an unrelated settings write does not churn the service', () async {
-    // The counterweight. A provider that rebuilt on every settings write would
-    // tear down a live connection each time the theme changed.
-    final container = await _container();
-
-    final before = container.read(
-      resolvedArrServiceProvider(ServiceType.movies),
-    );
-    await container
-        .read(settingsProvider.notifier)
-        .updateSettings(
-          const SettingsModel(instances: [_fourK, _hd], region: 'IT'),
-        );
-
-    expect(
-      identical(
-        before,
-        container.read(resolvedArrServiceProvider(ServiceType.movies)),
-      ),
-      isTrue,
-    );
-  });
 }

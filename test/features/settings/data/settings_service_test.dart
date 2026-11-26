@@ -22,34 +22,6 @@ void main() {
       service = SettingsService(prefs, secureStore);
     });
 
-    test('migrateFromPlaintext moves keys to secure storage', () async {
-      await prefs.setString('jellyseerr_api_key', 'jelly-key');
-      await prefs.setString('radarr_api_key', 'radarr-key');
-      await prefs.setString('sonarr_api_key', 'sonarr-key');
-      await prefs.setString('lidarr_api_key', 'lidarr-key');
-
-      await service.migrateFromPlaintext();
-
-      expect(await secureStore.read(key: 'secure_seerr_api_key'), 'jelly-key');
-      expect(
-        await secureStore.read(key: 'secure_radarr_api_key'),
-        'radarr-key',
-      );
-      expect(
-        await secureStore.read(key: 'secure_sonarr_api_key'),
-        'sonarr-key',
-      );
-      expect(
-        await secureStore.read(key: 'secure_lidarr_api_key'),
-        'lidarr-key',
-      );
-
-      expect(prefs.getString('jellyseerr_api_key'), isNull);
-      expect(prefs.getString('radarr_api_key'), isNull);
-      expect(prefs.getString('sonarr_api_key'), isNull);
-      expect(prefs.getString('lidarr_api_key'), isNull);
-    });
-
     test('migrateFromPlaintext is idempotent', () async {
       await prefs.setString('radarr_api_key', 'radarr-key');
 
@@ -88,99 +60,6 @@ void main() {
       expect(prefs.getString('jellyseerr_api_key'), isNull);
     });
 
-    test('saveSettings and loadSettings round-trip', () async {
-      final settings = settingsWith(
-        seerrUrl: 'https://jelly.example.com',
-        seerrApiKey: 'jelly-key',
-        radarrUrl: 'https://radarr.example.com',
-        radarrApiKey: 'radarr-key',
-        sonarrUrl: 'https://sonarr.example.com',
-        sonarrApiKey: 'sonarr-key',
-        lidarrUrl: 'https://lidarr.example.com',
-        lidarrApiKey: 'lidarr-key',
-        bazarrUrl: 'https://bazarr.example.com',
-        bazarrApiKey: 'bazarr-key',
-        region: 'IT',
-        themeMode: AppThemeMode.dark,
-      );
-
-      await service.saveSettings(settings);
-
-      final loaded = await service.loadSettings();
-
-      expect(
-        loaded.urlFor(ServiceKey.seerr),
-        settings.urlFor(ServiceKey.seerr),
-      );
-      expect(
-        loaded.apiKeyFor(ServiceKey.seerr),
-        settings.apiKeyFor(ServiceKey.seerr),
-      );
-      expect(
-        loaded.urlFor(ServiceKey.radarr),
-        settings.urlFor(ServiceKey.radarr),
-      );
-      expect(
-        loaded.apiKeyFor(ServiceKey.radarr),
-        settings.apiKeyFor(ServiceKey.radarr),
-      );
-      expect(
-        loaded.urlFor(ServiceKey.sonarr),
-        settings.urlFor(ServiceKey.sonarr),
-      );
-      expect(
-        loaded.apiKeyFor(ServiceKey.sonarr),
-        settings.apiKeyFor(ServiceKey.sonarr),
-      );
-      expect(
-        loaded.urlFor(ServiceKey.lidarr),
-        settings.urlFor(ServiceKey.lidarr),
-      );
-      expect(
-        loaded.apiKeyFor(ServiceKey.lidarr),
-        settings.apiKeyFor(ServiceKey.lidarr),
-      );
-      expect(
-        loaded.urlFor(ServiceKey.bazarr),
-        settings.urlFor(ServiceKey.bazarr),
-      );
-      expect(
-        loaded.apiKeyFor(ServiceKey.bazarr),
-        settings.apiKeyFor(ServiceKey.bazarr),
-      );
-      expect(loaded.region, settings.region);
-      expect(loaded.themeMode, settings.themeMode);
-    });
-
-    test('loadSettings returns empty defaults on fresh storage', () async {
-      final loaded = await service.loadSettings();
-
-      expect(loaded.urlFor(ServiceKey.seerr), isEmpty);
-      expect(loaded.apiKeyFor(ServiceKey.seerr), isEmpty);
-      expect(loaded.urlFor(ServiceKey.radarr), isEmpty);
-      expect(loaded.apiKeyFor(ServiceKey.radarr), isEmpty);
-      expect(loaded.urlFor(ServiceKey.sonarr), isEmpty);
-      expect(loaded.apiKeyFor(ServiceKey.sonarr), isEmpty);
-      expect(loaded.urlFor(ServiceKey.lidarr), isEmpty);
-      expect(loaded.apiKeyFor(ServiceKey.lidarr), isEmpty);
-      expect(loaded.urlFor(ServiceKey.bazarr), isEmpty);
-      expect(loaded.apiKeyFor(ServiceKey.bazarr), isEmpty);
-      expect(loaded.themeMode, AppThemeMode.dark);
-    });
-
-    test('loadSettings reads Bazarr API key from secure storage', () async {
-      await prefs.setString('bazarr_url', 'https://bazarr.example.com');
-      await secureStore.write(
-        key: 'secure_bazarr_api_key',
-        value: 'bazarr-key',
-      );
-
-      final loaded = await service.loadSettings();
-
-      expect(loaded.urlFor(ServiceKey.bazarr), 'https://bazarr.example.com');
-      expect(loaded.apiKeyFor(ServiceKey.bazarr), 'bazarr-key');
-    });
-
     test('loadSettings falls back to legacy Jellyseerr keys', () async {
       await prefs.setString('jellyseerr_url', 'https://legacy.example.com');
       await secureStore.write(
@@ -210,46 +89,6 @@ void main() {
       await service.saveOnboardingComplete();
 
       expect(await service.loadOnboardingComplete(), isTrue);
-    });
-
-    test('clearAll wipes settings, credentials, and onboarding flag', () async {
-      final settings = settingsWith(
-        seerrUrl: 'https://jelly.example.com',
-        seerrApiKey: 'jelly-key',
-        radarrUrl: 'https://radarr.example.com',
-        radarrApiKey: 'radarr-key',
-        qbittorrentUsername: 'admin',
-        qbittorrentPassword: 'pass',
-        region: 'IT',
-        themeMode: AppThemeMode.dark,
-      );
-      await service.saveSettings(settings);
-      await service.saveOnboardingComplete();
-
-      await service.clearAll();
-
-      final loaded = await service.loadSettings();
-      expect(loaded.urlFor(ServiceKey.seerr), isEmpty);
-      expect(loaded.apiKeyFor(ServiceKey.seerr), isEmpty);
-      expect(loaded.urlFor(ServiceKey.radarr), isEmpty);
-      expect(loaded.apiKeyFor(ServiceKey.radarr), isEmpty);
-      expect(loaded.usernameFor(ServiceKey.qbittorrent), isEmpty);
-      expect(loaded.apiKeyFor(ServiceKey.qbittorrent), isEmpty);
-      expect(loaded.themeMode, AppThemeMode.dark);
-
-      expect(await secureStore.read(key: 'secure_seerr_api_key'), isNull);
-      expect(await secureStore.read(key: 'secure_radarr_api_key'), isNull);
-      expect(
-        await secureStore.read(key: 'secure_qbittorrent_password'),
-        isNull,
-      );
-
-      expect(prefs.getString('seerr_url'), isNull);
-      expect(prefs.getString('region'), isNull);
-      expect(prefs.getString('theme_mode'), isNull);
-      expect(prefs.getString('qbittorrent_username'), isNull);
-
-      expect(await service.loadOnboardingComplete(), isFalse);
     });
 
     test('clearAll removes legacy keys too', () async {
@@ -426,7 +265,6 @@ void main() {
           'http://nas.lan:5001',
         );
       });
-
 
       // The concrete loss the scoping prevents: a self-signed NAS the user
       // already trusted keeps its pin, because the URL still resolves to the

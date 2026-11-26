@@ -110,7 +110,6 @@ Finder _within(Type region, Finder matching) =>
     find.descendant(of: find.byType(region), matching: matching);
 
 void main() {
-
   testWidgets('P1, lens on the HD: the 4K Radarr\'s failed download is no '
       'row in Needs you: the arr already handled it', (tester) async {
     final harness = await ProfileHarness.start(Profiles.p1);
@@ -231,68 +230,6 @@ void main() {
     expect(tears, hasLength(1));
     expect(tears.single.instanceId, WorldIds.radarr4k);
     expect(tears.single.connectionName, '4K');
-  });
-
-  test('P1: every connection of Radarr, Sonarr and Lidarr is asked for the '
-      'week, and each entry carries its own', () async {
-    final harness = await ProfileHarness.start(Profiles.p1);
-    final container = harness.container(retry: (_, _) => null);
-
-    final history = await _arrivals(container);
-
-    for (final id in [
-      WorldIds.radarr,
-      WorldIds.radarr4k,
-      WorldIds.sonarr,
-      WorldIds.lidarr,
-    ]) {
-      expect(
-        harness.network
-            .requestsTo(id)
-            .where((r) => r.path.endsWith('/history/since')),
-        hasLength(1),
-        reason: '$id is asked once',
-      );
-    }
-    expect(
-      history.entries
-          .where((entry) => entry.service == ServiceKey.radarr)
-          .map((entry) => (entry.title, entry.instanceId, entry.connectionName))
-          .toSet(),
-      {
-        ('Coffee Run', WorldIds.radarr, 'Radarr 1'),
-        ('Sintel', WorldIds.radarr, 'Radarr 1'),
-        ('Tears of Steel', WorldIds.radarr, 'Radarr 1'),
-        ('Elephants Dream', WorldIds.radarr, 'Radarr 1'),
-        ('Spring', WorldIds.radarr4k, '4K'),
-        ('Tears of Steel', WorldIds.radarr4k, '4K'),
-      },
-    );
-    expect(history.coverage.isWhole, isTrue);
-  });
-
-  test('P1, the HD Radarr dark: the week is the 4K\'s, and the coverage '
-      'names the one missing', () async {
-    final harness = await ProfileHarness.start(
-      Profiles.p1.withBehaviour(
-        WorldIds.radarr,
-        ConnectionBehaviour.didNotAnswer,
-      ),
-    );
-    final container = harness.container(retry: (_, _) => null);
-
-    final history = await _arrivals(container);
-    final cards = await _arrivedCards(container, harness);
-
-    expect(history.coverage.failed.keys.map((source) => source.title), [
-      'Radarr 1',
-    ]);
-    expect(cards.map((card) => card.title), ['Spring', 'Tears of Steel']);
-    expect(cards.map((card) => card.instanceId).toSet(), {WorldIds.radarr4k});
-    expect(
-      arrivedSubtitle(cards.length, history.coverage),
-      'Last 7 days\u00A0· 2 from Lidarr, Radarr 4K and Sonarr',
-    );
   });
 
   testWidgets('P1, the HD Radarr dark: the 4K keeps its rows, and the note '

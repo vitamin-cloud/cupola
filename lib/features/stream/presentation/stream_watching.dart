@@ -39,7 +39,6 @@ enum StreamWatchingShelf {
 
   /// The shelf's heading on [service].
   String titleOn(ServiceKey service) => switch (this) {
-    continueWatching when service == ServiceKey.plex => 'On deck',
     continueWatching => 'Continue watching',
     nextUp => 'Next up',
     recentlyAdded => 'Recently added',
@@ -52,16 +51,10 @@ enum StreamWatchingShelf {
 
 /// The shelves [service] draws, in the order a person asks them.
 List<StreamWatchingShelf> streamWatchingShelvesOf(ServiceKey service) =>
-    service == ServiceKey.plex
-    ? const [
-        StreamWatchingShelf.continueWatching,
-        StreamWatchingShelf.recentlyAdded,
-      ]
-    : StreamWatchingShelf.values;
+    StreamWatchingShelf.values;
 
 /// The tab a shelf's heading leads to: the server's Activity.
-ServiceTab streamWatchingTabOf(ServiceKey service) =>
-    service == ServiceKey.plex ? ServiceTab.activities : ServiceTab.activity;
+ServiceTab streamWatchingTabOf(ServiceKey service) => ServiceTab.activity;
 
 /// One shelf of one connection.
 typedef StreamWatchingKey = ({

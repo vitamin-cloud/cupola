@@ -1,36 +1,9 @@
-import 'package:flutter/material.dart' show ThemeMode;
-
 import 'package:cupola/core/utils/dot_separator.dart';
 import 'package:cupola/core/utils/url_utils.dart';
 import 'package:cupola/features/settings/domain/connection_access.dart';
 import 'package:cupola/features/settings/domain/connection_address.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-
-enum AppThemeMode {
-  system(label: 'System'),
-  light(label: 'Light'),
-  dark(label: 'Dark');
-
-  const AppThemeMode({required this.label});
-
-  final String label;
-
-  static final Map<String, AppThemeMode> _modesByName = {
-    for (final mode in values) mode.name: mode,
-  };
-
-  ThemeMode get materialThemeMode {
-    return switch (this) {
-      AppThemeMode.light => ThemeMode.light,
-      AppThemeMode.dark => ThemeMode.dark,
-      AppThemeMode.system => ThemeMode.system,
-    };
-  }
-
-  static AppThemeMode fromName(String? value) =>
-      _modesByName[value] ?? AppThemeMode.dark;
-}
 
 /// Everything Cupola persists, keyed on connections rather than on services.
 ///
@@ -88,15 +61,13 @@ class SettingsModel {
   /// kept in secure storage, never in plain `SharedPreferences`.
   final Map<String, String> trustedCertificates;
 
-  final String region;
-  final AppThemeMode themeMode;
+  /// This fork: the US, always (TMDB's region for releases and providers).
+  String get region => 'US';
 
   const SettingsModel({
     this.instances = const [],
     this.plexClientId = '',
     this.trustedCertificates = const {},
-    this.region = 'US',
-    this.themeMode = AppThemeMode.dark,
   });
 
   static String normalizeRegion(String? region) {
@@ -108,19 +79,13 @@ class SettingsModel {
     List<ServiceInstance>? instances,
     String? plexClientId,
     Map<String, String>? trustedCertificates,
-    String? region,
-    AppThemeMode? themeMode,
   }) {
     return SettingsModel(
       instances: instances ?? this.instances,
       plexClientId: plexClientId ?? this.plexClientId,
       trustedCertificates: trustedCertificates ?? this.trustedCertificates,
-      region: region ?? this.region,
-      themeMode: themeMode ?? this.themeMode,
     );
   }
-
-  ThemeMode get resolvedThemeMode => themeMode.materialThemeMode;
 
   // === Instances ===========================================================
 

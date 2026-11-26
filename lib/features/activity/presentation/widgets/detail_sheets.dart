@@ -287,17 +287,6 @@ List<_DetailField> _buildWantedFields(
         extractQualityName(item, fileKey: 'movieFile'),
       ),
     ]),
-    ServiceType.music => _compactFields([
-      _detailField('Release', item['title']),
-      _detailField('Status', wantedStatusText(item, serviceType)),
-      _detailField('Artist', asActivityMap(item['artist'])?['artistName']),
-      _detailField('Album', asActivityMap(item['album'])?['title']),
-      _detailField(
-        'Release date',
-        formatStatedDate(stringOrNull(item['releaseDate'])),
-      ),
-      _detailField('Monitored', item['monitored']),
-    ]),
     ServiceType.discover => const <_DetailField>[],
   };
 }

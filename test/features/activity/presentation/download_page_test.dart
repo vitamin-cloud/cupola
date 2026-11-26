@@ -18,10 +18,8 @@ import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/widgets/machine_name.dart'
     show machineNameWithBreaks;
 import 'package:cupola/features/activity/presentation/download_page.dart';
-import 'package:cupola/features/activity/presentation/widgets/activity_download_row.dart';
 import 'package:cupola/features/home/presentation/widgets/downloads_module.dart'
     show DownloadRow;
-import 'package:cupola/features/media/presentation/media_split.dart';
 import 'package:cupola/features/services/domain/source_coverage.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -364,31 +362,6 @@ void main() {
     );
     expect(router.state.uri.path, ServiceRoutes.activityDownloadPath);
     expect(find.byType(DownloadPage), findsOneWidget);
-
-    await _close(tester, harness, container);
-  });
-
-  testWidgets('on a tablet the page opens beside the list, whose row wears '
-      'the selection; Close closes it', (tester) async {
-    final (harness, router, container) = await _app(
-      tester,
-      size: const Size(1180, 820),
-    );
-    await _open(tester, router, 'Sprite Fright');
-
-    expect(find.byType(MediaSplitLayout), findsOneWidget);
-    expect(find.byType(DownloadPage), findsOneWidget);
-    // The list is still there beside it.
-    expect(find.byType(ActivityDownloadRow), findsWidgets);
-    final selected = tester
-        .widgetList<ActivityRowFrame>(find.byType(ActivityRowFrame))
-        .where((frame) => frame.selected)
-        .map((frame) => frame.label);
-    expect(selected, ['Sprite Fright']);
-
-    await _tap(tester, _onPage(find.byIcon(Icons.close_rounded)));
-    expect(find.byType(DownloadPage), findsNothing);
-    expect(router.state.uri.path, ServiceRoutes.activityDownloads);
 
     await _close(tester, harness, container);
   });

@@ -104,17 +104,6 @@ Widget _glyphCell(ServiceKey target) => CrossServiceAction(
   child: const Icon(Icons.open_in_new_rounded),
 );
 
-Widget _vmButton(String connectionId) => CapabilityGatedAction.icon(
-  service: ServiceKey.unraid,
-  connectionId: connectionId,
-  resource: 'vms',
-  hint: 'requires a key that can write VMs',
-  blockedMessage: 'This Unraid key can\'t start or stop VMs.',
-  tooltip: 'Start Kodi',
-  onTap: () {},
-  icon: const Icon(Icons.play_arrow_rounded),
-);
-
 Widget _toggle(String connectionId) => CapabilityGatedAction.toggle(
   service: ServiceKey.truenas,
   connectionId: connectionId,
@@ -290,15 +279,6 @@ void main() {
         ]),
       ),
       CatalogScene(
-        'CapabilityGatedAction.icon · Unraid VMs, read-write vs read-only key · '
-        'the glyph dims inside the IconButton, its target unchanged',
-        (_) => _row([
-          _labelled('read-write', _vmButton(_readWrite)),
-          _labelled('read-only', _vmButton(_readOnly)),
-          _labelled('not checked', _vmButton(_unanswered)),
-        ]),
-      ),
-      CatalogScene(
         'CapabilityGatedAction.toggle · TrueNAS share, read-write vs read-only '
         '· the whole switch dims and keeps the server\'s value',
         (_) => _row([
@@ -336,47 +316,11 @@ void main() {
           _labelled('absent', _manage(const Absent())),
         ]),
       ),
-      CatalogScene(
-        'Text at 200% · a cross-service button, a gated icon, a gated switch, '
-        'a gated save and a dimmed Manage, at twice the reading size',
-        (_) => _row([
-          _labelled('Radarr set up', _openIn(ServiceKey.radarr)),
-          _labelled('Sonarr not set up', _openIn(ServiceKey.sonarr)),
-          _labelled(
-            'qBittorrent not set up',
-            _openTransfer(ServiceKey.qbittorrent),
-          ),
-          _labelled('read-only', _vmButton(_readOnly)),
-          _labelled('read-only', _toggle(_readOnly)),
-          _labelled('not an admin', _save(_readOnly)),
-          _labelled(
-            'dimmed',
-            _manage(const Dimmed("Your account on Seerr can't manage media.")),
-          ),
-        ]),
-        width: 390,
-        textScale: catalogTextScale,
-      ),
-      _toastScene(
-        'Blocked tap at 200% · the toast at twice the reading size: the '
-            'sentence takes four lines and the action sits under it',
-        'This Unraid key can\'t start or stop VMs.',
-        ServiceKey.unraid.capabilityFixLabel,
-        height: 260,
-        textScale: catalogTextScale,
-      ),
       _toastScene(
         'Blocked tap on a cross-service jump · the caller\'s sentence, one '
             'action to that service\'s settings',
         'Set up qBittorrent to open this transfer.',
         'Settings',
-      ),
-      _toastScene(
-        'Blocked tap on a read-only key · the action is the service\'s own '
-            'fix verb',
-        'This Unraid key can\'t start or stop VMs.',
-        ServiceKey.unraid.capabilityFixLabel,
-        height: 140,
       ),
       _toastScene(
         'Blocked tap while the permissions are unknown · re-ask, not replace',

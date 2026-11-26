@@ -5,7 +5,6 @@ import 'package:cupola/features/discover/data/seerr_accounts.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/discover/domain/seerr_grant.dart';
 import 'package:cupola/features/discover/domain/seerr_known_arr.dart';
-import 'package:cupola/features/prowlarr/presentation/prowlarr_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/connection_candidate.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
@@ -87,7 +86,7 @@ final foundCandidatesProvider =
 /// of ids: a value the `select` above compares by equality, so a change to any
 /// other connection asks nothing again.
 String _sourcesOf(SettingsModel settings) => [
-  for (final service in const [ServiceKey.seerr, ServiceKey.prowlarr])
+  for (final service in const [ServiceKey.seerr])
     for (final connection in settings.instancesOf(service))
       if (connection.isConfigured) connection.id,
 ].join(' ');
@@ -115,8 +114,6 @@ final _knownByConnectionProvider = FutureProvider.autoDispose
       switch (source.service) {
         case ServiceKey.seerr:
           return withoutRepeats(await _fromSeerr(ref, source));
-        case ServiceKey.prowlarr:
-          return _fromProwlarr(ref, source);
         default:
           return const [];
       }
@@ -140,18 +137,6 @@ Future<List<ConnectionCandidate>> _fromSeerr(
     // account that may not.
     SeerrKnownArrsNotAllowed() => const [],
   };
-}
-
-Future<List<ConnectionCandidate>> _fromProwlarr(
-  Ref ref,
-  ServiceInstance source,
-) async {
-  final applications = await ref
-      .watch(prowlarrServiceForProvider(source.id))
-      .knownApplications();
-  return [
-    for (final application in applications) ?application.toCandidate(source),
-  ];
 }
 
 /// [candidates] with a server listed once.

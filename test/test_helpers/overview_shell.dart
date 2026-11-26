@@ -30,7 +30,6 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 const _pushable = [
   ServiceRoutes.activityDownloadPath,
   '${ServiceRoutes.dockge}/stacks/stack/:name',
-  '${ServiceRoutes.prowlarr}/indexers/indexer/:id',
 ];
 
 /// The routed host of an Overview.

@@ -13,10 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/platform/local_network_access.dart';
 import 'package:cupola/core/theme.dart';
-import 'package:cupola/core/widgets/failure_remedy.dart';
 import 'package:cupola/features/series/presentation/series_screen.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
@@ -213,7 +211,6 @@ void main() {
       });
     }
 
-
     testWidgets('Cloudflare Access: labelled fields, the secret hidden with '
         'Paste, the help line, and the token saved', (tester) async {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -397,7 +394,6 @@ void main() {
 
       await harness.unmount(tester);
     });
-
   });
 
   group('the connection test of a Cloudflare service token, under P8', () {
@@ -538,19 +534,6 @@ void main() {
   });
 
   group('a gateway\'s remedy opens the form on the Access row', () {
-    AccessKind? accessOf(ServiceKey service, AccessGatewayKind kind) =>
-        FailureRemedy.forReason(
-          service,
-          ServiceFailureReason.accessGateway,
-          gateway: AccessGatewayAnswer(
-            kind: kind,
-            credentialsSent: false,
-            gatewayHost: 'team.cloudflareaccess.com',
-            serviceHost: 'radarr.example.com',
-          ),
-        )?.access;
-
-
     testWidgets('Sonarr\'s library under P8: Add a service token lands on '
         'Cloudflare Access', (tester) async {
       final harness = await ProfileHarness.start(Profiles.p8);

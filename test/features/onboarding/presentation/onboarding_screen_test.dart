@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -117,39 +116,6 @@ void main() {
   });
 
   group('Start with another service', () {
-    testWidgets('lists every service exactly once, by what it is for', (
-      tester,
-    ) async {
-      await _pumpOnboarding(tester);
-      await _tap(tester, 'Set up a service');
-      await _tap(tester, 'Start with another service');
-
-      // The two that know the others lead, under their own label, by name.
-      expect(find.text('They know the others'), findsOneWidget);
-      for (final service in ServiceKey.values) {
-        final named =
-            service == ServiceKey.seerr || service == ServiceKey.prowlarr;
-        final title = named ? service.title : 'Set up ${service.title}';
-        expect(
-          find.byWidgetPredicate(
-            (w) =>
-                w is SettingsCard &&
-                w.title == title &&
-                w.subtitle == (service.knowsOthers ?? service.role),
-          ),
-          findsOneWidget,
-          reason: '$title, once, under the words that say what it is for',
-        );
-      }
-      expect(
-        find.byType(SettingsCard),
-        findsNWidgets(ServiceKey.values.length),
-      );
-      for (final domain in ServiceDomain.values) {
-        expect(find.text(domain.label), findsOneWidget, reason: domain.label);
-      }
-    });
-
     testWidgets('a row speaks one sentence and exposes its tap action', (
       tester,
     ) async {
@@ -258,17 +224,6 @@ void main() {
         find.text('Enter the address and the API key, then test.'),
         findsOneWidget,
       );
-    });
-
-    testWidgets('Seerr and Prowlarr say what they already know instead', (
-      tester,
-    ) async {
-      await _pumpOnboarding(tester);
-      await _openService(tester, 'Prowlarr');
-
-      expect(findLine('Set up Prowlarr'), findsOneWidget);
-      expect(findLine('Step 1 of 2'), findsOneWidget);
-      expect(find.text(connectLead(ServiceKey.prowlarr)), findsOneWidget);
     });
 
     testWidgets('one service: fill it in and test it', (tester) async {
@@ -655,56 +610,6 @@ void main() {
   });
 
   group('sizes', () {
-    testWidgets('compact desktop keeps long-form actions reachable', (
-      tester,
-    ) async {
-      debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
-      try {
-        final settings = const SettingsModel().copyWithService(
-          ServiceKey.readarr,
-          url: 'http://127.0.0.1:8787',
-          apiKey: 'test-key',
-        );
-        await _pumpOnboarding(
-          tester,
-          settings: settings,
-          viewport: const Size(720, 450),
-        );
-        await _tap(tester, 'Set up a service');
-        await _tap(tester, 'Start with another service');
-        // A short window scrolls the list, and the pager must not move.
-        await tester.scrollUntilVisible(
-          find.text('Set up Readarr'),
-          100,
-          scrollable: find
-              .descendant(
-                of: find.byType(OnboardingStart),
-                matching: find.byType(Scrollable),
-              )
-              .first,
-        );
-        await tester.tap(find.text('Set up Readarr'));
-        await tester.pumpAndSettle();
-
-        // Notes on the long-form services used to push the footer below the
-        // compact desktop window. The form may scroll, but the decision cannot
-        // require a user to discover an invisible primary action first.
-        expect(
-          find.textContaining('Readarr development has stopped'),
-          findsOneWidget,
-        );
-        final testButton = tester.getRect(_button('Test connection').first);
-        expect(testButton.bottom, lessThanOrEqualTo(450));
-        expect(
-          tester.getRect(find.widgetWithText(TextButton, 'Back')).bottom,
-          lessThanOrEqualTo(450),
-        );
-      } finally {
-        // Cleared before the test binding checks its foundation invariants.
-        debugDefaultTargetPlatformOverride = null;
-      }
-    });
-
     testWidgets('no beat overflows a short phone at an accessibility size', (
       tester,
     ) async {

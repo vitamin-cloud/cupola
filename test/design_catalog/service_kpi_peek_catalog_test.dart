@@ -30,20 +30,6 @@ const _radarr = [
   ServiceKpi(label: 'Queue', value: '3', icon: Icons.download_rounded),
 ];
 
-/// Readarr whose queue walk stopped on a full page with no total: the Queue
-/// figure is a floor.
-const _readarrFloor = [
-  ServiceKpi(label: 'Authors', value: '86', icon: Icons.person_rounded),
-  ServiceKpi(label: 'Books', value: '1,240', icon: Icons.menu_book_rounded),
-  ServiceKpi(
-    label: 'Missing',
-    value: '12',
-    icon: Icons.report_gmailerrorred_rounded,
-    tone: StatusTone.neutral,
-  ),
-  ServiceKpi(label: 'Queue', value: '200+', icon: Icons.download_rounded),
-];
-
 /// The same rail when Radarr did not answer: the same four cards, dashes.
 const _radarrSilent = [
   ServiceKpi.unavailable(
@@ -74,21 +60,6 @@ const _jellyfinMember = [
     label: 'Libraries',
     icon: Icons.video_library_outlined,
     note: 'admin only',
-  ),
-];
-
-/// Plex on a shared account's token: who is watching is the owner's to see.
-const _plexShared = [
-  ServiceKpi.unavailable(
-    label: 'Streams',
-    icon: Icons.play_circle_outline_rounded,
-    note: 'owner only',
-  ),
-  ServiceKpi.unavailable(label: 'Transcodes', icon: Icons.memory_rounded),
-  ServiceKpi(
-    label: 'Libraries',
-    value: '4',
-    icon: Icons.video_library_outlined,
   ),
 ];
 
@@ -160,12 +131,6 @@ void main() {
         ServiceKey.truenas,
       ),
       _scene(
-        'Readarr, a queue walk cut short · the Queue figure is a floor, 200+, '
-        'spoken "at least 200"',
-        const AsyncValue.data(_readarrFloor),
-        ServiceKey.readarr,
-      ),
-      _scene(
         'ServiceKpi.unavailable · Radarr did not answer · the same four cards, '
         'an em dash in the secondary ink, the note in place of the label',
         const AsyncValue.data(_radarrSilent),
@@ -179,22 +144,10 @@ void main() {
         ServiceKey.jellyfin,
       ),
       _scene(
-        'A narrower token, Plex · a shared account is refused who is '
-        'watching: owner only on the first card it empties, the libraries '
-        'still count',
-        const AsyncValue.data(_plexShared),
-        ServiceKey.plex,
-      ),
-      _scene(
         'Source failed · one card replaces the rail; a failure nobody can '
         'attribute reads Did not complete, never Did not answer',
         AsyncValue.error(Exception('timeout'), StackTrace.empty),
         ServiceKey.sonarr,
-      ),
-      _scene(
-        'Loading · four skeleton cards, 100 wide, no shadow',
-        const AsyncValue.loading(),
-        ServiceKey.lidarr,
       ),
       CatalogScene(
         'Not configured, or no figures · the rail collapses to nothing '

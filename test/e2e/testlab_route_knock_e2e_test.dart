@@ -18,16 +18,9 @@ void main() {
     ServiceKey.seerr: 'http://127.0.0.1:5055',
     ServiceKey.radarr: 'http://127.0.0.1:7878',
     ServiceKey.sonarr: 'http://127.0.0.1:8989',
-    ServiceKey.lidarr: 'http://127.0.0.1:8686',
-    ServiceKey.readarr: 'http://127.0.0.1:8787',
-    ServiceKey.prowlarr: 'http://127.0.0.1:9696',
-    ServiceKey.bazarr: 'http://127.0.0.1:6767',
     ServiceKey.qbittorrent: 'http://127.0.0.1:8080',
     ServiceKey.jellyfin: 'http://127.0.0.1:8096',
-    ServiceKey.emby: 'http://127.0.0.1:8097',
-    ServiceKey.plex: 'http://127.0.0.1:32400',
     ServiceKey.dockge: 'http://127.0.0.1:5001',
-    ServiceKey.unraid: 'http://127.0.0.1:8480',
     ServiceKey.truenas: 'https://127.0.0.1:8460',
   };
 
@@ -45,38 +38,7 @@ void main() {
     }
   });
 
-  test('no service with an answer of its own answers another\'s', () async {
-    // Unraid's knock takes any answer and TrueNAS's any open port, so
-    // only the services whose answer names them are crossed.
-    final named = {
-      for (final MapEntry(:key, :value) in lab.entries)
-        if (key != ServiceKey.unraid && key != ServiceKey.truenas) key: value,
-    };
-    for (final service in named.keys) {
-      for (final MapEntry(key: other, value: url) in named.entries) {
-        if (other == service) continue;
-        // The arrs and Bazarr share their ping, by design of the arrs: a
-        // knock proves an arr is there, the key proves which.
-        if (_pings.contains(service) && _pings.contains(other)) continue;
-        expect(
-          await knock(service, url),
-          isFalse,
-          reason: '$service knocked at $other\'s $url',
-        );
-      }
-    }
-  });
-
   test('a port nobody listens on is not an answer', () async {
     expect(await knock(ServiceKey.radarr, 'http://127.0.0.1:1'), isFalse);
   });
 }
-
-const _pings = {
-  ServiceKey.radarr,
-  ServiceKey.sonarr,
-  ServiceKey.lidarr,
-  ServiceKey.readarr,
-  ServiceKey.prowlarr,
-  ServiceKey.bazarr,
-};

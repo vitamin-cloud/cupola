@@ -68,19 +68,6 @@ void main() {
     expect(_traffic(both), formsOnly);
   });
 
-  test('a theme toggle tests no connection again', () async {
-    final harness = await ProfileHarness.start(Profiles.p1);
-    final container = harness.container();
-    await _readAll(container);
-    final before = _traffic(harness);
-    expect(before, greaterThan(0));
-
-    await _write(container, (s) => s.copyWith(themeMode: AppThemeMode.light));
-    await _readAll(container);
-
-    expect(_traffic(harness), before);
-  });
-
   test('editing a connection tests its service again, and no other', () async {
     final harness = await ProfileHarness.start(Profiles.p1);
     final container = harness.container();
@@ -118,7 +105,6 @@ void main() {
       reason: 'no other service was asked again',
     );
   });
-
 
   test('a Seerr account is tested again when its session moves, and only '
       'its service', () async {

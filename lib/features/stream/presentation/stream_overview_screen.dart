@@ -9,11 +9,8 @@ import 'package:cupola/core/app_spacing.dart';
 import 'package:cupola/core/widgets/widgets.dart';
 import 'package:cupola/features/jellyfin/presentation/jellyfin_admin_placeholder.dart';
 import 'package:cupola/features/jellyfin/presentation/jellyfin_provider.dart';
-import 'package:cupola/features/plex/domain/models/plex_models.dart';
-import 'package:cupola/features/plex/presentation/plex_provider.dart';
 import 'package:cupola/features/services/domain/service_tab.dart';
 import 'package:cupola/core/models/service_kpi.dart';
-import 'package:cupola/features/services/domain/services_semantics.dart';
 import 'package:cupola/features/services/presentation/service_kpi_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -159,8 +156,6 @@ class _OverviewBody extends ConsumerWidget {
   /// The connection every region reads; empty is the lens.
   final String instanceId;
 
-  bool get _isPlex => service == ServiceKey.plex;
-
   /// The figures of the connection the page reads: the lens's own fold when it
   /// is the lens, and that connection's when it is another.
   ///
@@ -209,11 +204,6 @@ class _OverviewBody extends ConsumerWidget {
             shelf: shelf,
           )),
         );
-      }
-      // The regions only Plex draws.
-      if (_isPlex) {
-        ref.invalidate(plexCapabilitiesProvider);
-        ref.invalidate(plexCapabilitiesForProvider(instanceId));
       }
     }
 
@@ -282,7 +272,6 @@ class _OverviewBody extends ConsumerWidget {
                     shelf: shelf,
                   ),
                 _LibrariesSection(service: service, instanceId: instanceId),
-                if (_isPlex) _ServerSection(instanceId: instanceId),
               ],
             ],
           ),
@@ -420,138 +409,3 @@ class _ShelfRow extends StatelessWidget {
 }
 
 // ─── Server (Plex only) ─────────────────────────────────────────────────────
-
-/// What the box says about itself, from the one call that asks it: `GET /`.
-///
-/// **Plex only.** Jellyfin's equivalent facts are already in the identity block
-/// above (host, version, answering), and `JellyfinClient` fetches nothing
-/// beyond them, so a second region there would be the same line twice.
-///
-/// Three of the board's six rows are here and three are not: remote access and
-/// the mapped port, the transcoder's hardware, the cache size and the uptime all
-/// live in `GET /:/prefs` and `GET /statistics/resources`, which this client
-/// never calls. The version is not repeated: the identity block owns it.
-///
-/// **Value first, label second**, the inversion the qBittorrent Session region
-/// uses: this region has no subject, so the figure is the content and the label
-/// is the chrome.
-class _ServerSection extends ConsumerWidget {
-  const _ServerSection({required this.instanceId});
-
-  /// The Plex connection that describes itself; empty is the lens.
-  final String instanceId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final capabilities = ref.watch(plexCapabilitiesForProvider(instanceId));
-
-    return ServiceOverviewSection(
-      service: ServiceKey.plex,
-      title: 'Server',
-      // No link: every fact here is a connection setting, and Plex's bar has no
-      // tab that owns them: a link named after a tab that does not exist is a
-      // promise the app cannot keep.
-      // A Plex that did not answer is the failure, in its words and tone: the
-      // sheet used to come back null for any failure, and this section read
-      // a dark server as one that "did not describe itself".
-      child: AsyncValueWidget<PlexServerCapabilities>.section(
-        value: capabilities,
-        service: ServiceKey.plex,
-        instanceId: instanceId,
-        consequence: 'what the server says about itself is not shown',
-        loadingLabel: 'Loading what the server says about itself',
-        onRetry: () {
-          ref.invalidate(plexCapabilitiesForProvider(instanceId));
-          ref.invalidate(plexCapabilitiesProvider);
-        },
-        skeleton: const ServiceOverviewRowsSkeleton(rows: 2),
-        data: (value) => _ServerRows(capabilities: value),
-      ),
-    );
-  }
-}
-
-class _ServerRows extends StatelessWidget {
-  const _ServerRows({required this.capabilities});
-
-  final PlexServerCapabilities capabilities;
-
-  @override
-  Widget build(BuildContext context) {
-    // A field the response omitted reads "—": the call answered, so saying
-    // nothing at all would hide that the server was asked. `plexBool` keeps the
-    // three-way distinction alive for exactly this: `myPlexSubscription`
-    // absent is not the same claim as `myPlexSubscription: false`.
-    final pass = switch (capabilities.myPlexSubscription) {
-      true => 'Active',
-      false => 'Not on this server',
-      null => '—',
-    };
-
-    return Column(
-      children: [
-        _ServerRow(
-          icon: Icons.dns_outlined,
-          value: capabilities.displayName ?? '—',
-          label: 'Server name',
-        ),
-        _ServerRow(
-          icon: Icons.workspace_premium_outlined,
-          value: pass,
-          // Named with its consequence rather than as trivia: this flag is why
-          // the stop control on a session card is there or is not.
-          label: 'Plex Pass\u00A0· stopping a stream needs it',
-        ),
-        _ServerRow(
-          icon: Icons.person_outline_rounded,
-          value: capabilities.myPlexUsername ?? '—',
-          label: 'Plex account',
-        ),
-        // Only when the server said so. `multiuser` absent means the build did
-        // not report it, and "owner only" would be a guess about someone's
-        // household, while `true` explains something the user will otherwise
-        // notice as a defect: every watch state Cupola shows for Plex is the
-        // owner's, because a token is one person and `/library/*` takes no
-        // impersonation parameter.
-        if (capabilities.multiuser == true)
-          const _ServerRow(
-            icon: Icons.groups_outlined,
-            // A figure, like every other row here, and not a noun phrase in the
-            // figure slot with the whole statement underneath it: that pair
-            // reads as a datum with a sentence below it and *speaks* as a
-            // qualifier arriving before the thing it qualifies, which is the
-            // exact failure the spoken order below exists to prevent.
-            value: 'Owner only',
-            label: 'Plex Home\u00A0· Stack reads the owner’s watch state',
-          ),
-      ],
-    );
-  }
-}
-
-class _ServerRow extends StatelessWidget {
-  const _ServerRow({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return ServiceOverviewRow(
-      // Label then value, spoken: the reverse of the visual order, which leads
-      // with the figure for scanning. Read aloud, "Active" before "Plex Pass"
-      // is an answer arriving before its question.
-      spoken: joinSpokenParts([spokenFromDotted(label), value]),
-      leading: Icon(icon, size: 18, color: colorScheme.onSurfaceVariant),
-      title: value,
-      detail: label,
-    );
-  }
-}

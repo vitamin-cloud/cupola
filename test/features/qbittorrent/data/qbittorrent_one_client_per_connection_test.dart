@@ -23,9 +23,7 @@ import 'package:cupola/features/services/presentation/dashboard_retry.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/connection_test_command.dart';
 import 'package:cupola/features/settings/data/service_verification.dart';
-import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/settings/domain/settings_model.dart';
 import 'package:cupola/features/settings/presentation/service_settings_screen.dart';
 
 import '../../../test_helpers/profiles/profiles.dart';
@@ -69,41 +67,6 @@ void main() {
         // Still a refused sign-in, read from the hold rather than asked again.
         expect(again.failureReason, ServiceFailureReason.unauthorized);
       }
-
-      expect(_signIns(harness), 1);
-    },
-  );
-
-  test(
-    'the Settings readouts share the sign-in, through tests and settings writes',
-    () async {
-      final harness = await ProfileHarness.start(_wrongPassword);
-      final container = harness.container();
-
-      await _probe(container);
-      for (var run = 0; run < 3; run++) {
-        final row = await container.read(
-          serviceDiagnosisProvider(ServiceKey.qbittorrent).future,
-        );
-        final form = await container.read(
-          instanceDiagnosisProvider(WorldIds.qbittorrent).future,
-        );
-        expect(row.reason, ServiceFailureReason.unauthorized);
-        expect(form.reason, ServiceFailureReason.unauthorized);
-        container.invalidate(serviceDiagnosisProvider);
-        container.invalidate(instanceDiagnosisProvider);
-      }
-
-      // A write that has nothing to do with qBittorrent re-runs both readouts,
-      // which watch the whole model. It must not reach the WebUI's login.
-      final settings = container.read(currentSettingsProvider);
-      await container
-          .read(settingsProvider.notifier)
-          .updateSettings(settings.copyWith(themeMode: AppThemeMode.light));
-      final afterWrite = await container.read(
-        serviceDiagnosisProvider(ServiceKey.qbittorrent).future,
-      );
-      expect(afterWrite.reason, ServiceFailureReason.unauthorized);
 
       expect(_signIns(harness), 1);
     },

@@ -136,8 +136,7 @@ void main() {
     });
   });
 
-  group('silenceKey', () {
-  });
+  group('silenceKey', () {});
 
   group('silenceClockProvider', () {
     test('reads the time the read clock reads', () {

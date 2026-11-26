@@ -747,16 +747,12 @@ List<Widget> _buildWantedChips(
       qualityProfileName ??
           extractQualityName(item, fileKey: 'movieFile') ??
           extractQualityName(item),
-    ServiceType.music =>
-      extractQualityName(item, fileKey: 'albumFile') ??
-          extractQualityName(item),
     _ => extractQualityName(item),
   };
   final date = switch (serviceType) {
     ServiceType.movies => stringOrNull(
       item['airDateUtc'] ?? item['digitalRelease'] ?? item['inCinemas'],
     ),
-    ServiceType.music => stringOrNull(item['releaseDate']),
     _ => stringOrNull(item['airDateUtc']),
   };
   final showDateChip = !(isCutoff && serviceType == ServiceType.movies);

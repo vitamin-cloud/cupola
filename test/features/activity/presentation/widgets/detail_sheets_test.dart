@@ -204,22 +204,6 @@ void main() {
       expect(find.text('No'), findsOneWidget);
     });
 
-    testWidgets('a release date prints the day it states and no clock', (
-      tester,
-    ) async {
-      await _pumpDetailSheet(
-        tester,
-        showSheet: (context) => DetailSheets.showWantedDetail(context, {
-          'title': 'Release Name',
-          'artist': {'artistName': 'Artist Name'},
-          'releaseDate': '2024-05-01T00:00:00Z',
-        }, ServiceType.music),
-      );
-
-      expect(find.text('Release date'), findsOneWidget);
-      expect(find.text('2024-05-01'), findsOneWidget);
-    });
-
     testWidgets('a movie\'s release date prints the day it states too', (
       tester,
     ) async {
@@ -267,29 +251,6 @@ void main() {
       );
 
       expect(find.text('2026-09-30 00:30'), findsOneWidget);
-    });
-
-    testWidgets('showWantedDetail renders music-specific fields', (
-      tester,
-    ) async {
-      await _pumpDetailSheet(
-        tester,
-        showSheet: (context) => DetailSheets.showWantedDetail(context, {
-          'title': 'Release Name',
-          'artist': {'artistName': 'Artist Name'},
-          'album': {'title': 'Album Name'},
-          'releaseDate': '2026-04-07T12:34:56Z',
-          'statistics': {'trackFileCount': 0},
-        }, ServiceType.music),
-      );
-
-      expect(find.text('Release Name'), findsWidgets);
-      expect(find.text('Artist'), findsOneWidget);
-      expect(find.text('Artist Name'), findsOneWidget);
-      expect(find.text('Album'), findsOneWidget);
-      expect(find.text('Album Name'), findsOneWidget);
-      expect(find.text('Album missing from disk'), findsOneWidget);
-      expect(find.textContaining('2026-04-07'), findsOneWidget);
     });
   });
 }

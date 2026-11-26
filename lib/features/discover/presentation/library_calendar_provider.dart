@@ -16,8 +16,6 @@ import 'package:cupola/features/discover/presentation/discover_details_provider.
 import 'package:cupola/features/discover/presentation/discover_provider.dart';
 import 'package:cupola/features/media/presentation/media_facts_sections.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
-import 'package:cupola/features/readarr/presentation/readarr_provider.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/connection_reach_provider.dart';
@@ -86,12 +84,7 @@ class LibraryCalendar {
 }
 
 /// The services whose calendars the calendar reads, in its chips' order.
-const calendarServices = [
-  ServiceKey.radarr,
-  ServiceKey.sonarr,
-  ServiceKey.lidarr,
-  ServiceKey.readarr,
-];
+const calendarServices = [ServiceKey.radarr, ServiceKey.sonarr];
 
 /// The connections the operator's calendar asks: every set-up connection of
 /// the four arrs. The requester's calendar never reads an arr.
@@ -123,8 +116,6 @@ final calendarSourceProvider = FutureProvider.autoDispose
       final ArrActivityMixin service = switch (key.service) {
         ServiceKey.radarr => ref.watch(radarrServiceForProvider(id)),
         ServiceKey.sonarr => ref.watch(sonarrServiceForProvider(id)),
-        ServiceKey.lidarr => ref.watch(lidarrServiceForProvider(id)),
-        ServiceKey.readarr => ref.watch(readarrServiceForProvider(id)),
         _ => throw ArgumentError.value(key.service, 'service', 'no calendar'),
       };
       final window = CalendarWindow.from(key.from);
@@ -143,13 +134,9 @@ final calendarSourceProvider = FutureProvider.autoDispose
           ServiceKey.radarr => await ref.watch(
             radarrQueueSnapshotForProvider(id).future,
           ),
-          ServiceKey.sonarr => (await ref.watch(
+          _ => (await ref.watch(
             sonarrQueueSnapshotsForProvider(id).future,
           )).byEpisode,
-          ServiceKey.lidarr => (await ref.watch(
-            lidarrQueueSnapshotsForProvider(id).future,
-          )).byAlbum,
-          _ => await ref.watch(readarrQueueSnapshotForProvider(id).future),
         };
       }
       return CalendarReading(

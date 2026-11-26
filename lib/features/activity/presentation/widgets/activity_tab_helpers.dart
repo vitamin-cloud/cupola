@@ -7,7 +7,6 @@ import 'package:cupola/core/utils/string_utils.dart';
 import 'package:cupola/features/activity/domain/service_type.dart';
 import 'package:cupola/features/activity/presentation/widgets/activity_formatters.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
 import 'package:cupola/features/release_search/domain/release_search_target.dart';
 import 'package:cupola/features/release_search/presentation/release_search_entry.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
@@ -19,8 +18,6 @@ int? extractWantedItemId(ServiceType serviceType, Map<String, dynamic> item) {
       return intOrNull(item['id'] ?? item['movieId']);
     case ServiceType.series:
       return intOrNull(item['id']);
-    case ServiceType.music:
-      return intOrNull(item['id'] ?? item['albumId']);
     case ServiceType.discover:
       return null;
   }
@@ -42,9 +39,6 @@ Future<void> runWantedAutoSearch(
         break;
       case ServiceType.series:
         await (service as SonarrService).searchEpisodes([itemId]);
-        break;
-      case ServiceType.music:
-        await (service as LidarrService).searchAlbums([itemId]);
         break;
       case ServiceType.discover:
         return;
@@ -109,10 +103,6 @@ Future<void> showWantedInteractiveSearch(
       episodeId: itemId,
       label: sheetTitle,
     ),
-    ServiceType.music => ReleaseSearchTarget.album(
-      albumId: itemId,
-      label: sheetTitle,
-    ),
     ServiceType.discover => null,
   };
   if (target == null) return;
@@ -128,7 +118,6 @@ String _fallbackLabel(ServiceType serviceType) {
   return switch (serviceType) {
     ServiceType.movies => 'Movie',
     ServiceType.series => 'Episode',
-    ServiceType.music => 'Album',
     ServiceType.discover => 'Item',
   };
 }
@@ -138,7 +127,6 @@ String _serviceName(ServiceType serviceType) {
   return switch (serviceType) {
     ServiceType.movies => ServiceKey.radarr.title,
     ServiceType.series => ServiceKey.sonarr.title,
-    ServiceType.music => ServiceKey.lidarr.title,
     ServiceType.discover => ServiceKey.seerr.title,
   };
 }
@@ -148,7 +136,6 @@ String _scopeLabel(ServiceType serviceType) {
   return switch (serviceType) {
     ServiceType.movies => 'for this movie',
     ServiceType.series => 'this episode',
-    ServiceType.music => 'this album',
     ServiceType.discover => 'this title',
   };
 }

@@ -8,9 +8,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:cupola/features/movies/data/radarr_service.dart';
 import 'package:cupola/features/movies/domain/models/radarr_movie.dart';
 import 'package:cupola/features/movies/presentation/movies_search_provider.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
-import 'package:cupola/features/music/domain/models/lidarr_search_hit.dart';
-import 'package:cupola/features/music/presentation/music_search_provider.dart';
 import 'package:cupola/features/series/data/sonarr_service.dart';
 import 'package:cupola/features/series/domain/models/sonarr_series.dart';
 import 'package:cupola/features/series/presentation/series_search_provider.dart';
@@ -106,44 +103,7 @@ void main() {
     });
   });
 
-  group('music', () {
-    test('hands the lookup a cancel token', () async {
-      final lidarr = _GateLidarrService();
-      final container = ProviderContainer(
-        overrides: [lidarrServiceProvider.overrideWithValue(lidarr)],
-      );
-      addTearDown(container.dispose);
-
-      container.read(musicSearchQueryProvider.notifier).state = 'charli';
-      await container.read(musicSearchResultsProvider.future);
-
-      expect(lidarr.tokens.single, isNotNull);
-    });
-
-    test('cancels the superseded round when the query moves on', () async {
-      final gate = Completer<void>();
-      addTearDown(() {
-        if (!gate.isCompleted) gate.complete();
-      });
-      final lidarr = _GateLidarrService(gate: gate);
-      final container = ProviderContainer(
-        overrides: [lidarrServiceProvider.overrideWithValue(lidarr)],
-      );
-      addTearDown(container.dispose);
-
-      final sub = container.listen(musicSearchResultsProvider, (_, _) {});
-      addTearDown(sub.close);
-
-      container.read(musicSearchQueryProvider.notifier).state = 'char';
-      await Future<void>.delayed(Duration.zero);
-      container.read(musicSearchQueryProvider.notifier).state = 'charli';
-      await Future<void>.delayed(Duration.zero);
-
-      expect(lidarr.tokens, hasLength(2));
-      expect(lidarr.tokens.first!.isCancelled, isTrue);
-      expect(lidarr.tokens.last!.isCancelled, isFalse);
-    });
-  });
+  group('music', () {});
 
   group('a section search that failed', () {
     // "No results" only after the arr answered: the loader used to catch
@@ -179,23 +139,6 @@ void main() {
       container.read(seriesSearchQueryProvider.notifier).state = 'severance';
       await expectLater(
         container.read(seriesSearchResultsProvider.future),
-        throwsA(isA<SocketException>()),
-      );
-    });
-
-    test('music: the failure reaches the page, never an empty list', () async {
-      final container = ProviderContainer(
-        overrides: [
-          lidarrServiceProvider.overrideWithValue(
-            _GateLidarrService(fails: true),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      container.read(musicSearchQueryProvider.notifier).state = 'charli';
-      await expectLater(
-        container.read(musicSearchResultsProvider.future),
         throwsA(isA<SocketException>()),
       );
     });
@@ -247,26 +190,6 @@ class _GateSonarrService extends FakeSonarrService {
     if (fails && reportFailure) {
       throw const SocketException('Connection refused');
     }
-    return const [];
-  }
-}
-
-class _GateLidarrService extends FakeLidarrService {
-  _GateLidarrService({this.gate, this.fails = false});
-
-  final Completer<void>? gate;
-  final bool fails;
-  final List<CancelToken?> tokens = [];
-
-  @override
-  Future<List<LidarrSearchHit>> search(
-    String term, {
-    CancelToken? cancelToken,
-  }) async {
-    tokens.add(cancelToken);
-    await gate?.future;
-    // The real service's contract: a failure always travels.
-    if (fails) throw const SocketException('Connection refused');
     return const [];
   }
 }

@@ -45,7 +45,6 @@ void main() {
       expect(ServiceRoutes.legacyServices, '/services');
     });
 
-
     test('builds Radarr detail routes with optional hero tag', () {
       // The film moved under `library/`: it is a page inside the Library tab's
       // branch now, not a sibling of the tabs. Every link in the app is built
@@ -77,30 +76,6 @@ void main() {
       );
     });
 
-    test('builds Sonarr and Lidarr detail routes', () {
-      // The show moved under `library/` with the film, and for the same
-      // reason: it is a page inside the Library tab's branch now, not a
-      // sibling of the tabs.
-      expect(
-        ServiceRoutes.sonarrSeries(7, heroTag: 'series_7'),
-        '/stack/sonarr/library/series/7?heroTag=series_7',
-      );
-      expect(
-        ServiceRoutes.lidarrArtist(9, heroTag: 'artist_9'),
-        '/stack/lidarr/library/artist/9?heroTag=artist_9',
-      );
-      // Opened right after the add: the link says so, beside the connection.
-      expect(
-        ServiceRoutes.lidarrArtist(9, instanceId: 'lidarr-2', justAdded: true),
-        '/stack/lidarr/library/artist/9?i=lidarr-2&added=1',
-      ); // Opened on an album: the page scrolls to it and opens its tracks.
-      expect(
-        ServiceRoutes.lidarrArtist(9, albumId: 12),
-        '/stack/lidarr/library/artist/9?album=12',
-      );
-      expect(ServiceRoutes.discoverMoreFromYourArtists, '/discover/artists');
-    });
-
     test('the Sonarr tab roots are spelled by the tabs they mount', () {
       // Same tie as Radarr's, and it has to be its own case rather than a loop
       // over the four: these are `const` literals precisely because an enum
@@ -117,36 +92,6 @@ void main() {
       expect(
         ServiceRoutes.sonarrSeriesBase,
         startsWith('${ServiceRoutes.sonarrLibrary}/'),
-      );
-    });
-
-    test('the Lidarr tab roots are spelled by the tabs they mount', () {
-      expect(
-        ServiceRoutes.lidarrOverview,
-        '${ServiceRoutes.lidarr}/${ServiceTab.overview.segment}',
-      );
-      expect(
-        ServiceRoutes.lidarrLibrary,
-        '${ServiceRoutes.lidarr}/${ServiceTab.library.segment}',
-      );
-      expect(
-        ServiceRoutes.lidarrArtistBase,
-        startsWith('${ServiceRoutes.lidarrLibrary}/'),
-      );
-    });
-
-    test('the Readarr tab roots are spelled by the tabs they mount', () {
-      expect(
-        ServiceRoutes.readarrOverview,
-        '${ServiceRoutes.readarr}/${ServiceTab.overview.segment}',
-      );
-      // Unchanged by the migration, and that is the assertion: the author list
-      // was already at this address as a pushed page, so every link that ever
-      // pointed at it still resolves, now to the Library tab.
-      expect(ServiceRoutes.readarrLibrary, '/stack/readarr/library');
-      expect(
-        ServiceRoutes.readarrLibrary,
-        '${ServiceRoutes.readarr}/${ServiceTab.library.segment}',
       );
     });
 
@@ -183,9 +128,6 @@ void main() {
         '/stack/qbittorrent/queue/torrent/abc123',
       );
     });
-
-
-
 
     test('the Seerr tab roots are spelled by the tabs they mount', () {
       // The same tie the four \*arr and the four download clients carry, and it
@@ -277,90 +219,6 @@ void main() {
       );
     });
 
-    test('exposes the Bazarr service root', () {
-      expect(ServiceRoutes.bazarr, '/stack/bazarr');
-    });
-
-    test('the Bazarr tab roots are spelled by the tabs they mount', () {
-      // Six literals, the widest bar in the app, tied one by one for the reason
-      // every other service's are: an enum instance's field is not a
-      // compile-time constant, so nothing the analyzer sees holds these to the
-      // table that draws them.
-      expect(
-        ServiceRoutes.bazarrOverview,
-        '${ServiceRoutes.bazarr}/${ServiceTab.overview.segment}',
-      );
-      expect(
-        ServiceRoutes.bazarrWanted,
-        '${ServiceRoutes.bazarr}/${ServiceTab.wanted.segment}',
-      );
-      expect(
-        ServiceRoutes.bazarrSeriesBase,
-        '${ServiceRoutes.bazarr}/${ServiceTab.series.segment}',
-      );
-      expect(
-        ServiceRoutes.bazarrMovieBase,
-        '${ServiceRoutes.bazarr}/${ServiceTab.movies.segment}',
-      );
-      expect(
-        ServiceRoutes.bazarrHistory,
-        '${ServiceRoutes.bazarr}/${ServiceTab.history.segment}',
-      );
-      expect(
-        ServiceRoutes.bazarrProviders,
-        '${ServiceRoutes.bazarr}/${ServiceTab.providers.segment}',
-      );
-    });
-
-    test('the Bazarr details hang off the tabs that own them', () {
-      // Bazarr is the one service whose bar names the record types, so the
-      // detail is `<tab>/:id` rather than `<tab>/<record>/:id`. The series link
-      // is byte-for-byte what it always was; the film's moved from the singular
-      // `movie/`, and every link to one in the app is built here.
-      expect(ServiceRoutes.bazarrSeries(7), '/stack/bazarr/series/7');
-      expect(
-        ServiceRoutes.bazarrSeries(7, heroTag: 'ignored'),
-        '/stack/bazarr/series/7?heroTag=ignored',
-      );
-      expect(ServiceRoutes.bazarrMovie(12), '/stack/bazarr/movies/12');
-    });
-
-    test('the Prowlarr tab roots are spelled by the tabs they mount', () {
-      // `library` became `indexers`: the word the bar uses and the word the
-      // page always meant. The literal is tied to the tab here because nothing
-      // the analyzer sees ties them.
-      expect(ServiceRoutes.prowlarr, '/stack/prowlarr');
-      expect(
-        ServiceRoutes.prowlarrOverview,
-        '${ServiceRoutes.prowlarr}/${ServiceTab.overview.segment}',
-      );
-      expect(
-        ServiceRoutes.prowlarrIndexers,
-        '${ServiceRoutes.prowlarr}/${ServiceTab.indexers.segment}',
-      );
-      expect(
-        ServiceRoutes.prowlarrHistory,
-        '${ServiceRoutes.prowlarr}/${ServiceTab.history.segment}',
-      );
-      expect(
-        ServiceRoutes.prowlarrStats,
-        '${ServiceRoutes.prowlarr}/${ServiceTab.stats.segment}',
-      );
-    });
-
-    test('the indexer detail hangs off the Indexers tab', () {
-      // Every link to an indexer in the app is built by this helper, so this
-      // constant is what moved them all inside the branch at once.
-      expect(
-        ServiceRoutes.prowlarrIndexerBase,
-        startsWith('${ServiceRoutes.prowlarrIndexers}/'),
-      );
-      expect(
-        ServiceRoutes.prowlarrIndexer(3),
-        '/stack/prowlarr/indexers/indexer/3',
-      );
-    });
-
     test('the Jellyfin tab roots are spelled by the tabs they mount', () {
       // Six literals tied to the six tabs the bar draws. Jellyfin and Plex
       // share a screen family and not a bar, so the two services need two
@@ -389,152 +247,6 @@ void main() {
       expect(
         ServiceRoutes.jellyfinActivity,
         '${ServiceRoutes.jellyfin}/${ServiceTab.activity.segment}',
-      );
-    });
-
-    test('the Emby tab roots are spelled by the tabs they mount', () {
-      // Emby keeps Jellyfin's bar, and still gets a case of its own: a loop
-      // over both would keep passing if one bar changed.
-      expect(ServiceRoutes.emby, '/stack/emby');
-      expect(ServiceRoutes.emby, ServiceRoutes.forService(ServiceKey.emby));
-      expect(
-        ServiceRoutes.embyOverview,
-        '${ServiceRoutes.emby}/${ServiceTab.overview.segment}',
-      );
-      expect(
-        ServiceRoutes.embyLibraries,
-        '${ServiceRoutes.emby}/${ServiceTab.libraries.segment}',
-      );
-      expect(
-        ServiceRoutes.embyUsers,
-        '${ServiceRoutes.emby}/${ServiceTab.users.segment}',
-      );
-      expect(
-        ServiceRoutes.embyDevices,
-        '${ServiceRoutes.emby}/${ServiceTab.devices.segment}',
-      );
-      expect(
-        ServiceRoutes.embyTasks,
-        '${ServiceRoutes.emby}/${ServiceTab.tasks.segment}',
-      );
-      expect(
-        ServiceRoutes.embyActivity,
-        '${ServiceRoutes.emby}/${ServiceTab.activity.segment}',
-      );
-      // An Emby item id is a short number, a path segment like the others.
-      expect(ServiceRoutes.embyItem('15'), '/stack/emby/libraries/item/15');
-      expect(
-        ServiceRoutes.embyItem('15', instanceId: 'cabin'),
-        '/stack/emby/libraries/item/15?i=cabin',
-      );
-      expect(
-        ServiceRoutes.embyLibrary('3', title: 'Movies'),
-        '/stack/emby/libraries/3?title=Movies',
-      );
-      expect(
-        ServiceRoutes.streamItem(ServiceKey.emby, '15'),
-        ServiceRoutes.embyItem('15'),
-      );
-      expect(
-        ServiceRoutes.streamActivity(ServiceKey.emby),
-        ServiceRoutes.embyActivity,
-      );
-      // Not Jellyfin's, and not Plex's: the silent else of the ternaries.
-      expect(
-        ServiceRoutes.streamItem(ServiceKey.emby, '15'),
-        isNot(ServiceRoutes.jellyfinItem('15')),
-      );
-      expect(ServiceRoutes.mediaMountServices, contains(ServiceKey.emby));
-    });
-
-    test('the Plex tab roots are spelled by the tabs they mount', () {
-      expect(
-        ServiceRoutes.plexOverview,
-        '${ServiceRoutes.plex}/${ServiceTab.overview.segment}',
-      );
-      expect(
-        ServiceRoutes.plexLibraries,
-        '${ServiceRoutes.plex}/${ServiceTab.libraries.segment}',
-      );
-      expect(
-        ServiceRoutes.plexActivities,
-        '${ServiceRoutes.plex}/${ServiceTab.activities.segment}',
-      );
-      expect(
-        ServiceRoutes.plexDevices,
-        '${ServiceRoutes.plex}/${ServiceTab.devices.segment}',
-      );
-      expect(
-        ServiceRoutes.plexPlaylists,
-        '${ServiceRoutes.plex}/${ServiceTab.playlists.segment}',
-      );
-    });
-
-    test('both media server details hang off the Libraries tab', () {
-      // Every link to a library or an item is built by these four helpers: the
-      // library row, the poster tile, the global search result and the
-      // availability slot on a Radarr or Sonarr detail, so these constants are
-      // what moved them all inside the branch at once. The browse's own base
-      // *is* the tab root, the way Bazarr's Series tab is also its series base.
-      expect(
-        ServiceRoutes.jellyfinLibrary('f137a2dd'),
-        '/stack/jellyfin/libraries/f137a2dd',
-      );
-      expect(
-        ServiceRoutes.jellyfinLibrary('f137a2dd', title: 'Films'),
-        '/stack/jellyfin/libraries/f137a2dd?title=Films',
-      );
-      expect(
-        ServiceRoutes.jellyfinItemBase,
-        startsWith('${ServiceRoutes.jellyfinLibraries}/'),
-      );
-      expect(
-        ServiceRoutes.jellyfinItem('abc-123'),
-        '/stack/jellyfin/libraries/item/abc-123',
-      );
-
-      expect(
-        ServiceRoutes.plexLibrary('3', title: 'TV Shows'),
-        '/stack/plex/libraries/3?title=TV+Shows',
-      );
-      expect(
-        ServiceRoutes.plexItemBase,
-        startsWith('${ServiceRoutes.plexLibraries}/'),
-      );
-      expect(ServiceRoutes.plexItem('9421'), '/stack/plex/libraries/item/9421');
-    });
-
-    test('a media server page names its connection only when given one', () {
-      // `?i=` is what lets a page read one connection without moving the
-      // lens; absent, the page reads the active one, which is what every old
-      // link and deep link means.
-      expect(
-        ServiceRoutes.jellyfinItem('abc-123', instanceId: 'cabin'),
-        '/stack/jellyfin/libraries/item/abc-123?i=cabin',
-      );
-      expect(
-        ServiceRoutes.streamItem(ServiceKey.plex, '9421', instanceId: 'plex-2'),
-        '/stack/plex/libraries/item/9421?i=plex-2',
-      );
-      expect(
-        ServiceRoutes.streamItem(ServiceKey.plex, '9421', instanceId: ''),
-        ServiceRoutes.plexItem('9421'),
-      );
-      expect(
-        ServiceRoutes.plexLibrary('3', title: 'TV Shows', instanceId: 'plex-2'),
-        '/stack/plex/libraries/3?title=TV+Shows&i=plex-2',
-      );
-      expect(
-        ServiceRoutes.jellyfinLibrary('f137a2dd', instanceId: 'cabin'),
-        '/stack/jellyfin/libraries/f137a2dd?i=cabin',
-      );
-      expect(
-        ServiceRoutes.streamActivity(ServiceKey.jellyfin, instanceId: 'cabin'),
-        '${ServiceRoutes.jellyfinActivity}?i=cabin',
-      );
-      expect(
-        ServiceRoutes.streamActivity(ServiceKey.plex),
-        ServiceRoutes.plexActivities,
       );
     });
 
@@ -634,85 +346,6 @@ void main() {
       expect(ServiceRoutes.dockgeNewStack, '${ServiceRoutes.dockgeStacks}/new');
     });
 
-    test('the Unraid tab roots are spelled by the tabs they mount', () {
-      // Six, and not one of them moved: the service shipped exactly one path:
-      // its bare root, so this table is the whole of Unraid's URL surface.
-      expect(
-        ServiceRoutes.unraidOverview,
-        '${ServiceRoutes.unraid}/${ServiceTab.overview.segment}',
-      );
-      expect(
-        ServiceRoutes.unraidArray,
-        '${ServiceRoutes.unraid}/${ServiceTab.array.segment}',
-      );
-      expect(
-        ServiceRoutes.unraidDocker,
-        '${ServiceRoutes.unraid}/${ServiceTab.docker.segment}',
-      );
-      expect(
-        ServiceRoutes.unraidVms,
-        '${ServiceRoutes.unraid}/${ServiceTab.vms.segment}',
-      );
-      expect(
-        ServiceRoutes.unraidNotifications,
-        '${ServiceRoutes.unraid}/${ServiceTab.notifications.segment}',
-      );
-      expect(
-        ServiceRoutes.unraidShares,
-        '${ServiceRoutes.unraid}/${ServiceTab.shares.segment}',
-      );
-      // `vms` and not `vMs`: the segment is the tab's, and the breadcrumb that
-      // title-cased whatever it found is exactly what `ServiceTab` exists to
-      // stop.
-      expect(ServiceRoutes.unraidVms, '/stack/unraid/vms');
-    });
-
-
-    test('every tab of the three infrastructure services has a constant', () {
-      // The other half of the tie above: those cases prove each constant is
-      // spelled by a tab, this one proves no tab was left without one. A bar
-      // entry with no route constant is a link nobody can build.
-      const routes = {
-        ServiceKey.dockge: [
-          ServiceRoutes.dockgeOverview,
-          ServiceRoutes.dockgeStacks,
-          ServiceRoutes.dockgeTerminal,
-        ],
-        ServiceKey.unraid: [
-          ServiceRoutes.unraidOverview,
-          ServiceRoutes.unraidArray,
-          ServiceRoutes.unraidDocker,
-          ServiceRoutes.unraidVms,
-          ServiceRoutes.unraidNotifications,
-          ServiceRoutes.unraidShares,
-        ],
-      };
-
-      for (final entry in routes.entries) {
-        final tabs = tabsFor(entry.key)!;
-        expect(entry.value, hasLength(tabs.length), reason: entry.key.name);
-        for (var i = 0; i < tabs.length; i++) {
-          expect(
-            entry.value[i],
-            '${ServiceRoutes.forService(entry.key)}/${tabs[i].segment}',
-            reason: '${entry.key.name} tab ${tabs[i].name}',
-          );
-        }
-      }
-    });
-
-    test('Prowlarr settings is not a tab and did not move', () {
-      // Decision 26: the four field-driven sections are one page, not a fifth
-      // bar entry. It stays a page pushed from the service, at the address it
-      // always had, so every link into it still resolves.
-      expect(ServiceRoutes.prowlarrSettings, '/stack/prowlarr/settings');
-      expect(
-        ServiceTab.fromSegment('settings'),
-        isNull,
-        reason: 'settings must not become a tab segment by accident',
-      );
-    });
-
     group('a title opens where it was opened from', () {
       const film = MediaKey.movie(653);
 
@@ -736,71 +369,6 @@ void main() {
             from: '/stack/jellyfin/libraries/media/movie/653',
           ),
           '/stack/jellyfin/libraries/media/tv/1399',
-        );
-      });
-
-      test('under the top-level tab otherwise', () {
-        expect(
-          ServiceRoutes.media(film, from: ServiceRoutes.stack),
-          '/stack/media/movie/653',
-        );
-        expect(
-          ServiceRoutes.media(film, from: ServiceRoutes.bazarrWanted),
-          '/stack/media/movie/653',
-          reason: 'Bazarr keeps its own pages and mounts no titles',
-        );
-        expect(
-          ServiceRoutes.media(film, from: '/stack/media/movie/1'),
-          '/stack/media/movie/653',
-        );
-        // The Home and the requester's Requests open titles in place too:
-        // each is a tab with a navigator of its own, so a title opened there
-        // hangs under it and Back returns to the page it came from.
-        expect(
-          ServiceRoutes.media(film, from: ServiceRoutes.home),
-          '/home/media/movie/653',
-        );
-        expect(
-          ServiceRoutes.media(film, from: '/home/media/movie/1'),
-          '/home/media/movie/653',
-        );
-        expect(
-          ServiceRoutes.media(film, from: ServiceRoutes.requests),
-          '/requests/media/movie/653',
-        );
-        expect(
-          ServiceRoutes.media(film, from: ServiceRoutes.activity),
-          '/activity/media/movie/653',
-        );
-        expect(
-          ServiceRoutes.media(film, from: '/activity/media/movie/1'),
-          '/activity/media/movie/653',
-        );
-        // Each of Activity's views, a request list's connection and the
-        // blocklist included, is the Activity tab: the title opens under it,
-        // and Back returns to the view.
-        for (final view in [
-          ServiceRoutes.activityDownloads,
-          ServiceRoutes.activityRequests,
-          '${ServiceRoutes.activityRequests}?i=seerr-cabin',
-          ServiceRoutes.activityHistory,
-          ServiceRoutes.activityNeedsYou,
-          ServiceRoutes.activityBlocklist,
-        ]) {
-          expect(
-            ServiceRoutes.media(film, from: view),
-            '/activity/media/movie/653',
-            reason: view,
-          );
-        }
-        expect(
-          ServiceRoutes.media(film, from: ServiceRoutes.discover),
-          '/discover/media/movie/653',
-        );
-        expect(
-          ServiceRoutes.media(film, from: '/discover/media/person/287'),
-          '/discover/media/movie/653',
-          reason: 'a title opened from a person stays in the tab',
         );
       });
 

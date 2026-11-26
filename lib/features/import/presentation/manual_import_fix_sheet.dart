@@ -50,7 +50,7 @@ Future<void> _show(BuildContext context, Widget sheet) =>
     );
 
 /// Where the sheet is: the title, then (a series, an album) the part of it.
-enum _Step { title, album, part }
+enum _Step { title, part }
 
 class _MatchSheet extends ConsumerStatefulWidget {
   const _MatchSheet({required this.service, required this.items})
@@ -81,14 +81,10 @@ class _MatchSheetState extends ConsumerState<_MatchSheet> {
 
   List<ManualImportEpisode> _episodes = const [];
   int? _season;
-  List<ManualImportAlbum> _albums = const [];
-  ManualImportAlbum? _album;
-  List<ManualImportTrack> _tracks = const [];
   bool _loadingPart = false;
 
   /// Each file's episode or track, by path.
   final _episodeOf = <String, ManualImportEpisode>{};
-  final _trackOf = <String, ManualImportTrack>{};
 
   bool _applying = false;
   String? _refusal;
@@ -166,8 +162,6 @@ class _MatchSheetState extends ConsumerState<_MatchSheet> {
     switch (_service) {
       case ServiceKey.sonarr:
         await _loadEpisodes(match);
-      case ServiceKey.lidarr:
-        await _loadAlbums(match);
       default:
         break;
     }
@@ -209,42 +203,9 @@ class _MatchSheetState extends ConsumerState<_MatchSheet> {
     }
   });
 
-  Future<void> _loadAlbums(ManualImportLookupResult artist) async {
-    setState(() {
-      _step = _Step.album;
-      _loadingPart = true;
-    });
-    final albums = await ref
-        .read(manualImportFlowProvider.notifier)
-        .getAlbums(artist.id);
-    if (!mounted) return;
-    setState(() {
-      _albums = albums;
-      _loadingPart = false;
-    });
-  }
-
-  Future<void> _pickAlbum(ManualImportAlbum album) async {
-    setState(() {
-      _album = album;
-      _step = _Step.part;
-      _loadingPart = true;
-      _trackOf.clear();
-    });
-    final tracks = await ref
-        .read(manualImportFlowProvider.notifier)
-        .getTracks(album.id);
-    if (!mounted) return;
-    setState(() {
-      _tracks = tracks;
-      _loadingPart = false;
-    });
-  }
-
   void _back() => setState(() {
     _refusal = null;
     _step = switch (_step) {
-      _Step.part when _service == ServiceKey.lidarr => _Step.album,
       _ => _Step.title,
     };
   });
@@ -342,23 +303,16 @@ class _MatchSheetState extends ConsumerState<_MatchSheet> {
       ServiceKey.sonarr => widget.items.every(
         (item) => _episodeOf.containsKey(item.path),
       ),
-      ServiceKey.lidarr =>
-        _album != null &&
-            widget.items.every((item) => _trackOf.containsKey(item.path)),
       _ => true,
     };
   }
 
   ManualImportFixAssignment _assignmentFor(ManualImportItem item) {
     final episode = _episodeOf[item.path];
-    final track = _trackOf[item.path];
     return ManualImportFixAssignment(
       match: _match!,
       episode: episode,
       episodes: [?episode],
-      album: _album,
-      track: track,
-      tracks: [?track],
     );
   }
 
@@ -398,9 +352,6 @@ class _MatchSheetState extends ConsumerState<_MatchSheet> {
     (ServiceKey.radarr, _) => 'Which movie?',
     (ServiceKey.sonarr, _Step.title) => 'Which series?',
     (ServiceKey.sonarr, _) => _bulk ? 'Which episodes?' : 'Which episode?',
-    (ServiceKey.lidarr, _Step.title) => 'Which artist?',
-    (ServiceKey.lidarr, _Step.album) => 'Which album?',
-    (ServiceKey.lidarr, _) => _bulk ? 'Which tracks?' : 'Which track?',
     _ => 'Which title?',
   };
 
@@ -411,11 +362,6 @@ class _MatchSheetState extends ConsumerState<_MatchSheet> {
     (ServiceKey.sonarr, _Step.part) => switch (_episodeOf.values.firstOrNull) {
       final episode? => 'Match to ${episode.label}',
       null => 'Pick an episode',
-    },
-    (ServiceKey.lidarr, _Step.part) => switch (_trackOf.values.firstOrNull) {
-      final ManualImportTrack track =>
-        'Match to track ${track.trackNumber ?? ''}'.trim(),
-      null => 'Pick a track',
     },
     // Picking the series or the album is the step: no button under it.
     _ => null,
@@ -443,7 +389,6 @@ class _MatchSheetState extends ConsumerState<_MatchSheet> {
             SearchBarHeader(
               hintText: switch (_service) {
                 ServiceKey.radarr => 'Search your movies',
-                ServiceKey.lidarr => 'Search your artists',
                 _ => 'Search your series',
               },
               debounceDuration: const Duration(milliseconds: 300),
@@ -466,7 +411,6 @@ class _MatchSheetState extends ConsumerState<_MatchSheet> {
                 ],
                 ...switch (_step) {
                   _Step.title => _titleStep(context),
-                  _Step.album => _albumStep(context),
                   _Step.part => _partStep(context),
                 },
               ],
@@ -578,62 +522,7 @@ class _MatchSheetState extends ConsumerState<_MatchSheet> {
     );
   }
 
-  List<Widget> _albumStep(BuildContext context) => [
-    _chosen(context, 'Artist'),
-    const _Label('Album'),
-    if (_loadingPart)
-      const ShimmerPlaceholder(height: 3 * SearchRow.minHeight)
-    else if (_albums.isEmpty)
-      const AppEmptyState.compact(
-        icon: Icons.album_outlined,
-        title: 'No albums for this artist',
-      )
-    else
-      for (final album in _albums)
-        SearchRow.title(
-          title: album.title,
-          meta: ['Album', ?album.year?.toString()].join(dotSeparator),
-          poster: _posterOf(album.raw) ?? '',
-          onTap: () => _pickAlbum(album),
-        ),
-  ];
-
   List<Widget> _partStep(BuildContext context) {
-    if (_service == ServiceKey.lidarr) {
-      return [
-        _chosen(context, 'Album'),
-        if (_loadingPart)
-          const ShimmerPlaceholder(height: 4 * 56)
-        else if (_tracks.isEmpty)
-          const AppEmptyState.compact(
-            icon: Icons.music_note_outlined,
-            title: 'No tracks on this album',
-          )
-        else if (_bulk)
-          ..._eachFile(
-            label: 'Track',
-            valueOf: (item) => _trackOf[item.path]?.label,
-            onTap: (item) => _pickTrackFor(context, item),
-          )
-        else ...[
-          const _Label('Track'),
-          MediaGroup(
-            children: [
-              for (final track in _tracks)
-                _PickRow(
-                  title: track.label,
-                  detail: _trackDetail(track),
-                  selected: _trackOf[widget.items.single.path]?.id == track.id,
-                  onTap: () => setState(
-                    () => _trackOf[widget.items.single.path] = track,
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ];
-    }
-
     final seasons = _seasonsOf(_episodes);
     final season = _season;
     return [
@@ -732,27 +621,6 @@ class _MatchSheetState extends ConsumerState<_MatchSheet> {
     if (picked != null) _pickEpisode(item, picked.value);
   }
 
-  Future<void> _pickTrackFor(
-    BuildContext context,
-    ManualImportItem item,
-  ) async {
-    final current = _trackOf[item.path];
-    final picked = await showMediaValueSheet<ManualImportTrack>(
-      context,
-      title: fileStem(item),
-      value: current,
-      currentLabel: current?.label ?? 'none',
-      searchHint: 'Track number or title',
-      options: [
-        for (final track in _tracks)
-          MediaDetailValueOption(value: track, label: track.label),
-      ],
-    );
-    if (picked != null) {
-      setState(() => _trackOf[item.path] = picked.value);
-    }
-  }
-
   /// `E4 · The title`: the season is the pill above.
   static String _episodeTitle(ManualImportEpisode episode) => [
     formatEpisodeOrdinal(episode.episodeNumber),
@@ -775,17 +643,6 @@ class _MatchSheetState extends ConsumerState<_MatchSheet> {
       'Aired ${formatDayMonth(aired.toLocal())}',
       onDisk ? 'On disk' : 'Missing',
     ].join(dotSeparator);
-  }
-
-  static String? _trackDetail(ManualImportTrack track) {
-    final raw = track.raw;
-    final seconds = (intOrNull(raw['duration']) ?? 0) ~/ 1000;
-    final words = [
-      if (seconds > 0)
-        '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}',
-      if (raw['hasFile'] == true) 'On disk',
-    ];
-    return words.isEmpty ? null : words.join(dotSeparator);
   }
 }
 

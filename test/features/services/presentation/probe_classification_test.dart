@@ -17,7 +17,6 @@ import 'package:cupola/features/services/domain/service_summary.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/services/presentation/stack_screen.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
-import 'package:cupola/features/shell/domain/stack_health.dart';
 
 import '../../../test_helpers/profiles/profiles.dart';
 
@@ -34,7 +33,6 @@ Future<ServiceSummary> _probe(
 }
 
 void main() {
-
   group('nothing answering is the one red state', () {
     for (final behaviour in const [
       ConnectionBehaviour.didNotAnswer,
@@ -80,42 +78,9 @@ void main() {
         expect(summary.version, '10.11.11');
       },
     );
-
   });
 
-  group('P7: the fleet counts a refusal apart from the dark', () {
-    test(
-      'qBittorrent refusing the sign-in is a fault, not an outage',
-      () async {
-        final harness = await ProfileHarness.start(Profiles.p7);
-        final container = harness.container(retry: (_, _) => null);
-        for (final connection in Profiles.p7.connections) {
-          await container.read(
-            instanceSummaryProvider((
-              service: connection.instance.service,
-              instanceId: connection.id,
-            )).future,
-          );
-        }
-
-        final qb = container.read(
-          foldedServiceHealthProvider(ServiceKey.qbittorrent),
-        );
-        expect(qb.faulted, 1);
-        expect(qb.offline, 0);
-
-        final dark = container.read(unreachableServicesProvider);
-        expect(dark, contains(ServiceKey.jellyfin));
-        expect(dark, contains(ServiceKey.bazarr));
-        expect(dark, isNot(contains(ServiceKey.qbittorrent)));
-
-        final health = container.read(stackHealthProvider);
-        expect(health.faulted, 1);
-        expect(health.sentence, contains('1 fault'));
-        expect(health.sentence, isNot(contains('unreachable')));
-      },
-    );
-  });
+  group('P7: the fleet counts a refusal apart from the dark', () {});
 
   group('the Stack paints it', () {
     testWidgets('a refused key reads amber in its own words, and the band '

@@ -683,12 +683,10 @@ class OnboardingClose extends StatelessWidget {
   ServiceKey? get _exampleToAdd {
     final missing = [
       for (final s in ServiceKey.values)
-        if (s != ServiceKey.readarr && !setUp.contains(s)) s,
+        if (!setUp.contains(s)) s,
     ];
     if (missing.isEmpty) return null;
-    return missing.contains(ServiceKey.lidarr)
-        ? ServiceKey.lidarr
-        : missing.first;
+    return missing.first;
   }
 
   String get _body {
@@ -764,7 +762,7 @@ class OnboardingStart extends StatelessWidget {
   final ValueChanged<ServiceKey> onPick;
   final VoidCallback onBack;
 
-  static const _knowTheOthers = [ServiceKey.seerr, ServiceKey.prowlarr];
+  static const _knowTheOthers = [ServiceKey.seerr];
 
   @override
   Widget build(BuildContext context) {

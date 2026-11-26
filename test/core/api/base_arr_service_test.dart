@@ -3,12 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/core/api/api_client.dart';
 import 'package:cupola/core/api/base_arr_service.dart';
-import 'package:cupola/features/movies/data/radarr_service.dart';
-import 'package:cupola/features/music/data/lidarr_service.dart';
-import 'package:cupola/features/readarr/data/readarr_service.dart';
-import 'package:cupola/features/series/data/sonarr_service.dart';
 
-import '../../test_helpers/capturing_http_adapter.dart';
 import '../../test_helpers/fake_api_client.dart';
 
 void main() {
@@ -510,50 +505,6 @@ void main() {
 
       expect(service.getCalendar(), throwsA(isA<FormatException>()));
     });
-  });
-
-  // Every "today" figure reads page one of history as the newest records and
-  // stops at the first one older than today. Asked for, on the wire, on every
-  // fork, rather than left to whatever order a server build defaults to.
-  group('history is asked for newest first', () {
-    final forks = <(String, String, ArrActivityMixin Function(ApiClient))>[
-      ('Radarr', '/api/v3/history', RadarrService.new),
-      ('Sonarr', '/api/v3/history', SonarrService.new),
-      ('Lidarr', '/api/v1/history', LidarrService.new),
-      ('Readarr', '/api/v1/history', ReadarrService.new),
-    ];
-
-    for (final (name, path, build) in forks) {
-      test('$name sends date, descending', () async {
-        final adapter = CapturingHttpAdapter(
-          response: {'totalRecords': 0, 'records': const []},
-        );
-        final client = ApiClient(baseUrl: 'https://arr.test', apiKey: 'k');
-        client.dio.httpClientAdapter = adapter;
-        final service = build(client);
-
-        await service.getHistoryPage(pageSize: 50);
-        expect(adapter.lastUri!.path, path);
-        expect(
-          adapter.lastUri!.queryParameters,
-          containsPair('sortKey', 'date'),
-        );
-        expect(
-          adapter.lastUri!.queryParameters,
-          containsPair('sortDirection', 'descending'),
-        );
-
-        await service.getAllHistory();
-        expect(
-          adapter.lastUri!.queryParameters,
-          containsPair('sortKey', 'date'),
-        );
-        expect(
-          adapter.lastUri!.queryParameters,
-          containsPair('sortDirection', 'descending'),
-        );
-      });
-    }
   });
 }
 

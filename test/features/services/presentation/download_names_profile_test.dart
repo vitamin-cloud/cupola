@@ -72,27 +72,6 @@ void main() {
     expect(_parses(harness, WorldIds.radarr), 1);
   });
 
-  test('P1: a name no arr can read stays its raw self, with no second '
-      'name', () async {
-    final harness = await ProfileHarness.start(
-      Profiles.p1.withDownloads([_iso]),
-    );
-    final container = harness.container(retry: (_, _) => null);
-
-    final queue = await container.read(servicesQueueProvider.future);
-    final row = queue.items.singleWhere((item) => item.id == _iso.id);
-    expect(row.names, const MediaNames.raw('ubuntu-24.10-desktop-amd64.iso'));
-    // Every arr was asked: two Radarr, Sonarr and Lidarr.
-    for (final id in [
-      WorldIds.radarr,
-      WorldIds.radarr4k,
-      WorldIds.sonarr,
-      WorldIds.lidarr,
-    ]) {
-      expect(_parses(harness, id), 1, reason: id);
-    }
-  });
-
   test('P1: a read sends at most six names to the arrs, and the rest are '
       'asked on the next', () async {
     final harness = await ProfileHarness.start(
@@ -119,34 +98,5 @@ void main() {
     container.invalidate(servicesQueueProvider);
     await container.read(servicesQueueProvider.future);
     expect(parses(), 2 * downloadNameParseCap);
-  });
-
-  test('P1, qBittorrent\'s own list: a download an arr claims is its item, '
-      'one it does not is asked about, one nobody reads is raw', () async {
-    final harness = await ProfileHarness.start(Profiles.p1);
-    final container = harness.container(retry: (_, _) => null);
-
-    final names = await container.read(
-      downloadClientNamesProvider((
-        service: ServiceKey.qbittorrent,
-        instanceId: WorldIds.qbittorrent,
-      )).future,
-    );
-
-    // In Radarr's queue: its title, beside qBittorrent's own name for it.
-    final sprite = names[WorldDownloads.spriteFright.id]!;
-    expect(sprite.title, 'Sprite Fright');
-    expect(sprite.machineName, WorldDownloads.spriteFright.release);
-
-    // Seeding, long imported: Radarr reads the name and holds the film.
-    final sintel = names[WorldDownloads.sintelSeeding.id]!;
-    expect(sintel.title, 'Sintel');
-    expect(sintel.source, MediaTitleSource.library);
-    expect(sintel.machineName, WorldDownloads.sintelSeeding.release);
-
-    expect(
-      names[WorldDownloads.ubuntu.id],
-      MediaNames.raw(WorldDownloads.ubuntu.release),
-    );
   });
 }

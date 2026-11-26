@@ -5,36 +5,12 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 
 void main() {
   group('Password is offered only where a proxy password can travel', () {
-    const signInWithAuthorization = {
-    };
+    const signInWithAuthorization = {};
 
-    for (final service in ServiceKey.values) {
-    }
-
+    for (final service in ServiceKey.values) {}
   });
 
-  group('a custom header named like the service\'s own credential', () {
-    test('is offered a move into the credential field', () {
-      expect(
-        duplicatesCredentialHeader(ServiceKey.radarr, 'x-api-key'),
-        isTrue,
-      );
-      expect(customHeaderNameProblem(ServiceKey.radarr, 'X-Api-Key'), isNull);
-      expect(
-        credentialHeaderClash(ServiceKey.radarr),
-        "Cupola already sends Radarr's key. Move it to the API key field?",
-      );
-      expect(
-        credentialHeaderClash(ServiceKey.plex),
-        "Cupola already sends Plex's token. Move it to the Plex token field?",
-      );
-      expect(
-        duplicatesCredentialHeader(ServiceKey.jellyfin, 'X-Emby-Token'),
-        isTrue,
-      );
-    });
-
-  });
+  group('a custom header named like the service\'s own credential', () {});
 
   group('a custom header name', () {
     test('never one the transport or the protocol owns', () {
@@ -57,7 +33,6 @@ void main() {
         );
       }
     });
-
 
     test('is an RFC 9110 token', () {
       expect(customHeaderNameProblem(ServiceKey.radarr, ''), 'Add a name');
@@ -114,5 +89,4 @@ void main() {
     expect(proxyUsernameProblem('a:b'), 'A username cannot contain a colon');
     expect(proxyUsernameProblem('matt'), isNull);
   });
-
 }

@@ -87,10 +87,7 @@ void main() {
   });
 
   group('Flagged by Tracearr', () {
-    const withTracearr = [
-      ServiceKey.seerr,
-      ServiceKey.radarr,
-    ];
+    const withTracearr = [ServiceKey.seerr, ServiceKey.radarr];
 
     testWidgets('is a third switch, off, once Tracearr is set up', (
       tester,

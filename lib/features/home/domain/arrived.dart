@@ -52,8 +52,6 @@ bool _newToLibrary(ArrHistoryEntry entry, DateTime since) =>
 String arrivedIdentity(ArrHistoryEntry entry) => switch (entry.service) {
   ServiceKey.radarr when entry.tmdbId != null => 'movie:${entry.tmdbId}',
   ServiceKey.sonarr when entry.tmdbId != null => 'tv:${entry.tmdbId}',
-  ServiceKey.lidarr =>
-    'lidarr:${entry.instanceId}:${entry.unitId ?? entry.mediaId}',
   _ => '${entry.service.name}:${entry.instanceId}:${entry.mediaId}',
 };
 

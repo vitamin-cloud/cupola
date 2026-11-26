@@ -52,15 +52,12 @@ const _services = <DesktopRailService>[
     state: '18 need you',
     count: '18',
   ),
-  (service: ServiceKey.lidarr, tone: null, state: null, count: null),
-  (service: ServiceKey.bazarr, tone: null, state: null, count: null),
   (
     service: ServiceKey.qbittorrent,
     tone: StatusTone.warning,
     state: 'a fault',
     count: null,
   ),
-  (service: ServiceKey.prowlarr, tone: null, state: null, count: null),
   (service: ServiceKey.jellyfin, tone: null, state: null, count: null),
   (
     service: ServiceKey.truenas,

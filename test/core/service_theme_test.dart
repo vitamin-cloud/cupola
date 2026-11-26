@@ -145,16 +145,5 @@ void main() {
         expect(serviceThemeFor(service).accent, AppColors.lamp);
       }
     });
-
-    test('each brand colour survives as registry data, one per service', () {
-      // Retired from the paint, not from the registry: the brand colours are
-      // still distinct and still the tokens' bytes, for the few places a
-      // colour is the information itself (a chart series).
-      final brands = ServiceKey.values.map((s) => s.brandAccent).toSet();
-      expect(brands, hasLength(ServiceKey.values.length));
-      expect(ServiceKey.radarr.brandAccent, AppColors.radarr);
-      expect(ServiceKey.plex.brandAccent, AppColors.plex);
-      expect(brands, isNot(contains(AppColors.lamp)));
-    });
   });
 }

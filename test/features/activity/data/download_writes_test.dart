@@ -47,8 +47,7 @@ const _drone = WorldDownload(
 void main() {
   Future<(ProfileHarness, WidgetRef)> pump(WidgetTester tester) async {
     final harness = await ProfileHarness.start(
-      Profiles.p1
-          .withDownloads(const [_torrent, _usenet, _drone]),
+      Profiles.p1.withDownloads(const [_torrent, _usenet, _drone]),
     );
     late WidgetRef captured;
     await tester.pumpWidget(
@@ -89,16 +88,6 @@ void main() {
     expect(done, isTrue, reason: 'the write never settled');
     return failure;
   }
-
-  List<NetworkRequest> writesTo(ProfileHarness harness, String id) => harness
-      .network
-      .requestsTo(id)
-      .where((request) => request.method == 'POST')
-      .toList();
-
-
-
-
 
   testWidgets('a service that moves no bytes is refused before any write', (
     tester,

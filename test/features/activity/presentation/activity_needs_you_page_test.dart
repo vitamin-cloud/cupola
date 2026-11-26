@@ -12,7 +12,6 @@ import 'package:cupola/core/router.dart';
 import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/features/activity/presentation/activity_needs_you_page.dart';
-import 'package:cupola/features/activity/presentation/widgets/activity_section.dart';
 import 'package:cupola/features/activity/presentation/widgets/fault_card.dart';
 import 'package:cupola/features/activity/presentation/widgets/reported_problems_card.dart';
 import 'package:cupola/features/home/presentation/widgets/needs_you_banner.dart';
@@ -156,31 +155,6 @@ void main() {
     expect(find.text('Radarr 1 → qBittorrent'), findsOneWidget);
     expect(find.text('Radarr 1\u00A0· qBittorrent'), findsNothing);
     expect(find.textContaining('Nothing for '), findsNothing);
-
-    await _close(tester, harness, container);
-  });
-
-  testWidgets('the heading of Needs you on All opens the page, and Back '
-      'returns to All', (tester) async {
-    final (harness, router, container) = await _app(tester, Profiles.p1);
-    router.go(ServiceRoutes.activity);
-    await _answer(tester);
-
-    await _tap(
-      tester,
-      find.descendant(
-        of: find.byWidgetPredicate(
-          (widget) => widget is ActivitySection && widget.title == 'Needs you',
-        ),
-        matching: find.text('4 faults\u00A0· 3 requests'),
-      ),
-    );
-    expect(router.state.uri.path, ServiceRoutes.activityNeedsYou);
-    expect(find.byType(ActivityNeedsYouPage), findsOneWidget);
-
-    router.pop();
-    await _answer(tester);
-    expect(router.state.uri.path, ServiceRoutes.activity);
 
     await _close(tester, harness, container);
   });

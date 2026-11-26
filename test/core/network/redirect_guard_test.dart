@@ -406,7 +406,6 @@ void main() {
   });
 
   group('a connection only at home, away from it', () {
-
     test('a client of a connection that may ask is left alone', () {
       final dio = guardedDio(baseUrl: 'http://192.0.2.10:8080');
       expect(dio.interceptors.whereType<OnlyAtHomeRefusal>(), isEmpty);

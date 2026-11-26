@@ -9,9 +9,7 @@ import 'package:cupola/core/network/connection_failure.dart';
 import 'package:cupola/core/platform/local_network_access.dart';
 import 'package:cupola/core/utils/dynamic_map_utils.dart';
 import 'package:cupola/features/dockge/data/dockge_client.dart';
-import 'package:cupola/features/emby/data/emby_client.dart';
 import 'package:cupola/features/jellyfin/data/jellyfin_client.dart';
-import 'package:cupola/features/plex/data/plex_client.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client_provider.dart';
 import 'package:cupola/features/discover/data/seerr_service.dart';
@@ -32,7 +30,6 @@ import 'package:cupola/features/settings/domain/unread_secret.dart'
     show secureStoreName;
 import 'package:cupola/features/settings/domain/settings_model.dart';
 import 'package:cupola/features/truenas/data/truenas_ws_client.dart';
-import 'package:cupola/features/unraid/data/unraid_client.dart';
 
 /// Where a service's connection is checked, and how the result is described.
 ///
@@ -352,20 +349,6 @@ Future<ServiceDiagnosis> diagnoseCredentials(
     );
   }
 
-  if (service == ServiceKey.unraid) {
-    final client = UnraidClient(
-      url: urlTrimmed,
-      apiKey: apiKey.trim(),
-      certFingerprint: pin,
-      accessHeaders: accessHeaders,
-    );
-    return _probe(
-      client.testConnection,
-      timeout: const Duration(seconds: 6),
-      close: client.close,
-    );
-  }
-
   if (service == ServiceKey.truenas) {
     final client = TrueNasWsClient(
       baseUrl: urlTrimmed,
@@ -408,22 +391,13 @@ Future<ServiceDiagnosis> diagnoseCredentials(
   // endpoints in the table above are anonymous. Verified through the generic branch, *any* non-empty string
   // therefore came back 2xx and the tile went green while every real call 401ed.
   // Their own clients are what actually present the credential.
-  if (service == ServiceKey.jellyfin || service == ServiceKey.emby) {
-    // Two constructions, not a factory: each client is opened where its pin
-    // and access are visible (`access_headers_guard_test`).
-    final MediaBrowserClient client = service == ServiceKey.emby
-        ? EmbyClient(
-            baseUrl: urlTrimmed,
-            apiKey: apiKey.trim(),
-            pinnedCertFingerprint: pin,
-            accessHeaders: accessHeaders,
-          )
-        : JellyfinClient(
-            baseUrl: urlTrimmed,
-            apiKey: apiKey.trim(),
-            pinnedCertFingerprint: pin,
-            accessHeaders: accessHeaders,
-          );
+  if (service == ServiceKey.jellyfin) {
+    final MediaBrowserClient client = JellyfinClient(
+      baseUrl: urlTrimmed,
+      apiKey: apiKey.trim(),
+      pinnedCertFingerprint: pin,
+      accessHeaders: accessHeaders,
+    );
     bool accepted;
     String? version;
     try {
@@ -469,36 +443,6 @@ Future<ServiceDiagnosis> diagnoseCredentials(
       pin: pin,
       accessHeaders: accessHeaders,
     );
-  }
-
-  if (service == ServiceKey.plex) {
-    final client = PlexClient(
-      url: urlTrimmed,
-      token: apiKey.trim(),
-      clientIdentifier: clientIdentifier.trim(),
-      pinnedCertFingerprint: pin,
-      accessHeaders: accessHeaders,
-    );
-    try {
-      // Unlike Jellyfin's, this one already separates the two questions: it
-      // answers false only for an actual refusal and rethrows a `PlexException`
-      // carrying its own `ServiceFailureReason` for anything else, including
-      // the JWT it refuses to send at all, which is an unauthorized the user has
-      // to fix by pasting a different *kind* of token. So no second probe.
-      final accepted = await client.verifyCredential().timeout(
-        const Duration(seconds: 6),
-      );
-      return accepted
-          ? const ServiceDiagnosis.connected()
-          : const ServiceDiagnosis(
-              ServiceConnectionStatus.disconnected,
-              ServiceFailureReason.unauthorized,
-            );
-    } catch (e) {
-      return ServiceDiagnosis.failed(e);
-    } finally {
-      client.close();
-    }
   }
 
   // A media server's status route is anonymous, so one that reached the generic

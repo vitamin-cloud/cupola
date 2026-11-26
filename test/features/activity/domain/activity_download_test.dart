@@ -56,8 +56,6 @@ SeerrRequest _request({
 
 void main() {
   group('downloadRoute', () {
-
-
     test('a transfer no arr asked for is its client alone', () {
       expect(
         downloadRoute(
@@ -217,28 +215,6 @@ void main() {
           requestFor(_item(tmdbId: 5), [_request(tmdbId: 5, status: status)]),
           isNotNull,
           reason: '$status',
-        );
-      }
-    });
-
-    test('nothing is matched without a title\'s id, or off a service that is '
-        'no arr of movies or series', () {
-      expect(requestFor(_item(), [_request(tmdbId: 5)]), isNull);
-      expect(
-        requestFor(_item(service: ServiceKey.sonarr), [
-          _request(type: 'tv', tmdbId: 5, tvdbId: 6),
-        ]),
-        isNull,
-      );
-      for (final service in [
-        ServiceKey.lidarr,
-        ServiceKey.readarr,
-        ServiceKey.qbittorrent,
-      ]) {
-        expect(
-          requestFor(_item(service: service, tmdbId: 5), [_request(tmdbId: 5)]),
-          isNull,
-          reason: service.name,
         );
       }
     });

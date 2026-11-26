@@ -22,7 +22,6 @@ import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/stream/domain/models/stream_item.dart';
 import 'package:cupola/features/stream/domain/models/stream_session.dart';
 import 'package:cupola/features/stream/presentation/stream_activity_provider.dart';
-import 'package:cupola/features/stream/presentation/stream_connection_provider.dart';
 import 'package:cupola/features/stream/presentation/stream_item_screen.dart';
 
 import '../../test_helpers/profiles/profiles.dart';
@@ -70,22 +69,6 @@ Future<ProviderContainer> _pumpScreen(
 }
 
 void main() {
-  test('the connection a link names is kept only if it is the service\'s', () {
-    final settings = _twoJellyfin.settings;
-    expect(
-      streamInstanceFor(settings, ServiceKey.jellyfin, WorldIds.jellyfinCabin),
-      WorldIds.jellyfinCabin,
-    );
-    // Another service's connection, a stale one, a blank one and none.
-    expect(
-      streamInstanceFor(settings, ServiceKey.plex, WorldIds.jellyfinCabin),
-      '',
-    );
-    expect(streamInstanceFor(settings, ServiceKey.jellyfin, 'gone'), '');
-    expect(streamInstanceFor(settings, ServiceKey.jellyfin, ' '), '');
-    expect(streamInstanceFor(settings, ServiceKey.jellyfin, null), '');
-  });
-
   testWidgets('an item opened with ?i= is read from that connection', (
     tester,
   ) async {

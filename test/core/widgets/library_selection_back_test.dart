@@ -31,8 +31,8 @@ Widget _wall() => MediaBrowseScaffold<String>(
   activityRoute: '/activity',
   navigationSection: NavigationSection.stack,
   serviceName: 'Lidarr',
-  service: ServiceKey.lidarr,
-  heroTagPrefix: 'artist',
+  service: ServiceKey.sonarr,
+  heroTagPrefix: 'series',
   libraryProvider: _library,
   searchQueryProvider: _query,
   find: MediaFind.libraryOnly(libraryBody: (context, query) => Text(query)),
@@ -45,10 +45,10 @@ Widget _wall() => MediaBrowseScaffold<String>(
   showAppBar: false,
   tileShape: MediaBrowseTileShape.circle,
   bulk: MediaBulk<String>(
-    singular: 'artist',
-    plural: 'artists',
-    noneHint: 'Select an artist first',
-    service: ServiceKey.lidarr,
+    singular: 'series',
+    plural: 'series',
+    noneHint: 'Select a series first',
+    service: ServiceKey.sonarr,
     instanceId: '',
     actions: [
       MediaBulkAction<String>(

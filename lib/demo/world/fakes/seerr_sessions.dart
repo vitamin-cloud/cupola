@@ -214,10 +214,7 @@ class SeerrSetup {
   SeerrMediaServer get mediaServer {
     if (!sendsMediaServerType) return SeerrMediaServer.plex;
     if (!initialized) return state._setUpWith ?? SeerrMediaServer.notConfigured;
-    return connection?.seerrMediaServer ??
-        (_context.profile.has(ServiceKey.plex)
-            ? SeerrMediaServer.plex
-            : SeerrMediaServer.jellyfin);
+    return connection?.seerrMediaServer ?? SeerrMediaServer.jellyfin;
   }
 
   /// Whether the release has Quick Connect: Seerr 3.4.0 and later.

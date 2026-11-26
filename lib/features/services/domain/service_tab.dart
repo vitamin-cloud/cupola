@@ -98,34 +98,10 @@ const Map<ServiceKey, List<ServiceTab>> serviceTabs = {
   // no Queue (downloads live on Activity).
   ServiceKey.radarr: _arrLibraryTabs,
   ServiceKey.sonarr: _arrLibraryTabs,
-  // Artists and Albums merged into one segmented Library, which is what freed
-  // the sixth slot for History (decision 24).
-  ServiceKey.lidarr: _arrTabs,
-  // Full parity with the other three (decision 13). Upstream being archived
-  // makes the v1 API a frozen target, not a moving one.
-  ServiceKey.readarr: _arrTabs,
-  ServiceKey.bazarr: [
-    ServiceTab.overview,
-    ServiceTab.wanted,
-    ServiceTab.series,
-    ServiceTab.movies,
-    // History and Blacklist are one tab with a pill, so the cap holds
-    // (decision 22).
-    ServiceTab.history,
-    ServiceTab.providers,
-  ],
   ServiceKey.qbittorrent: [
     ServiceTab.overview,
     ServiceTab.queue,
     ServiceTab.rss,
-  ],
-  // Apps is a section of Prowlarr's own Settings page, not a tab
-  // (decision 26, bonus rule 2).
-  ServiceKey.prowlarr: [
-    ServiceTab.overview,
-    ServiceTab.indexers,
-    ServiceTab.history,
-    ServiceTab.stats,
   ],
   ServiceKey.jellyfin: [
     ServiceTab.overview,
@@ -135,51 +111,13 @@ const Map<ServiceKey, List<ServiceTab>> serviceTabs = {
     ServiceTab.tasks,
     ServiceTab.activity,
   ],
-  // Emby's bar is Jellyfin's, tab for tab: the two servers answer the same
-  // administration reads (users, devices, scheduled tasks, sessions).
-  ServiceKey.emby: [
-    ServiceTab.overview,
-    ServiceTab.libraries,
-    ServiceTab.users,
-    ServiceTab.devices,
-    ServiceTab.tasks,
-    ServiceTab.activity,
-  ],
-  // Five tabs: the drawn set (decision 17), with On deck moved into
-  // Activities beside who is watching (decision `P-stream-library-browse`).
-  ServiceKey.plex: [
-    ServiceTab.overview,
-    ServiceTab.libraries,
-    ServiceTab.activities,
-    ServiceTab.devices,
-    ServiceTab.playlists,
-  ],
   // The agent picker is the app-bar connection lens, not a tab (decision 41).
   ServiceKey.dockge: [
     ServiceTab.overview,
     ServiceTab.stacks,
     ServiceTab.terminal,
   ],
-  ServiceKey.unraid: [
-    ServiceTab.overview,
-    ServiceTab.array,
-    ServiceTab.docker,
-    ServiceTab.vms,
-    ServiceTab.notifications,
-    ServiceTab.shares,
-  ],
 };
-
-/// The four \*arr share a bar exactly, which is the point: the same record
-/// types in the same order, so a user who learns Radarr has learned Sonarr.
-const List<ServiceTab> _arrTabs = [
-  ServiceTab.overview,
-  ServiceTab.library,
-  ServiceTab.calendar,
-  ServiceTab.queue,
-  ServiceTab.wanted,
-  ServiceTab.history,
-];
 
 const List<ServiceTab> _arrLibraryTabs = [
   ServiceTab.library,

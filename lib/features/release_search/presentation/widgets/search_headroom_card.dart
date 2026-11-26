@@ -30,9 +30,7 @@ class SearchHeadroomCard extends ConsumerStatefulWidget {
 
   /// Only the services that actually have interactive release search.
   static bool appliesTo(ServiceKey service) =>
-      service == ServiceKey.sonarr ||
-      service == ServiceKey.radarr ||
-      service == ServiceKey.lidarr;
+      service == ServiceKey.sonarr || service == ServiceKey.radarr;
 
   @override
   ConsumerState<SearchHeadroomCard> createState() => _SearchHeadroomCardState();

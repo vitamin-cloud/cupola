@@ -67,12 +67,7 @@ final class KnockPlan {
 /// The knock for [service] at [url]; null to open a connection instead.
 KnockPlan? knockPlanOf(ServiceKey service, String url) => switch (service) {
   // Every arr, and Bazarr, answer a key-less ping with `{"status": "OK"}`.
-  ServiceKey.radarr ||
-  ServiceKey.sonarr ||
-  ServiceKey.lidarr ||
-  ServiceKey.readarr ||
-  ServiceKey.prowlarr => const KnockPlan('/ping', _statusOk),
-  ServiceKey.bazarr => const KnockPlan('/api/system/ping', _statusOk),
+  ServiceKey.radarr || ServiceKey.sonarr => const KnockPlan('/ping', _statusOk),
   // Public routes whose answer `identifyProbeAnswer` already recognises.
   ServiceKey.seerr => KnockPlan(
     '/api/v1/status',
@@ -81,19 +76,6 @@ KnockPlan? knockPlanOf(ServiceKey service, String url) => switch (service) {
   ServiceKey.jellyfin => KnockPlan(
     '/System/Info/Public',
     (answer) => _identifies(ServiceKey.jellyfin, answer),
-  ),
-  // Emby's public info under its own `/emby` prefix. The root answers the same,
-  // but a Jellyfin answers its own there too, and the body tells them apart.
-  ServiceKey.emby => KnockPlan(
-    '/emby/System/Info/Public',
-    (answer) => _identifies(ServiceKey.emby, answer),
-  ),
-  ServiceKey.plex => KnockPlan(
-    '/identity',
-    (answer) =>
-        _identifies(ServiceKey.plex, answer) ||
-        (answer.status == 200 && answer.body.contains('<MediaContainer')),
-    headers: const {'Accept': 'application/json'},
   ),
   // qBittorrent answers its version, or `Forbidden` to a caller not signed
   // in: either is qBittorrent.
@@ -111,12 +93,6 @@ KnockPlan? knockPlanOf(ServiceKey service, String url) => switch (service) {
     (answer) =>
         answer.status == 200 &&
         answer.body.toLowerCase().contains('<title>dockge</title>'),
-  ),
-  // Unraid's GraphQL endpoint answers a bare GET with nothing that names
-  // it; an answer that is not a redirect is the most a knock can ask.
-  ServiceKey.unraid => KnockPlan(
-    '/graphql',
-    (answer) => answer.status < 300 || answer.status >= 400,
   ),
   ServiceKey.truenas => null,
 };

@@ -1,7 +1,6 @@
 @Tags(['e2e'])
 library;
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -69,89 +68,6 @@ void main() {
       isEmpty,
     );
   });
-
-
-
-
-
-}
-
-/// The four NPM admin calls the scoped-account probe needs. They are not part
-/// of the app's client on purpose: Cupola never manages NPM users.
-class _NpmAdmin {
-  _NpmAdmin({required this.url, required this.identity, required this.secret});
-
-  final String url;
-  final String identity;
-  final String secret;
-  final HttpClient _http = HttpClient();
-  String? _token;
-
-  Future<dynamic> _call(String method, String path, [Object? body]) async {
-    _token ??=
-        (await _send('POST', '/api/tokens', {
-                  'identity': identity,
-                  'secret': secret,
-                }, auth: false)
-                as Map)['token']
-            as String;
-    return _send(method, path, body);
-  }
-
-  Future<dynamic> _send(
-    String method,
-    String path,
-    Object? body, {
-    bool auth = true,
-  }) async {
-    final request = await _http.openUrl(method, Uri.parse('$url$path'));
-    request.headers.contentType = ContentType.json;
-    if (auth) request.headers.set('Authorization', 'Bearer $_token');
-    if (body != null) request.write(jsonEncode(body));
-    final response = await request.close();
-    final text = await response.transform(utf8.decoder).join();
-    if (response.statusCode >= 400) {
-      throw StateError('NPM $method $path: ${response.statusCode} $text');
-    }
-    return text.isEmpty ? null : jsonDecode(text);
-  }
-
-  Future<int> createUser({
-    required String email,
-    required String password,
-    required Map<String, String> permissions,
-  }) async {
-    final user =
-        await _call('POST', '/api/users', {
-              'name': 'Cupola scoped',
-              'nickname': 'scoped',
-              'email': email,
-              'roles': <String>[],
-              'is_disabled': false,
-            })
-            as Map;
-    final id = user['id'] as int;
-    await _call('PUT', '/api/users/$id/auth', {
-      'type': 'password',
-      'secret': password,
-    });
-    await setPermissions(id, permissions);
-    return id;
-  }
-
-  Future<void> setPermissions(int id, Map<String, String> permissions) =>
-      _call('PUT', '/api/users/$id/permissions', permissions);
-
-  Future<void> deleteUser(int id) => _call('DELETE', '/api/users/$id');
-
-  Future<void> deleteUserByEmail(String email) async {
-    final users = await _call('GET', '/api/users') as List;
-    for (final user in users.whereType<Map>()) {
-      if (user['email'] == email) await deleteUser(user['id'] as int);
-    }
-  }
-
-  void close() => _http.close(force: true);
 }
 
 Future<T> _eventually<T>(
