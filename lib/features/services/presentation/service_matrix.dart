@@ -213,9 +213,10 @@ class ServiceMatrix extends ConsumerWidget {
         .where(settings.hasServiceConnection)
         .toList(growable: false);
 
-    if (configured.isEmpty) return const SizedBox.shrink();
-
     final readout = role == ServiceMatrixRole.readout;
+    // The readout draws every service even with none set up: each one's
+    // cell is its way to be set up. A picker has nothing to pick.
+    if (configured.isEmpty && !readout) return const SizedBox.shrink();
     final bands = <Widget>[];
     for (final domain in ServiceDomain.values) {
       final subjects = <MatrixCellSubject>[

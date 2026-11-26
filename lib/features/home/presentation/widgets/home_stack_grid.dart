@@ -2,6 +2,10 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+
+import 'package:cupola/core/app_spacing.dart';
+import 'package:cupola/features/home/presentation/widgets/dog_park.dart';
+import 'package:cupola/features/services/presentation/nothing_set_up.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // ignore: implementation_imports
 import 'package:flutter_riverpod/legacy.dart';
@@ -64,7 +68,11 @@ class _HomeStackGridState extends ConsumerState<HomeStackGrid> {
           if (settings.isServiceConfigured(service)) service,
     ];
     final health = ref.watch(stackHealthProvider);
-    final line = homeHealthLine(health);
+    // Nothing set up yet: the same line, counting the services the Stack
+    // offers.
+    final line = services.isEmpty
+        ? '0 of ${ServiceKey.values.length} answering'
+        : homeHealthLine(health);
     final now = DateTime.now();
     final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
     final time = '$hour:${now.minute.toString().padLeft(2, '0')}';
@@ -182,10 +190,67 @@ class _HomeStackGridState extends ConsumerState<HomeStackGrid> {
       ),
     );
 
+    final bottom = FloatingNavBarMetrics.getScrollViewBottomPadding(context);
+
+    // Nothing set up: the header as ever, and the two ways to set up low on
+    // the screen where the tiles would be.
+    if (services.isEmpty) {
+      return LayoutBuilder(
+        builder: (context, box) => SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: box.maxHeight),
+            child: IntrinsicHeight(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  header,
+                  const Spacer(),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      side + margin,
+                      AppSpacing.xl,
+                      side + margin,
+                      bottom + AppSpacing.lg,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Welcome on the left, the dogs pacing the rest of
+                        // its line.
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              'Welcome',
+                              textScaler: scale,
+                              style: TextStyle(
+                                fontFamily: _face,
+                                fontSize: 34 * k,
+                                fontWeight: FontWeight.w500,
+                                height: 1,
+                                color: _text,
+                                shadows: shadow,
+                              ),
+                            ),
+                            SizedBox(width: 16 * k),
+                            Expanded(child: DogPark(height: 52 * k)),
+                          ],
+                        ),
+                        SizedBox(height: 18 * k),
+                        const SetUpButtons(),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return ListView(
-      padding: EdgeInsets.only(
-        bottom: FloatingNavBarMetrics.getScrollViewBottomPadding(context),
-      ),
+      padding: EdgeInsets.only(bottom: bottom),
       children: [
         header,
         Padding(

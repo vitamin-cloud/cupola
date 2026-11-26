@@ -41,25 +41,10 @@ import 'package:cupola/features/home/presentation/widgets/home_well.dart';
 import 'package:cupola/features/import/presentation/import_service_picker_sheet.dart';
 import 'package:cupola/features/release_search/presentation/release_searches_body.dart';
 import 'package:cupola/features/services/domain/source_coverage.dart';
-import 'package:cupola/features/services/presentation/nothing_set_up.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/core/widgets/screen_title.dart';
-
-/// The services Activity reads: the queues, the clients, the requests and
-/// whatever says who is playing. With none of them set up the page has
-/// nothing to say and says how to begin.
-///
-/// Not `const`: the playing services come from their capability, so a new one
-/// is read here without this list being touched.
-final _activityServices = [
-  ServiceKey.radarr,
-  ServiceKey.sonarr,
-  ServiceKey.qbittorrent,
-  ServiceKey.seerr,
-  ...sessionServices,
-];
 
 /// The arrs whose History tab the page's foot leads to.
 const _historyServices = [ServiceKey.sonarr, ServiceKey.radarr];
@@ -104,11 +89,9 @@ class ActivityPage extends ConsumerWidget {
     final bottomPadding = FloatingNavBarMetrics.getScrollViewBottomPadding(
       context,
     );
-    final settings = ref.watch(currentSettingsProvider);
-    final nothingSetUp = !_activityServices.any(settings.isServiceConfigured);
     // The room takes its light from the download that leads it: the first one
     // stuck, else the first one moving.
-    final lead = nothingSetUp ? null : ref.watch(activityRoomSourceProvider);
+    final lead = ref.watch(activityRoomSourceProvider);
     final light = lead == null
         ? null
         : ref.watch(titleLightProvider(lead)).value;
@@ -121,69 +104,66 @@ class ActivityPage extends ConsumerWidget {
         accent: light?.light,
         art: light?.art,
         accentDuration: AppAnimation.light,
-        body: nothingSetUp
-            ? NothingSetUpView(bottomPadding: bottomPadding)
-            : Stack(
-                children: [
-                  RefreshIndicator(
-                    onRefresh: () => refreshActivity(ref, tab),
-                    child: LayoutBuilder(
-                      builder: (context, box) => HomeWell(
-                        // A desktop window reads the downloads as a table,
-                        // which wants the width a reading column gives up.
-                        inset: AppBreakpoints.wellInset(
-                          box.maxWidth,
-                          well: AppBreakpoints.isDesktopShell(context)
-                              ? AppBreakpoints.contentWell
-                              : AppBreakpoints.readingWell,
-                        ),
-                        child: Builder(
-                          builder: (context) {
-                            Widget column(Widget child) =>
-                                HomeWell.column(context, child);
-                            return SideBleed(
-                              child: ListView(
-                                clipBehavior: Clip.none,
-                                physics: const AlwaysScrollableScrollPhysics(),
-                                padding: EdgeInsets.only(bottom: bottomPadding),
-                                children: [
-                                  column(const _ActivityHeader()),
-                                  column(
-                                    Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        AppSpacing.gutter,
-                                        AppSpacing.md,
-                                        AppSpacing.gutter,
-                                        0,
-                                      ),
-                                      child: PageTabs<ActivityTab>(
-                                        values: ActivityTab.values,
-                                        selected: tab,
-                                        labelBuilder: (tab) => tab.label,
-                                        onSelected: (tab) =>
-                                            context.go(tab.location),
-                                      ),
-                                    ),
-                                  ),
-                                  for (final section in _sectionsOf(tab))
-                                    column(section),
-                                  const SizedBox(height: AppSpacing.lg),
-                                ],
+        body: Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: () => refreshActivity(ref, tab),
+              child: LayoutBuilder(
+                builder: (context, box) => HomeWell(
+                  // A desktop window reads the downloads as a table,
+                  // which wants the width a reading column gives up.
+                  inset: AppBreakpoints.wellInset(
+                    box.maxWidth,
+                    well: AppBreakpoints.isDesktopShell(context)
+                        ? AppBreakpoints.contentWell
+                        : AppBreakpoints.readingWell,
+                  ),
+                  child: Builder(
+                    builder: (context) {
+                      Widget column(Widget child) =>
+                          HomeWell.column(context, child);
+                      return SideBleed(
+                        child: ListView(
+                          clipBehavior: Clip.none,
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: EdgeInsets.only(bottom: bottomPadding),
+                          children: [
+                            column(const _ActivityHeader()),
+                            column(
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  AppSpacing.gutter,
+                                  AppSpacing.md,
+                                  AppSpacing.gutter,
+                                  0,
+                                ),
+                                child: PageTabs<ActivityTab>(
+                                  values: ActivityTab.values,
+                                  selected: tab,
+                                  labelBuilder: (tab) => tab.label,
+                                  onSelected: (tab) => context.go(tab.location),
+                                ),
                               ),
-                            );
-                          },
+                            ),
+                            for (final section in _sectionsOf(tab))
+                              column(section),
+                            const SizedBox(height: AppSpacing.lg),
+                          ],
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                  const Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: StatusBarScrim(),
-                  ),
-                ],
+                ),
               ),
+            ),
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: StatusBarScrim(),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -248,65 +248,6 @@ void main() {
         expect(opened, ServiceRoutes.settingsConnections);
       });
 
-      testWidgets('offers copying from another device under the other two '
-          'doors, and opens the screen that copies', (tester) async {
-        String? opened;
-        final router = GoRouter(
-          routes: [
-            GoRoute(path: '/', builder: (context, state) => _screen(page)),
-            GoRoute(
-              path: ServiceRoutes.welcomePair,
-              builder: (context, state) {
-                opened = state.uri.path;
-                return const SizedBox.shrink();
-              },
-            ),
-          ],
-        );
-        addTearDown(router.dispose);
-
-        await _pumpPage(
-          tester,
-          page,
-          router: router,
-          settings: const SettingsModel(),
-        );
-
-        expect(find.text('Copy from another device'), findsOneWidget);
-        expect(find.text(SetupDoors.copyHint), findsOneWidget);
-        // A link in ink under the two buttons, not a third fill.
-        expect(find.byType(FilledButton), findsOneWidget);
-        final doors = [
-          for (final label in [
-            'Set up a service',
-            'I have a Seerr account',
-            'Copy from another device',
-          ])
-            tester.getTopLeft(find.text(label)).dy,
-        ];
-        expect(doors, [...doors]..sort());
-
-        // The last door: under the fold of the test's surface.
-        await tester.ensureVisible(find.text('Copy from another device'));
-        await tester.pump();
-        await tester.tap(find.text('Copy from another device'));
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
-
-        expect(opened, ServiceRoutes.welcomePair);
-      });
-
-      testWidgets('keeps the ring still: nothing is set up, nothing moves', (
-        tester,
-      ) async {
-        await _pumpPage(tester, page, settings: const SettingsModel());
-
-        // Settled: a ring that spun would keep scheduling frames for ever.
-        await tester.pumpAndSettle();
-        expect(find.byType(ServiceRing), findsOneWidget);
-        expect(tester.binding.hasScheduledFrame, isFalse);
-      });
-
       // The date is the Home's, whatever is set up; the Stack never had one.
       testWidgets(
         page == _Page.home

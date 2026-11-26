@@ -19,7 +19,6 @@ import 'package:cupola/features/movies/presentation/movies_provider.dart';
 import 'package:cupola/features/series/presentation/series_provider.dart';
 import 'package:cupola/features/services/domain/services_semantics.dart';
 import 'package:cupola/features/services/presentation/service_kpi_provider.dart';
-import 'package:cupola/features/services/presentation/nothing_set_up.dart';
 import 'package:cupola/features/services/presentation/service_matrix.dart';
 import 'package:cupola/features/services/presentation/services_alert_band.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
@@ -96,12 +95,6 @@ class StackScreen extends ConsumerWidget {
         );
       }
     }
-    // A Seerr account that signed out is a connection somebody set up: the
-    // stack is not empty, it has a step to take.
-    final allUnconfigured = ServiceKey.values.every(
-      (s) => !settings.hasServiceConnection(s),
-    );
-
     return RefreshOnReturn(
       id: 'services.stack',
       maxAge: _staleAfter,
@@ -118,41 +111,39 @@ class StackScreen extends ConsumerWidget {
         // No accent passed: the room on this screen is lit by the neutral lamp,
         // like every room with no artwork. The fleet below is nineteen
         // services, and each is named by its mark and its title, never a hue.
-        body: allUnconfigured
-            ? NothingSetUpView(bottomPadding: bottomPadding)
-            : Stack(
-                children: [
-                  RefreshIndicator(
-                    onRefresh: () => _refreshStack(ref),
-                    child: SideBleed(
-                      child: ListView(
-                        clipBehavior: Clip.none,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.only(bottom: bottomPadding),
-                        //  * the header is one line of StackHealth under the
-                        //    title, and it is neutral when clear: no permanent
-                        //    green
-                        //  * the band is absent unless something stopped
-                        //    answering
-                        //  * the stack is the instrument and the launcher
-                        children: const [
-                          _StackHeadline(),
-                          ServicesAlertBand(),
-                          ServiceMatrix(),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // The fleet passes under the clock, as Activity's rows do,
-                  // and fades into the room there instead of colliding with it.
-                  const Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: StatusBarScrim(),
-                  ),
-                ],
+        body: Stack(
+          children: [
+            RefreshIndicator(
+              onRefresh: () => _refreshStack(ref),
+              child: SideBleed(
+                child: ListView(
+                  clipBehavior: Clip.none,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: EdgeInsets.only(bottom: bottomPadding),
+                  //  * the header is one line of StackHealth under the
+                  //    title, and it is neutral when clear: no permanent
+                  //    green
+                  //  * the band is absent unless something stopped
+                  //    answering
+                  //  * the stack is the instrument and the launcher
+                  children: const [
+                    _StackHeadline(),
+                    ServicesAlertBand(),
+                    ServiceMatrix(),
+                  ],
+                ),
               ),
+            ),
+            // The fleet passes under the clock, as Activity's rows do,
+            // and fades into the room there instead of colliding with it.
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: StatusBarScrim(),
+            ),
+          ],
+        ),
       ),
     );
   }

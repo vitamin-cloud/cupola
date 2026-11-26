@@ -54,7 +54,6 @@ import 'package:cupola/features/home/presentation/widgets/your_requests_module.d
 import 'package:cupola/features/requests/data/my_requests_provider.dart';
 import 'package:cupola/features/services/domain/dashboard_decision.dart';
 import 'package:cupola/features/services/presentation/dashboard_retry.dart';
-import 'package:cupola/features/services/presentation/nothing_set_up.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -121,16 +120,10 @@ class HomeScreen extends ConsumerWidget {
             ? null
             : ref.watch(featuredRoomProvider)?.art,
         accentDuration: AppAnimation.light,
-        body: allUnconfigured
-            ? NothingSetUpView(
-                bottomPadding: bottomPadding,
-                // The date stays: it is the Home's, whatever is set up.
-                header: const HomeHeader(showsHealth: false),
-              )
-            // This fork: the operator's Home is the remote's grid of the
-            // services on the Stack (`HomeStackGrid`); Edit Home moved to
-            // Settings.
-            : !requester
+        // This fork: the operator's Home is the remote's grid of the services
+        // on the Stack (`HomeStackGrid`), which also draws the Home with
+        // nothing set up; Edit Home moved to Settings.
+        body: allUnconfigured || !requester
             ? const HomeStackGrid()
             : Stack(
                 children: [
