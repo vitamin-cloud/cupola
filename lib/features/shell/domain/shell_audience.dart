@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cupola/core/capability/audience.dart';
 import 'package:cupola/core/capability/role_gate_provider.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/release_search/presentation/release_search_lifecycle.dart';
 
 /// Who the shell is drawn for: [audienceProvider], held while the app is in
@@ -26,9 +25,6 @@ class ShellAudienceNotifier extends Notifier<Audience> {
   Audience build() {
     ref.listen<bool>(appInForegroundProvider, (previous, next) {
       if (next && previous == false) _take();
-    });
-    ref.listen<bool>(onboardingCompletedProvider, (previous, next) {
-      if (next) _take();
     });
     return ref.read(audienceProvider);
   }

@@ -95,7 +95,6 @@ class SettingsSummaryPane extends ConsumerWidget {
           children: [
             const SettingsBackgroundRow(),
             const SettingsNotificationsRow(),
-            const SettingsRevisitOnboardingRow(),
             if (offersCode) const SettingsAnotherDeviceRow(),
             const SettingsResetAppDataRow(),
           ],

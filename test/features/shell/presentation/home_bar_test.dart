@@ -23,7 +23,6 @@ import 'package:cupola/features/discover/data/seerr_service.dart';
 import 'package:cupola/features/discover/domain/seerr_sign_in.dart';
 import 'package:cupola/features/discover/presentation/catalog_providers.dart';
 import 'package:cupola/features/home/presentation/home_screen.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/release_search/presentation/release_search_lifecycle.dart';
 import 'package:cupola/features/requests/presentation/requests_screen.dart';
 import 'package:cupola/features/services/presentation/stack_screen.dart';
@@ -430,7 +429,6 @@ Future<ProviderContainer> _pump(
   final container = ProviderContainer(
     overrides: [
       ...overrides,
-      initialOnboardingCompletedProvider.overrideWith((ref) => true),
       _settings.overrideWith((ref) => settings),
       currentSettingsProvider.overrideWith((ref) => ref.watch(_settings)),
       seerrServiceProvider.overrideWith((ref) => FakeSeerrService()),

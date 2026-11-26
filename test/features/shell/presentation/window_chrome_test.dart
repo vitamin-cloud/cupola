@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
 
@@ -32,7 +31,6 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            initialOnboardingCompletedProvider.overrideWith((ref) => true),
             currentSettingsProvider.overrideWith(
               (ref) => const SettingsModel(),
             ),

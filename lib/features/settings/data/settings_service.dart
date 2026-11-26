@@ -350,14 +350,6 @@ class SettingsService {
     }
   }
 
-  Future<bool> loadOnboardingComplete() async {
-    return _prefs.getBool(_kOnboardingComplete) ?? false;
-  }
-
-  Future<void> saveOnboardingComplete() async {
-    await _prefs.setBool(_kOnboardingComplete, true);
-  }
-
   /// Wipes all Cupola-persisted data: SharedPreferences keys (service URLs,
   /// credentials, region, theme, onboarding flag, legacy keys) and every
   /// secure-storage entry. Clears secure storage first so a Keychain failure

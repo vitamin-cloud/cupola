@@ -17,7 +17,6 @@ import 'package:cupola/core/network/connection_failure.dart'
 import 'package:cupola/core/providers/navigation_refresh_provider.dart';
 import 'package:cupola/core/widgets/floating_bottom_nav_bar.dart';
 import 'package:cupola/core/widgets/floating_nav_rail.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/services/domain/dashboard_decision.dart';
 import 'package:cupola/features/services/domain/service_summary.dart';
 import 'package:cupola/features/services/domain/source_coverage.dart';
@@ -787,7 +786,6 @@ Future<_Harness> _pumpShell(
   final container = ProviderContainer(
     overrides: [
       // The shell reads who it is drawn for, which waits on onboarding.
-      initialOnboardingCompletedProvider.overrideWithValue(true),
       // The sidebar's "In flight" thirty-second poll: a test about the shell
       // ends before the container that holds its timer is disposed.
       sidebarInFlightPollProvider.overrideWith((ref) {}),

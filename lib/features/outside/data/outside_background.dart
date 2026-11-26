@@ -19,7 +19,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'package:cupola/core/startup/startup_overrides.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/outside/data/outside_native.dart';
 import 'package:cupola/features/outside/data/outside_settings.dart';
 import 'package:cupola/features/outside/data/outside_run.dart';
@@ -58,7 +57,6 @@ Future<void> runOutsideInBackground() async {
       overrides: await readHeadlessStartup(),
       retry: (_, _) => null,
     );
-    if (!container.read(onboardingCompletedProvider)) return;
     await OutsideRun(
       shelf: OutsideShelf(await outsideFolder()),
       speaker: LocalOutsideSpeaker(),

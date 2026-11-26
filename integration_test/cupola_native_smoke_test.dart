@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'package:cupola/features/home/presentation/home_screen.dart';
-import 'package:cupola/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:cupola/main.dart' as app;
 
 /// Native smoke gate for macOS, iOS Simulator and Android Emulator.
@@ -37,41 +36,16 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   const captureScreenshot = bool.fromEnvironment('CUPOLA_NATIVE_SCREENSHOT');
 
-  testWidgets('Cupola boots through onboarding to the Home', (tester) async {
+  testWidgets('Stack boots straight to the Home', (tester) async {
     app.main();
     await _settle(tester);
 
     expect(find.byType(app.CupolaApp), findsOneWidget);
 
-    // **The assertion has to be that it reached the Home, not that it
-    // reached one of the two screens it could already have been on.** An
-    // `onboarding || Home` check is satisfied by the state a clean
-    // simulator starts in, so a Skip button that had been renamed, or a
-    // routing change that trapped the app in onboarding: left this gate
-    // green. There is exactly one acceptable end state and it is named below.
-    final onboarding = find.byType(OnboardingScreen);
-    if (tester.any(onboarding)) {
-      final skip = find.text('Skip for now');
-      expect(
-        skip,
-        findsWidgets,
-        reason:
-            'onboarding must offer a way past it that needs no service and no '
-            'network permission; if the copy moved, this test moves with it',
-      );
-      await tester.tap(skip.first);
-      await _settle(tester);
-    }
-
     expect(
       find.byType(HomeScreen),
       findsOneWidget,
       reason: 'the native bootstrap must land on the Home',
-    );
-    expect(
-      find.byType(OnboardingScreen),
-      findsNothing,
-      reason: 'onboarding must not survive the skip',
     );
 
     // Keep the evidence artifact for the visual-E2E ledger. The screenshot

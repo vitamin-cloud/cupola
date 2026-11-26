@@ -97,14 +97,12 @@ Future<void> _start() async {
     reach(StartupStep.connections);
     await settingsService.migrateFromPlaintext();
     final initialSettings = await settingsService.loadSettings();
-    final onboardingCompleted = await settingsService.loadOnboardingComplete();
 
     return startupOverrides(
       prefs: prefs,
       secureSettingsStore: secureSettingsStore,
       initialSettings: initialSettings,
       activeInstances: settingsService.loadActiveInstances(),
-      onboardingCompleted: onboardingCompleted,
       lastKnown: await lastKnown,
     );
   });

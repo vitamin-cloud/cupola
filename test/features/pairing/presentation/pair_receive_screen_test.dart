@@ -19,7 +19,6 @@ import 'package:cupola/core/theme.dart';
 import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/widgets/status_badge.dart';
 import 'package:cupola/features/discover/domain/seerr_sign_in.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/pairing/data/pair_fetch.dart';
 import 'package:cupola/features/pairing/data/pair_session.dart';
 import 'package:cupola/features/pairing/domain/pair_link.dart';
@@ -54,8 +53,6 @@ Future<ProviderContainer> _pump(
     ],
   );
   addTearDown(container.dispose);
-  container.read(onboardingCompletedProvider.notifier).state =
-      onboardingCompleted;
   if (arrival != null) {
     container.read(pendingPairProvider.notifier).hold(arrival);
   }
@@ -704,7 +701,6 @@ void main() {
         settings.trustedCertificates['https://radarr.home.arpa:443'],
         pairFixturePin,
       );
-      expect(container.read(onboardingCompletedProvider), isTrue);
     });
   });
 

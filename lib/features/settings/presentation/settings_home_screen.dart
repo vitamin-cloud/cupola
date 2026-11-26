@@ -183,8 +183,6 @@ class SettingsHomeScreen extends ConsumerWidget {
           // no state to report.
           const SettingsBackgroundRow(),
           const SettingsNotificationsRow(),
-          // Shared with the window's summary pane: see settings_app_rows.dart.
-          const SettingsRevisitOnboardingRow(),
           if (SettingsAnotherDeviceRow.offeredFor(settings))
             const SettingsAnotherDeviceRow(),
           const SettingsResetAppDataRow(),

@@ -8,7 +8,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cupola/features/discover/data/seerr_accounts.dart';
 import 'package:cupola/features/discover/domain/seerr_server_facts.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/pairing/data/pair_server.dart';
 import 'package:cupola/features/pairing/data/pair_session.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
@@ -73,7 +72,6 @@ List<Override> _world(
   initialSettingsProvider.overrideWith(
     (ref) => SettingsModel(instances: [connection], trustedCertificates: pins),
   ),
-  initialOnboardingCompletedProvider.overrideWith((ref) => true),
   seerrServerFactsProvider.overrideWith((ref, id) => facts()),
 ];
 

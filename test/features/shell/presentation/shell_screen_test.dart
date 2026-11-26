@@ -14,7 +14,6 @@ import 'package:cupola/core/providers/navigation_refresh_provider.dart';
 import 'package:cupola/core/utils/a11y_announce.dart';
 import 'package:cupola/core/widgets/floating_bottom_nav_bar.dart';
 import 'package:cupola/core/widgets/library_selection.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/release_search/presentation/release_search_jobs_provider.dart';
 import 'package:cupola/features/release_search/presentation/release_search_lifecycle.dart';
 import 'package:cupola/features/services/domain/service_summary.dart';
@@ -1110,7 +1109,6 @@ Future<List<Override>> _lensOverrides({
     initialSettingsProvider.overrideWithValue(
       SettingsModel(instances: instances),
     ),
-    initialOnboardingCompletedProvider.overrideWithValue(true),
     for (final instance in instances)
       instanceSummaryProvider((
         service: instance.service,

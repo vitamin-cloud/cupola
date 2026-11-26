@@ -65,7 +65,6 @@ import 'package:cupola/features/home/presentation/home_screen.dart';
 import 'package:cupola/features/requests/presentation/requests_screen.dart';
 import 'package:cupola/features/shell/domain/shell_audience.dart';
 import 'package:cupola/core/capability/audience.dart';
-import 'package:cupola/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:cupola/features/onboarding/presentation/requester_sign_in_screen.dart';
 import 'package:cupola/features/pairing/data/pair_session.dart';
 import 'package:cupola/features/pairing/domain/pair_link.dart';
@@ -1523,11 +1522,6 @@ String _inviteRedirect(Uri uri, SettingsModel settings) {
   ).toString();
 }
 
-bool _showsWelcome(Ref ref) => showsWelcome(
-  onboardingCompleted: ref.read(onboardingCompletedProvider),
-  settings: ref.read(currentSettingsProvider),
-);
-
 final routerProvider = Provider<GoRouter>((ref) {
   final notifier = ref.watch(routerRefreshNotifierProvider);
   // The routes a person may reach follow the bar they see.
@@ -1536,9 +1530,8 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     refreshListenable: notifier,
-    initialLocation: _showsWelcome(ref)
-        ? ServiceRoutes.welcome
-        : ServiceRoutes.home,
+    // No onboarding: the first open lands on the Home.
+    initialLocation: ServiceRoutes.home,
     errorBuilder: (context, state) => const UnknownPlaceScreen(),
     redirect: (context, state) {
       // A pairing link carries the key to every secret of the device that
@@ -1566,21 +1559,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         return _rewriteLegacyStackPath(Uri.parse(to)) ?? to;
       }
       final path = state.uri.path;
-      if (path == ServiceRoutes.legacyOnboarding) return ServiceRoutes.welcome;
+      // There is no onboarding: its old places land on the Home, and its
+      // "set up a service" on the connections list.
+      if (path == ServiceRoutes.legacyOnboarding ||
+          path == ServiceRoutes.welcome) {
+        return ServiceRoutes.home;
+      }
+      if (path == ServiceRoutes.welcomeConnect) {
+        return ServiceRoutes.settingsConnections;
+      }
       // This fork has no Discover: anything that still links there lands on
       // the Stack.
       if (path == ServiceRoutes.discover ||
           path.startsWith('${ServiceRoutes.discover}/')) {
         return ServiceRoutes.stack;
       }
-      // Never away from the way in: a run saves its first connection before
-      // it is over, "Revisit onboarding" arrives with the flag already on,
-      // and the flow leaves for the Home on its own.
-      if (path == ServiceRoutes.welcome ||
-          path.startsWith('${ServiceRoutes.welcome}/')) {
-        return null;
-      }
-      if (_showsWelcome(ref)) return ServiceRoutes.welcome;
+      // Pairing and the Seerr sign-in keep their addresses.
+      if (path.startsWith('${ServiceRoutes.welcome}/')) return null;
       if (path == '/') return ServiceRoutes.home;
 
       // Everything that used to live under `/dashboard` or `/services` still
@@ -1600,32 +1595,30 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(
+        path: ServiceRoutes.welcomePair,
+        builder: (context, state) =>
+            const SecureScreen(child: PairReceiveScreen()),
+      ),
+      GoRoute(
+        path: ServiceRoutes.welcomeSignIn,
+        // Keyed by the invite: one opened over another starts afresh.
+        builder: (context, state) => RequesterSignInScreen(
+          key: ValueKey(state.uri.query),
+          invite: state.uri.queryParameters,
+        ),
+      ),
+      // Matched only so the redirect above can send them on.
+      GoRoute(
         path: ServiceRoutes.welcome,
-        builder: (context, state) => const OnboardingScreen(),
-        routes: [
-          GoRoute(
-            path: 'connect',
-            builder: (context, state) =>
-                const OnboardingScreen(entry: OnboardingEntry.connect),
-          ),
-          GoRoute(
-            path: 'pair',
-            builder: (context, state) =>
-                const SecureScreen(child: PairReceiveScreen()),
-          ),
-          GoRoute(
-            path: 'sign-in',
-            // Keyed by the invite: one opened over another starts afresh.
-            builder: (context, state) => RequesterSignInScreen(
-              key: ValueKey(state.uri.query),
-              invite: state.uri.queryParameters,
-            ),
-          ),
-        ],
+        redirect: (context, state) => ServiceRoutes.home,
+      ),
+      GoRoute(
+        path: ServiceRoutes.welcomeConnect,
+        redirect: (context, state) => ServiceRoutes.settingsConnections,
       ),
       GoRoute(
         path: ServiceRoutes.legacyOnboarding,
-        redirect: (context, state) => ServiceRoutes.welcome,
+        redirect: (context, state) => ServiceRoutes.home,
       ),
       // One Navigator per tab, all alive at once behind a cross-fade.
       //

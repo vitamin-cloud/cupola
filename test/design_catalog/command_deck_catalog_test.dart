@@ -7,7 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cupola/core/utils/service_routes.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -98,7 +97,6 @@ class _OpenDeckState extends State<_OpenDeck> {
       sharedPreferencesProvider.overrideWithValue(_prefs),
       secureSettingsStoreProvider.overrideWithValue(FakeSecureSettingsStore()),
       initialSettingsProvider.overrideWithValue(_settings),
-      initialOnboardingCompletedProvider.overrideWithValue(true),
       initialActiveInstancesProvider.overrideWithValue(const {}),
       stackHealthProvider.overrideWith(_FixedHealth.new),
       recentLocationsProvider.overrideWith((ref) => _recents),

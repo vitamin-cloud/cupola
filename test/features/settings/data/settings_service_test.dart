@@ -83,14 +83,6 @@ void main() {
       expect(await secureStore.read(key: 'secure_radarr_api_key'), isNull);
     });
 
-    test('saveOnboardingComplete persists the onboarding flag', () async {
-      expect(await service.loadOnboardingComplete(), isFalse);
-
-      await service.saveOnboardingComplete();
-
-      expect(await service.loadOnboardingComplete(), isTrue);
-    });
-
     test('clearAll removes legacy keys too', () async {
       await prefs.setString('jellyseerr_url', 'https://legacy.example.com');
       await prefs.setString('jellyseerr_api_key', 'legacy-key');

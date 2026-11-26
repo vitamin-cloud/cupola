@@ -36,7 +36,7 @@ class NothingSetUpView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final body = _NothingSetUp(
-      onSetUp: () => context.push(ServiceRoutes.welcomeConnect),
+      onSetUp: () => context.push(ServiceRoutes.settingsConnections),
       onCopy: () => context.push(ServiceRoutes.welcomePair),
       onSignIn: () => context.push(ServiceRoutes.welcomeSignIn),
     );

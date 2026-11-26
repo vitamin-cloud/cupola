@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cupola/core/last_known/last_known_store.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_client_provider.dart';
 import 'package:cupola/features/qbittorrent/data/qbittorrent_refusal_store.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
@@ -20,7 +19,6 @@ List<Override> startupOverrides({
   required SecureSettingsStore secureSettingsStore,
   required SettingsModel initialSettings,
   required Map<ServiceKey, String> activeInstances,
-  required bool onboardingCompleted,
   required LastKnownStore lastKnown,
 }) => [
   sharedPreferencesProvider.overrideWithValue(prefs),
@@ -33,7 +31,6 @@ List<Override> startupOverrides({
   ),
   initialSettingsProvider.overrideWithValue(initialSettings),
   initialActiveInstancesProvider.overrideWithValue(activeInstances),
-  initialOnboardingCompletedProvider.overrideWithValue(onboardingCompleted),
 ];
 
 /// The overrides of a run with no screen: the same stores, read as they
@@ -50,7 +47,6 @@ Future<List<Override>> readHeadlessStartup() async {
     secureSettingsStore: secureSettingsStore,
     initialSettings: await settingsService.loadSettings(),
     activeInstances: settingsService.loadActiveInstances(),
-    onboardingCompleted: await settingsService.loadOnboardingComplete(),
     lastKnown: LastKnownStore.memory(),
   );
 }

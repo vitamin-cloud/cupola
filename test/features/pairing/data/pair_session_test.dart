@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/misc.dart' show ProviderListenable;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:cupola/features/discover/domain/seerr_sign_in.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/pairing/data/pair_fetch.dart';
 import 'package:cupola/features/pairing/data/pair_session.dart';
 import 'package:cupola/features/pairing/domain/pair_link.dart';
@@ -66,7 +65,6 @@ Future<ProviderContainer> _device({
       sharedPreferencesProvider.overrideWith((ref) => scope.prefs),
       secureSettingsStoreProvider.overrideWith((ref) => scope.secureStore),
       initialSettingsProvider.overrideWith((ref) => settings),
-      initialOnboardingCompletedProvider.overrideWith((ref) => false),
       pairNetworkProvider.overrideWithValue(network ?? _onLoopback),
       settingsProvider.overrideWith(_SettingsOnADisk.new),
     ],
@@ -183,7 +181,6 @@ void main() {
         final settings = receiver.read(currentSettingsProvider);
         expect(settings.instanceById('radarr')!.credential, 'radarr-key');
         expect(settings.instanceById('sonarr')!.credential, 'sonarr-key');
-        expect(receiver.read(onboardingCompletedProvider), isTrue);
       },
     );
 
@@ -212,7 +209,6 @@ void main() {
             .having((s) => s.failure, 'failure', PairReceiveFailure.notSaved)
             .having((s) => s.retryHelps, 'retryHelps', isTrue),
       );
-      expect(receiver.read(onboardingCompletedProvider), isFalse);
       expect(receiver.read(currentSettingsProvider).instances, isEmpty);
 
       // The code was used and is gone, so trying again is the preview again.
@@ -221,7 +217,6 @@ void main() {
       expect(receiver.read(pairReceiveProvider), isA<PairReceivePreview>());
       await notifier.add();
       expect(receiver.read(pairReceiveProvider), isA<PairReceiveAdded>());
-      expect(receiver.read(onboardingCompletedProvider), isTrue);
     });
 
     test('says a link that did not arrive whole is not', () async {
@@ -340,7 +335,6 @@ void main() {
         expect(held.awayAccess, token);
         expect(held.awayPin, pairFixturePin);
         expect(receiver.read(currentSettingsProvider).instances, isEmpty);
-        expect(receiver.read(onboardingCompletedProvider), isFalse);
         expect(sender.read(inviteOfferProvider), isA<PairOfferSent>());
       },
     );

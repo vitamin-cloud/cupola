@@ -13,14 +13,12 @@ import 'package:cupola/core/utils/url_utils.dart';
 import 'package:cupola/core/widgets/app_card.dart';
 import 'package:cupola/core/widgets/failure_remedy.dart';
 import 'package:cupola/core/widgets/notice_line.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/onboarding/presentation/widgets/onboarding_parts.dart';
 import 'package:cupola/features/pairing/data/pair_session.dart';
 import 'package:cupola/features/pairing/domain/pair_link.dart';
 import 'package:cupola/features/pairing/domain/pair_plan.dart';
 import 'package:cupola/features/pairing/presentation/pair_scan_screen.dart';
 import 'package:cupola/features/pairing/presentation/pair_words.dart';
-import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
 import 'package:cupola/features/settings/domain/settings_model.dart';
@@ -109,18 +107,13 @@ class _PairReceiveScreenState extends ConsumerState<PairReceiveScreen> {
   }
 
   /// Back where the visit came from: the screen under this one, else the
-  /// Welcome on a first run and the Home otherwise.
+  /// Home.
   void _leave() {
     if (context.canPop()) {
       context.pop();
       return;
     }
-    final settings = ref.read(currentSettingsProvider);
-    final welcome = showsWelcome(
-      onboardingCompleted: ref.read(onboardingCompletedProvider),
-      settings: settings,
-    );
-    context.go(welcome ? ServiceRoutes.welcome : ServiceRoutes.home);
+    context.go(ServiceRoutes.home);
   }
 
   void _goHome() => context.go(ServiceRoutes.home);

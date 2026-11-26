@@ -16,7 +16,6 @@ import 'package:cupola/core/platform/browser_opener.dart';
 import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/features/discover/domain/seerr_invite.dart';
 import 'package:cupola/features/discover/domain/seerr_sign_in.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/onboarding/presentation/requester_sign_in_screen.dart';
 import 'package:cupola/features/onboarding/presentation/widgets/onboarding_parts.dart';
 import 'package:cupola/features/pairing/data/pair_session.dart';
@@ -84,7 +83,6 @@ Future<(ProfileHarness, ProviderContainer, _Browser)> _atSignIn(
           ],
         ),
       ),
-      initialOnboardingCompletedProvider.overrideWith((ref) => false),
       browserOpenerProvider.overrideWithValue(browser),
     ],
   );
@@ -93,10 +91,8 @@ Future<(ProfileHarness, ProviderContainer, _Browser)> _atSignIn(
   if (held != null) container.read(pendingInviteProvider.notifier).hold(held);
   final router = onboardingRouter(
     certificateProber: certificateProber,
-    initialLocation: held != null
+    initialLocation: held != null || invite == null
         ? ServiceRoutes.welcomeSignIn
-        : invite == null
-        ? ServiceRoutes.welcome
         : Uri(
             path: ServiceRoutes.welcomeSignIn,
             queryParameters: invite.toUri().queryParameters,
@@ -116,9 +112,6 @@ Future<(ProfileHarness, ProviderContainer, _Browser)> _atSignIn(
     ),
   );
   await harness.settle(tester);
-  if (invite == null && held == null) {
-    await _tap(tester, harness, find.text('I have a Seerr account'));
-  }
   return (harness, container, browser);
 }
 
@@ -162,7 +155,6 @@ ServiceInstance? _seerr(ProviderContainer container) =>
 /// drawn for them.
 void _expectOpenedFor(ProviderContainer container, Audience audience) {
   expect(find.byKey(onboardingHomeStandIn), findsOneWidget);
-  expect(container.read(onboardingCompletedProvider), isTrue);
   expect(container.read(shellAudienceProvider), audience);
 }
 
@@ -304,27 +296,6 @@ void main() {
 
     expect(find.text('Add the address of your Seerr'), findsOneWidget);
     expect(harness.network.requests.length, asked);
-
-    await harness.unmount(tester);
-  });
-
-  testWidgets('Back from the ways in returns to the address, and from the '
-      'address to the Welcome', (tester) async {
-    final (harness, _, _) = await _atSignIn(tester, Profiles.p2);
-
-    await tester.enterText(_address(), WorldHosts.seerr);
-    await _tap(tester, harness, find.text('Continue'));
-    expect(find.text('Sign in with email'), findsOneWidget);
-
-    await _tap(tester, harness, find.byType(BackButton));
-    expect(find.text('Where is your Seerr?'), findsOneWidget);
-    expect(
-      tester.widget<TextField>(_address()).controller!.text,
-      WorldHosts.seerr,
-    );
-
-    await _tap(tester, harness, find.byType(BackButton));
-    expect(find.text('I have a Seerr account'), findsOneWidget);
 
     await harness.unmount(tester);
   });

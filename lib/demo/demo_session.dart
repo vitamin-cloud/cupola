@@ -126,7 +126,6 @@ class DemoSession {
         secureSettingsStore: MemorySecureSettingsStore(),
         initialSettings: profile.settings,
         activeInstances: profile.lens,
-        onboardingCompleted: true,
         lastKnown: LastKnownStore.memory(),
       ),
       hostReachProvider.overrideWithValue(network.reach),

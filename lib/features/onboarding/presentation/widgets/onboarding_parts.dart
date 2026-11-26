@@ -22,10 +22,6 @@ const onboardingPadding = EdgeInsets.fromLTRB(
   AppSpacing.xxl,
 );
 
-/// Widest the column is allowed to get. Past this a field's label and its
-/// control drift too far apart to read as a pair.
-const onboardingMaxWidth = 560.0;
-
 /// Whether this window puts the ring beside the step instead of above it.
 ///
 /// Platform first, then shape. The width test this replaced asked for
@@ -42,28 +38,6 @@ bool onboardingSideBySide(BuildContext context) {
   if (!AppBreakpoints.isDesktopShell(context)) return false;
   return AppBreakpoints.isLandscapeFrame(context);
 }
-
-/// The well on a desktop window, where the ring sits *beside* the step.
-///
-/// 1040 rather than the well every other screen uses: the ring is 396 and the
-/// form wants its own 560, and those two plus the air between them is what this
-/// number is. It is not a reading measure; nothing here is prose.
-const onboardingDesktopMaxWidth = 1040.0;
-
-/// The ring at the size DESIGN.md protects it at.
-///
-/// On a phone the diameter is negotiated against whatever height the keyboard
-/// leaves; in a wide window there is nothing to negotiate with, so it is a
-/// constant and the instrument stops resizing under the user mid-flow.
-const onboardingDesktopRingDiameter = 396.0;
-
-/// The same instrument in a compact window, where the whole frame is 450pt tall.
-///
-/// 230, which is what the compact board draws, rather than the 286 the full
-/// constant resolves to once the column's own reservation is taken off: a ring
-/// that fills nine tenths of a short window is not the subject of the beat, it
-/// is the beat.
-const onboardingCompactRingDiameter = 230.0;
 
 /// Whether the keyboard is currently taking screen height, published for the
 /// whole flow.

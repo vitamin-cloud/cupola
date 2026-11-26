@@ -15,7 +15,6 @@ import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/features/services/domain/source_coverage.dart';
 import 'package:cupola/features/services/presentation/services_provider.dart'
     show dashboardDecisionsProvider, stallClockProvider;
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -105,7 +104,6 @@ class _SceneState extends State<_Scene> {
       sharedPreferencesProvider.overrideWithValue(_prefs),
       secureSettingsStoreProvider.overrideWithValue(FakeSecureSettingsStore()),
       initialSettingsProvider.overrideWithValue(_settings),
-      initialOnboardingCompletedProvider.overrideWithValue(true),
       if (widget.requester) shellAudienceProvider.overrideWith(_Requester.new),
       initialActiveInstancesProvider.overrideWithValue(const {}),
       dashboardDecisionsProvider.overrideWithValue((

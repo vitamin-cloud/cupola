@@ -14,9 +14,9 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<!-- This fork ("Stack"): the neon pirate ship, mipmap-*/stack_icon_*.png from scripts/stack_icon.py. -->
+<!-- This fork ("Stack"): the Musubi tile, mipmap-*/stack_icon_*.png from scripts/stack_icon.py.
+     No monochrome layer: the drawing is too fine for one, so a themed launcher keeps its colours. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@mipmap/stack_icon_background"/>
     <foreground android:drawable="@mipmap/stack_icon_foreground"/>
-    <monochrome android:drawable="@mipmap/stack_icon_monochrome"/>
 </adaptive-icon>

@@ -7,7 +7,6 @@ import 'package:cupola/core/app_spacing.dart';
 import 'package:cupola/core/utils/service_routes.dart';
 import 'package:cupola/core/utils/url_utils.dart';
 import 'package:cupola/features/discover/domain/seerr_invite.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/onboarding/presentation/widgets/onboarding_parts.dart';
 import 'package:cupola/features/pairing/data/pair_session.dart';
 import 'package:cupola/features/settings/data/service_connection_provider.dart';
@@ -243,7 +242,7 @@ class _RequesterSignInScreenState extends ConsumerState<RequesterSignInScreen> {
 
   /// Every way in is off: the server's key is what is left, and that is the
   /// operator's way, Connect with Seerr proposed.
-  void _useApiKey() => context.go(ServiceRoutes.welcomeConnect);
+  void _useApiKey() => context.go(ServiceRoutes.settingsConnections);
 
   void _back() {
     if (_flow.stage != SeerrSignInStage.start || _flow.facts != null) {
@@ -253,7 +252,7 @@ class _RequesterSignInScreenState extends ConsumerState<RequesterSignInScreen> {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go(ServiceRoutes.welcome);
+      context.go(ServiceRoutes.home);
     }
   }
 
@@ -261,7 +260,6 @@ class _RequesterSignInScreenState extends ConsumerState<RequesterSignInScreen> {
     if (_finishing) return;
     _finishing = true;
     HapticFeedback.mediumImpact();
-    await markOnboardingComplete(ref);
     // Nothing is under the finger: the screen it is on goes away now.
     ref.read(shellAudienceProvider.notifier).take();
     if (mounted) context.go(ServiceRoutes.home);

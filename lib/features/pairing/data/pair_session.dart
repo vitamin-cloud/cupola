@@ -5,7 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cupola/features/discover/domain/seerr_invite.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/pairing/data/pair_fetch.dart';
 import 'package:cupola/features/pairing/data/pair_server.dart';
 import 'package:cupola/features/pairing/domain/pair_cipher.dart';
@@ -490,8 +489,6 @@ class PairReceiveNotifier extends Notifier<PairReceiveState> {
       await container
           .read(settingsProvider.notifier)
           .updateSettings(plan.applyTo(current));
-      await container.read(settingsServiceProvider).saveOnboardingComplete();
-      container.read(onboardingCompletedProvider.notifier).state = true;
     } catch (_) {
       // Held, with its package, for [retry]: leaving the state on `adding`
       // kept the button busy and Start again disabled for good.

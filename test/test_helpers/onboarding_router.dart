@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import 'package:cupola/core/platform/local_network_access.dart';
 import 'package:cupola/core/utils/service_routes.dart';
-import 'package:cupola/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:cupola/features/onboarding/presentation/requester_sign_in_screen.dart';
 import 'package:cupola/features/settings/data/service_connection_provider.dart';
 
@@ -35,19 +34,8 @@ GoRouter onboardingRouter({
   routes: [
     GoRoute(
       path: ServiceRoutes.welcome,
-      builder: (_, _) => OnboardingScreen(
-        certificateProber: certificateProber,
-        localNetworkProbe: localNetworkProbe,
-      ),
+      builder: (_, _) => const Scaffold(body: Center(child: Text('Home'))),
       routes: [
-        GoRoute(
-          path: 'connect',
-          builder: (_, _) => OnboardingScreen(
-            entry: OnboardingEntry.connect,
-            certificateProber: certificateProber,
-            localNetworkProbe: localNetworkProbe,
-          ),
-        ),
         GoRoute(
           path: 'pair',
           builder: (_, _) => const Scaffold(

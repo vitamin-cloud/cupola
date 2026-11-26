@@ -14,7 +14,6 @@ import 'package:cupola/core/widgets/app_card.dart';
 import 'package:cupola/core/widgets/app_dialog.dart';
 import 'package:cupola/core/widgets/service_ring.dart';
 import 'package:cupola/core/utils/service_routes.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/settings/data/donation_service.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/domain/service_key.dart';
@@ -188,44 +187,6 @@ class SettingsBackgroundRow extends StatelessWidget {
   }
 }
 
-/// Opens the Welcome again, after asking: nothing set up is touched.
-class SettingsRevisitOnboardingRow extends ConsumerWidget {
-  const SettingsRevisitOnboardingRow({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return SettingsCard.grouped(
-      leading: const Icon(Icons.replay_rounded),
-      title: 'Revisit onboarding',
-      subtitle: 'See the Welcome again',
-      semanticHint: 'opens the Welcome',
-      onTap: () => _confirmRevisitOnboarding(context, ref),
-    );
-  }
-
-  Future<void> _confirmRevisitOnboarding(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
-    final result = await showAppConfirmDialog(
-      context: context,
-      icon: Icons.replay_rounded,
-      title: 'Revisit onboarding?',
-      message:
-          "You'll see the Welcome again. Nothing about your services or "
-          'settings is changed or removed.',
-      confirmLabel: 'Revisit onboarding',
-      enterConfirms: true,
-    );
-
-    if (!result.confirmed) return;
-    if (!context.mounted) return;
-    // Pushed, so Back returns here: the Welcome is never redirected away
-    // from, and nothing about the connections or the flag changes.
-    context.push(ServiceRoutes.welcome);
-  }
-}
-
 /// Clears every service, credential and preference, behind its confirmation,
 /// on both layouts.
 class SettingsResetAppDataRow extends ConsumerWidget {
@@ -236,7 +197,7 @@ class SettingsResetAppDataRow extends ConsumerWidget {
     return SettingsCard.grouped(
       leading: const Icon(Icons.restart_alt_rounded),
       title: 'Reset app data',
-      subtitle: 'Clear all services, settings, and restart onboarding',
+      subtitle: 'Clear all services and settings',
       // The row's default accent, like every other settings row: red means
       // unreachable and nothing else, and the confirmation says what goes.
       onTap: () => _confirmReset(context, ref),
@@ -250,7 +211,7 @@ class SettingsResetAppDataRow extends ConsumerWidget {
       title: 'Reset all data?',
       message:
           'This clears all saved services, credentials, and preferences. '
-          'Onboarding will restart. This cannot be undone.',
+          'This cannot be undone.',
       confirmLabel: 'Reset app data',
     );
 
@@ -258,7 +219,7 @@ class SettingsResetAppDataRow extends ConsumerWidget {
 
     try {
       await ref.read(settingsProvider.notifier).resetSettings();
-      await markOnboardingIncomplete(ref);
+      if (context.mounted) context.go(ServiceRoutes.home);
     } catch (e) {
       if (!context.mounted) return;
       SnackBarHelper.error(context, "Could not reset app data.", detail: e);

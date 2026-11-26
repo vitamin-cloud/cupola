@@ -46,7 +46,6 @@ import 'package:cupola/core/theme.dart';
 import 'package:cupola/features/home/presentation/home_screen.dart';
 import 'package:cupola/features/home/presentation/widgets/home_header.dart';
 import 'package:cupola/features/home/presentation/widgets/needs_you_banner.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/services/domain/dashboard_decision.dart';
 import 'package:cupola/features/services/domain/in_flight.dart';
 import 'package:cupola/features/services/domain/arr_import.dart';
@@ -215,7 +214,7 @@ void main() {
           routes: [
             GoRoute(path: '/', builder: (context, state) => _screen(page)),
             GoRoute(
-              path: ServiceRoutes.welcomeConnect,
+              path: ServiceRoutes.settingsConnections,
               builder: (context, state) {
                 opened = state.uri.path;
                 return const SizedBox.shrink();
@@ -246,7 +245,7 @@ void main() {
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 300));
 
-        expect(opened, ServiceRoutes.welcomeConnect);
+        expect(opened, ServiceRoutes.settingsConnections);
       });
 
       testWidgets('offers copying from another device under the other two '
@@ -1102,7 +1101,6 @@ Future<void> _pumpPage(
   final overrides = <Override>[
     if (prefs != null) sharedPreferencesProvider.overrideWithValue(prefs),
     // The Home reads who the shell is drawn for, which waits on onboarding.
-    initialOnboardingCompletedProvider.overrideWithValue(true),
     currentSettingsProvider.overrideWith((ref) => settings ?? _settings),
     instanceSummaryProvider.overrideWith(
       (ref, key) =>

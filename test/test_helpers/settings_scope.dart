@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cupola/core/network/host_reach.dart';
-import 'package:cupola/features/onboarding/data/onboarding_provider.dart';
 import 'package:cupola/features/settings/data/settings_provider.dart';
 import 'package:cupola/features/settings/data/settings_service.dart';
 import 'package:cupola/features/settings/domain/service_instance.dart';
@@ -72,7 +71,6 @@ Future<List<Override>> settingsScopeOverrides({
     sharedPreferencesProvider.overrideWith((ref) => scope.prefs),
     secureSettingsStoreProvider.overrideWith((ref) => scope.secureStore),
     initialSettingsProvider.overrideWith((ref) => settings),
-    initialOnboardingCompletedProvider.overrideWith((ref) => true),
     hostReachProvider.overrideWithValue(hostReach),
   ];
 }
