@@ -1,0 +1,22 @@
+# Dockge stack: paste this as the stack's compose file, fill in .env from env.example.
+# The container idles; open its terminal in Dockge and run steps with `av <step>`.
+services:
+  alice-voice:
+    build:
+      context: ${ALICE_CODE}
+      dockerfile: docker/Dockerfile
+    image: alice-voice:phase1
+    container_name: alice-voice
+    restart: unless-stopped
+    command: ["sleep", "infinity"]
+    environment:
+      - ALICE_DATA=/data
+      - IMMICH_URL=${IMMICH_URL}
+      - IMMICH_API_KEY=${IMMICH_API_KEY}
+      - IMMICH_ALBUM=${IMMICH_ALBUM}
+      - HF_TOKEN=${HF_TOKEN}
+      - HF_HOME=/data/.cache/huggingface
+    volumes:
+      - ${ALICE_DATA}:/data
+    # Leave cores free for Jellyfin/Immich. Raise to "8" for overnight runs.
+    cpus: "6"

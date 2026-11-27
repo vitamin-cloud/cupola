@@ -1,0 +1,22 @@
+# Never commit voice data or secrets. Media lives on the NAS, not in git.
+.env
+*.wav
+*.flac
+*.mp3
+*.m4a
+*.aac
+*.ogg
+*.opus
+*.mp4
+*.mov
+*.m4v
+*.mkv
+*.avi
+*.3gp
+*.webm
+*.csv
+*.json
+!env.example
+data/
+__pycache__/
+*.pyc

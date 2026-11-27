@@ -1,0 +1,5 @@
+# Phase 1, steps 0-1 (fetch + extract). Heavier ML deps (torch, separation,
+# WhisperX, pyannote) are added when those steps land.
+numpy>=1.26,<3
+soundfile>=0.12
+requests>=2.31
