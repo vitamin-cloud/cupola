@@ -1,9 +1,10 @@
-# Dockge stack: paste this as the stack's compose file, fill in .env from env.example.
+# Dockge stack. Copy this whole folder into Dockge's stacks folder as "alice-voice",
+# fill in .env from env.example, then Deploy. Builds from this folder (context: .).
 # The container idles; open its terminal in Dockge and run steps with `av <step>`.
 services:
   alice-voice:
     build:
-      context: ${ALICE_CODE}
+      context: .
       dockerfile: docker/Dockerfile
     image: alice-voice:phase1
     container_name: alice-voice

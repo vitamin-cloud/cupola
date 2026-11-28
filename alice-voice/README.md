@@ -14,14 +14,15 @@ code only; `.gitignore` blocks audio, video, CSV/JSON outputs and `.env`.
 
 ## One-time setup (TrueNAS + Dockge)
 1. **Data folder:** create `/mnt/<pool>/alice-voice` (a dataset later; we'll move it).
-2. **Code:** put this repo's `alice-voice/` folder on the NAS, e.g.
-   `/mnt/<pool>/apps/alice-voice-code/` (git clone, or download the branch ZIP
-   from GitHub and unzip it).
+2. **Code:** copy this `alice-voice/` folder into Dockge's stacks folder so it
+   becomes `<stacks>/alice-voice/` (with `compose.yaml` at its top level).
+   Find the stacks folder in TrueNAS → Apps → Dockge → Edit → Storage.
 3. **Immich:** put the chosen videos in an album named `Alice voice`. Then go to
-   Account Settings → API Keys → New API Key with the `album.read`,
+   Account Settings → API Keys and create a key with the `album.read`,
    `asset.read` and `asset.download` permissions.
-4. **Dockge:** create a new stack `alice-voice`. Paste `compose.yaml` and fill
-   the `.env` editor from `env.example`. Deploy it (the first build takes a few minutes).
+4. **Dockge:** the `alice-voice` stack appears (use "Scan Stacks Folder" in the ⋮ menu
+   if it doesn't). Edit it, fill the `.env` box from `env.example`, and Deploy.
+   The first build takes a few minutes.
 5. In Dockge, open the container's terminal (`>_` button → `bash`).
 
 ## Running
